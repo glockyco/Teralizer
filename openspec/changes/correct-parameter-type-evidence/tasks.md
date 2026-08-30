@@ -39,26 +39,26 @@
 - [x] 5.1 Update registered report metrics and metric keys for `zero_parameters`, `unsupported_types`, `missing_declaration`, and `derivation_gap`; verify old `no_arguments` identities are removed without a compatibility alias and all shares use the persisted rejection denominator.
 - [x] 5.2 Update filter-detail and historical-category table declarations, labels, ordering, and zero-count rows; verify `Evaluated = Accept + Defer + Reject`, level grouping remains unchanged, and category totals reconcile before rendering.
 - [x] 5.3 Record one read-only consistent snapshot and source-observation provenance for the registered report; verify the citable metrics, tables, and collapsed outcomes use the same snapshot and eligible corpus inputs.
-- [ ] 5.4 Regenerate registered CSV, TeX, Markdown, manifest, macro, and provenance artifacts from the corrected report; verify every changed value and label follows from the four-category calculation and no database or corpus files change.
-- [ ] 5.5 Inspect generated artifact diffs and report metadata; verify the filter name remains `ParameterType`, the category labels contain exactly four historical causes, and no ad hoc query output is used as publication output.
+- [x] 5.4 Regenerate registered CSV, TeX, Markdown, manifest, macro, and provenance artifacts from the corrected report; verify every changed value and label follows from the four-category calculation and no database or corpus files change.
+- [x] 5.5 Inspect generated artifact diffs and report metadata; verify the filter name remains `ParameterType`, the category labels contain exactly four historical causes, and no ad hoc query output is used as publication output.
 
 ## 6. Update Thesis Literals and Discussion
 
-- [ ] 6.1 Replace ParameterType-specific `no_arguments` and `unknown` literals in thesis source, tables, macros, and supporting report consumers with `zero_parameters`, `unsupported_types`, `missing_declaration`, and `derivation_gap`; verify no stale category literal remains in the scoped thesis material.
-- [ ] 6.2 Replace the related thesis discussion with evidence-based distinctions between formal selected-MUT declarations and recipe-derived generalizable inputs; verify the prose does not treat call-argument or derived-list emptiness as signature evidence.
-- [ ] 6.3 Explain missing declaration evidence and derivation gaps without changing historical rejection totals or implying a corpus rerun; verify each reported claim cites the registered metric, table, or provenance artifact.
-- [ ] 6.4 Regenerate affected thesis tables and macros from registered report artifacts; verify the rendered values and labels match the report outputs and no hand-edited publication value remains.
+- [x] 6.1 Replace ParameterType-specific `no_arguments` and `unknown` literals in thesis source, tables, macros, and supporting report consumers with `zero_parameters`, `unsupported_types`, `missing_declaration`, and `derivation_gap`; verify no stale category literal remains in the scoped thesis material.
+- [x] 6.2 Replace the related thesis discussion with evidence-based distinctions between formal selected-MUT declarations and recipe-derived generalizable inputs; verify the prose does not treat call-argument or derived-list emptiness as signature evidence.
+- [x] 6.3 Explain missing declaration evidence and derivation gaps without changing historical rejection totals or implying a corpus rerun; verify each reported claim cites the registered metric, table, or provenance artifact.
+- [x] 6.4 Regenerate affected thesis tables and macros from registered report artifacts; verify the rendered values and labels match the report outputs and no hand-edited publication value remains.
 
 ## 7. Apply the Atomic Source-and-report Cutover
 
-- [ ] 7.1 Integrate the producer, mapper, registered-report SQL, validations, metrics, generated artifacts, and thesis updates as one evidence-contract revision; verify the source and report paths cannot be deployed with different declaration semantics.
-- [ ] 7.2 Verify the migration is read-only against historical databases; verify no corpus rerun, project rerun, synthetic observation, synthetic filter result, or database mutation is present in the implementation or report procedure.
-- [ ] 7.3 Verify rollback reverts the complete source-and-report revision before new measurements; verify rollback leaves all historical rows and generated evidence untouched and does not restore the obsolete interpretation as a corrected result.
+- [x] 7.1 Integrate the producer, mapper, registered-report SQL, validations, metrics, generated artifacts, and thesis updates as one evidence-contract revision; verify the source and report paths cannot be deployed with different declaration semantics.
+- [x] 7.2 Verify the migration is read-only against historical databases; verify no corpus rerun, project rerun, synthetic observation, synthetic filter result, or database mutation is present in the implementation or report procedure.
+- [x] 7.3 Verify rollback reverts the complete source-and-report revision before new measurements; verify rollback leaves all historical rows and generated evidence untouched and does not restore the obsolete interpretation as a corrected result.
 
 ## 8. Run Focused and Full Repository Gates
 
-- [ ] 8.1 Run focused Java tests for `ParameterTypeFilter`, filtering telemetry, lifted inputs, mapper evidence, and caller observation cardinality; verify the decision matrix and declaration invariants pass.
-- [ ] 8.2 Run focused Python report tests for canonical joins, four-category calculations, exact partitions, provenance, metric registration, table rendering, and macro generation; verify malformed and contradictory evidence fails closed.
-- [ ] 8.3 Run the full Java repository test and build gates plus the full analysis test, Ruff, and Ty gates; verify all repository implementation checks pass without running a corpus or changing a database.
-- [ ] 8.4 Run repository hooks and the thesis build and style gates, then inspect affected rendered pages; verify generated report values, thesis literals, and discussion remain consistent with the registered read-only report.
-- [ ] 8.5 Perform a final change-scope audit; verify only intended source, tests, registered report code, generated artifacts, thesis consumers, and this task plan are changed, with no corpus rerun or database mutation evidence.
+- [x] 8.1 Run focused Java tests for `ParameterTypeFilter`, filtering telemetry, lifted inputs, mapper evidence, and caller observation cardinality; verify the decision matrix and declaration invariants pass.
+- [x] 8.2 Run focused Python report tests for canonical joins, four-category calculations, exact partitions, provenance, metric registration, table rendering, and macro generation; verify malformed and contradictory evidence fails closed.
+- [x] 8.3 Run the full Java repository test and build gates plus the full analysis test, Ruff, and Ty gates; verify all repository implementation checks pass without running a corpus or changing a database.
+- [x] 8.4 Run repository hooks and the thesis build and style gates, then inspect affected rendered pages; verify generated report values, thesis literals, and discussion remain consistent with the registered read-only report.
+- [x] 8.5 Perform a final change-scope audit; verify only intended source, tests, registered report code, generated artifacts, thesis consumers, and this task plan are changed, with no corpus rerun or database mutation evidence.
