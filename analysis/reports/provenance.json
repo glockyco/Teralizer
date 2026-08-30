@@ -3467,7 +3467,7 @@
         "version": "0.1.0"
       },
       "realworld.assertions_without_resolution": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -3479,7 +3479,7 @@
         },
         "qualname": "_fetch_assertions_without_resolution",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT count(*) AS assertions_without_resolution\nFROM assertion a\nJOIN eligible_projects ep ON ep.id = a.project_id\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM mut_resolution_observation o\n    WHERE o.assertion_id = a.id\n)\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L70",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L70",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -4438,6 +4438,24 @@
         "value_kind": "count",
         "version": "0.1.0"
       },
+      "realworld.return_type.evaluated": {
+        "commit": "2aabc2dad7d53adeb7dfcb279fb89533f315e216",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._exclusion_evidence",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.evaluated"
+        },
+        "qualname": "fetch_filter_decisions",
+        "query": "\n\n\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nfilter_result_evidence AS (\n    SELECT\n        fr.id AS evidence_id,\n        fr.project_id,\n        CASE\n            WHEN fr.test_id IS NOT NULL THEN 'Test'\n            WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n            WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n        END AS level,\n        coalesce(fr.test_id, fr.assertion_id, fr.generalization_id) AS entity_id,\n        fr.filter_name AS producer,\n        fr.decision,\n        fr.reason_code,\n        num_nonnulls(fr.test_id, fr.assertion_id, fr.generalization_id) AS identity_count,\n        CASE\n            WHEN fr.filter_name ~ :filter_class_pattern THEN 'filter_rejection'\n            WHEN fr.filter_name = :quarantine_producer THEN 'build_quarantine'\n        END AS producer_mechanism\n    FROM filter_result fr\n),\neligible_filter_evidence AS (\n    SELECT fa.*\n    FROM filter_result_evidence fa\n    JOIN eligible_projects ep ON ep.id = fa.project_id\n),\ntest_lifecycle_evidence AS (\n    SELECT\n        t.project_id,\n        t.id AS entity_id,\n        t.is_included,\n        split_part(t.exclusion_info, ':', 1) AS exclusion_code,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Test'\n              AND fa.entity_id = t.id\n              AND fa.decision = 'REJECT'\n              AND fa.producer_mechanism = 'filter_rejection'\n        ) AS filter_rejected,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Test'\n              AND fa.entity_id = t.id\n              AND fa.producer_mechanism = 'build_quarantine'\n        ) AS quarantined,\n        EXISTS (\n            SELECT 1\n            FROM task failed\n            WHERE failed.test_id = t.id\n              AND failed.assertion_id IS NULL\n              AND failed.generalization_id IS NULL\n              AND failed.status <> 'SUCCEEDED'\n        ) AS task_failed\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n),\nassertion_evidence AS (\n    SELECT\n        a.project_id,\n        a.id AS entity_id,\n        a.is_included,\n        split_part(a.exclusion_info, ':', 1) AS exclusion_code,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Assertion'\n              AND fa.entity_id = a.id\n              AND fa.decision = 'REJECT'\n              AND fa.producer_mechanism = 'filter_rejection'\n        ) AS filter_rejected,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Assertion'\n              AND fa.entity_id = a.id\n              AND fa.producer_mechanism = 'build_quarantine'\n        ) AS quarantined,\n        EXISTS (\n            SELECT 1\n            FROM task failed\n            WHERE failed.assertion_id = a.id\n              AND failed.generalization_id IS NULL\n              AND failed.status <> 'SUCCEEDED'\n        ) AS task_failed\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ngenerated_generalization_evidence AS (\n    SELECT\n        g.project_id,\n        g.id AS entity_id,\n        split_part(g.exclusion_info, ':', 1) AS exclusion_code,\n        l.generated_filter_passed,\n        l.final_failure_stage,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Generalization'\n              AND fa.entity_id = g.id\n              AND fa.decision = 'REJECT'\n              AND fa.producer_mechanism = 'filter_rejection'\n        ) AS filter_rejected,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Generalization'\n              AND fa.entity_id = g.id\n              AND fa.producer_mechanism = 'build_quarantine'\n        ) AS quarantined,\n        EXISTS (\n            SELECT 1\n            FROM task failed\n            WHERE failed.generalization_id = g.id\n              AND failed.status <> 'SUCCEEDED'\n        ) AS task_failed\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n),\ntest_mechanism_candidates AS (\n    SELECT\n        project_id,\n        entity_id,\n        'Test' AS level,\n        ARRAY_REMOVE(ARRAY[\n            CASE WHEN is_included AND NOT task_failed THEN 'included' END,\n            CASE WHEN filter_rejected THEN 'filter_rejection' END,\n            CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)\n                 THEN 'build_quarantine' END,\n            CASE WHEN exclusion_code = ANY(:capability_codes)\n                 THEN 'inherited_test_inlining_limit' END,\n            CASE WHEN (task_failed OR exclusion_code LIKE 'Excluded by%')\n                       AND NOT filter_rejected\n                       AND NOT quarantined\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:quarantine_codes))\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:capability_codes))\n                 THEN 'task_exception' END\n        ], NULL) AS candidates\n    FROM test_lifecycle_evidence\n),\nassertion_mechanism_candidates AS (\n    SELECT\n        project_id,\n        entity_id,\n        'Assertion' AS level,\n        ARRAY_REMOVE(ARRAY[\n            CASE WHEN is_included AND NOT task_failed THEN 'included' END,\n            CASE WHEN filter_rejected THEN 'filter_rejection' END,\n            CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)\n                 THEN 'build_quarantine' END,\n            CASE WHEN (task_failed OR exclusion_code LIKE 'Excluded by%')\n                       AND NOT filter_rejected\n                       AND NOT quarantined\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:quarantine_codes))\n                 THEN 'task_exception' END\n        ], NULL) AS candidates\n    FROM assertion_evidence\n),\ngeneralization_mechanism_candidates AS (\n    SELECT\n        project_id,\n        entity_id,\n        'Generalization' AS level,\n        ARRAY_REMOVE(ARRAY[\n            CASE WHEN generated_filter_passed THEN 'included' END,\n            CASE WHEN exclusion_code = ANY(:gate_codes)\n                 THEN 'generation_gate' END,\n            CASE WHEN filter_rejected THEN 'filter_rejection' END,\n            CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)\n                 THEN 'build_quarantine' END,\n            CASE WHEN NOT coalesce(generated_filter_passed, FALSE)\n                       AND NOT filter_rejected\n                       AND NOT quarantined\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:gate_codes))\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:quarantine_codes))\n                       AND (task_failed OR final_failure_stage IS NOT NULL\n                            OR exclusion_code LIKE 'Excluded by%')\n                 THEN 'task_exception' END\n        ], NULL) AS candidates\n    FROM generated_generalization_evidence\n),\nall_mechanism_candidates AS (\n    SELECT * FROM test_mechanism_candidates\n    UNION ALL\n    SELECT * FROM assertion_mechanism_candidates\n    UNION ALL\n    SELECT * FROM generalization_mechanism_candidates\n),\nmechanism_evidence AS (\n    SELECT project_id, entity_id, level, candidates[1] AS mechanism\n    FROM all_mechanism_candidates\n    WHERE cardinality(candidates) = 1\n)\n,\nresolved_test_method_evidence AS (\n    SELECT\n        t.id AS entity_id,\n        t.test_class_qualified_name,\n        rtrim(\n            regexp_replace(\n                regexp_replace(\n                    substring(t.test_method_absolute_path from '^(.*)#method'),\n                    '#subPackage\\[name=([^]]+)\\]',\n                    '\\1.',\n                    'g'\n                ),\n                '#containedType\\[name=([^]]+)\\]',\n                '\\1.',\n                'g'\n            ),\n            '.'\n        ) AS declaring_type,\n        split_part(t.exclusion_info, ':', 1) AS exclusion_code\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    WHERE t.test_method_absolute_path IS NOT NULL\n),\ngeneralization_proactive_filter_evidence AS (\n    SELECT\n        g.id AS entity_id,\n        split_part(g.exclusion_info, ':', 1) AS exclusion_code,\n        coalesce(l.generated_source_created, FALSE) AS generated_source_created\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n),\nrecorded_filter_evidence AS (\n    SELECT\n        fa.level,\n        CASE\n            WHEN substring(fa.producer from 'filter\\.(\\w+)Filter$') = 'UnsupportedAssertion'\n                THEN 'AssertionType'\n            ELSE substring(fa.producer from 'filter\\.(\\w+)Filter$')\n        END AS filter,\n        fa.entity_id,\n        fa.decision\n    FROM eligible_filter_evidence fa\n    LEFT JOIN generalization g\n        ON fa.level = 'Generalization' AND g.id = fa.entity_id\n    WHERE fa.producer_mechanism = 'filter_rejection'\n      AND (fa.level <> 'Generalization' OR g.variant = :variant)\n),\nproactive_filter_evidence AS (\n    SELECT\n        'Test' AS level,\n        'InheritedTestMethod' AS filter,\n        entity_id,\n        CASE\n            WHEN exclusion_code = 'INHERITED_METHOD_NOT_FLATTENABLE' THEN 'REJECT'\n            ELSE 'ACCEPT'\n        END AS decision\n    FROM resolved_test_method_evidence\n    WHERE declaring_type <> test_class_qualified_name\n\n    UNION ALL\n\n    SELECT\n        'Generalization',\n        'SeedSpecConsistency',\n        entity_id,\n        CASE\n            WHEN exclusion_code = 'INPUT_SPEC_NOT_SATISFIED_BY_SEED' THEN 'REJECT'\n            ELSE 'ACCEPT'\n        END\n    FROM generalization_proactive_filter_evidence\n\n    UNION ALL\n\n    SELECT\n        'Generalization',\n        'WideningLicense',\n        entity_id,\n        CASE\n            WHEN exclusion_code = 'ORACLE_NOT_WIDENABLE' THEN 'REJECT'\n            WHEN generated_source_created THEN 'ACCEPT'\n        END\n    FROM generalization_proactive_filter_evidence\n    WHERE exclusion_code IS DISTINCT FROM 'INPUT_SPEC_NOT_SATISFIED_BY_SEED'\n)\n,\nall_filter_evidence AS (\n    SELECT * FROM recorded_filter_evidence\n    UNION ALL\n    SELECT * FROM proactive_filter_evidence\n)\nSELECT\n    level,\n    filter,\n    count(DISTINCT entity_id)::bigint AS total,\n    count(DISTINCT entity_id) FILTER (WHERE decision = 'ACCEPT')::bigint AS accept,\n    count(DISTINCT entity_id) FILTER (WHERE decision = 'DEFER')::bigint AS defer,\n    count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT')::bigint AS reject\nFROM all_filter_evidence\nGROUP BY level, filter\nHAVING count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT') > 0\nORDER BY\n    CASE level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    filter\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L787",
+        "value": 109865,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
       "realworld.return_type.list": {
         "commit": "4e0888996f17939a359e3efb2d53a6ccb8c149cb",
         "denominator_key": null,
@@ -4526,6 +4544,24 @@
         "source_url": "https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L424",
         "value": 57465,
         "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.rejected_pct": {
+        "commit": "2aabc2dad7d53adeb7dfcb279fb89533f315e216",
+        "denominator_key": "realworld.return_type.evaluated",
+        "dirty": false,
+        "module": "teralizer.eval.reports._exclusion_evidence",
+        "numerator_key": "realworld.return_type.rejected",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.rejected"
+        },
+        "qualname": "fetch_filter_decisions",
+        "query": "\n\n\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nfilter_result_evidence AS (\n    SELECT\n        fr.id AS evidence_id,\n        fr.project_id,\n        CASE\n            WHEN fr.test_id IS NOT NULL THEN 'Test'\n            WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n            WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n        END AS level,\n        coalesce(fr.test_id, fr.assertion_id, fr.generalization_id) AS entity_id,\n        fr.filter_name AS producer,\n        fr.decision,\n        fr.reason_code,\n        num_nonnulls(fr.test_id, fr.assertion_id, fr.generalization_id) AS identity_count,\n        CASE\n            WHEN fr.filter_name ~ :filter_class_pattern THEN 'filter_rejection'\n            WHEN fr.filter_name = :quarantine_producer THEN 'build_quarantine'\n        END AS producer_mechanism\n    FROM filter_result fr\n),\neligible_filter_evidence AS (\n    SELECT fa.*\n    FROM filter_result_evidence fa\n    JOIN eligible_projects ep ON ep.id = fa.project_id\n),\ntest_lifecycle_evidence AS (\n    SELECT\n        t.project_id,\n        t.id AS entity_id,\n        t.is_included,\n        split_part(t.exclusion_info, ':', 1) AS exclusion_code,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Test'\n              AND fa.entity_id = t.id\n              AND fa.decision = 'REJECT'\n              AND fa.producer_mechanism = 'filter_rejection'\n        ) AS filter_rejected,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Test'\n              AND fa.entity_id = t.id\n              AND fa.producer_mechanism = 'build_quarantine'\n        ) AS quarantined,\n        EXISTS (\n            SELECT 1\n            FROM task failed\n            WHERE failed.test_id = t.id\n              AND failed.assertion_id IS NULL\n              AND failed.generalization_id IS NULL\n              AND failed.status <> 'SUCCEEDED'\n        ) AS task_failed\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n),\nassertion_evidence AS (\n    SELECT\n        a.project_id,\n        a.id AS entity_id,\n        a.is_included,\n        split_part(a.exclusion_info, ':', 1) AS exclusion_code,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Assertion'\n              AND fa.entity_id = a.id\n              AND fa.decision = 'REJECT'\n              AND fa.producer_mechanism = 'filter_rejection'\n        ) AS filter_rejected,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Assertion'\n              AND fa.entity_id = a.id\n              AND fa.producer_mechanism = 'build_quarantine'\n        ) AS quarantined,\n        EXISTS (\n            SELECT 1\n            FROM task failed\n            WHERE failed.assertion_id = a.id\n              AND failed.generalization_id IS NULL\n              AND failed.status <> 'SUCCEEDED'\n        ) AS task_failed\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ngenerated_generalization_evidence AS (\n    SELECT\n        g.project_id,\n        g.id AS entity_id,\n        split_part(g.exclusion_info, ':', 1) AS exclusion_code,\n        l.generated_filter_passed,\n        l.final_failure_stage,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Generalization'\n              AND fa.entity_id = g.id\n              AND fa.decision = 'REJECT'\n              AND fa.producer_mechanism = 'filter_rejection'\n        ) AS filter_rejected,\n        EXISTS (\n            SELECT 1\n            FROM eligible_filter_evidence fa\n            WHERE fa.level = 'Generalization'\n              AND fa.entity_id = g.id\n              AND fa.producer_mechanism = 'build_quarantine'\n        ) AS quarantined,\n        EXISTS (\n            SELECT 1\n            FROM task failed\n            WHERE failed.generalization_id = g.id\n              AND failed.status <> 'SUCCEEDED'\n        ) AS task_failed\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n),\ntest_mechanism_candidates AS (\n    SELECT\n        project_id,\n        entity_id,\n        'Test' AS level,\n        ARRAY_REMOVE(ARRAY[\n            CASE WHEN is_included AND NOT task_failed THEN 'included' END,\n            CASE WHEN filter_rejected THEN 'filter_rejection' END,\n            CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)\n                 THEN 'build_quarantine' END,\n            CASE WHEN exclusion_code = ANY(:capability_codes)\n                 THEN 'inherited_test_inlining_limit' END,\n            CASE WHEN (task_failed OR exclusion_code LIKE 'Excluded by%')\n                       AND NOT filter_rejected\n                       AND NOT quarantined\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:quarantine_codes))\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:capability_codes))\n                 THEN 'task_exception' END\n        ], NULL) AS candidates\n    FROM test_lifecycle_evidence\n),\nassertion_mechanism_candidates AS (\n    SELECT\n        project_id,\n        entity_id,\n        'Assertion' AS level,\n        ARRAY_REMOVE(ARRAY[\n            CASE WHEN is_included AND NOT task_failed THEN 'included' END,\n            CASE WHEN filter_rejected THEN 'filter_rejection' END,\n            CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)\n                 THEN 'build_quarantine' END,\n            CASE WHEN (task_failed OR exclusion_code LIKE 'Excluded by%')\n                       AND NOT filter_rejected\n                       AND NOT quarantined\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:quarantine_codes))\n                 THEN 'task_exception' END\n        ], NULL) AS candidates\n    FROM assertion_evidence\n),\ngeneralization_mechanism_candidates AS (\n    SELECT\n        project_id,\n        entity_id,\n        'Generalization' AS level,\n        ARRAY_REMOVE(ARRAY[\n            CASE WHEN generated_filter_passed THEN 'included' END,\n            CASE WHEN exclusion_code = ANY(:gate_codes)\n                 THEN 'generation_gate' END,\n            CASE WHEN filter_rejected THEN 'filter_rejection' END,\n            CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)\n                 THEN 'build_quarantine' END,\n            CASE WHEN NOT coalesce(generated_filter_passed, FALSE)\n                       AND NOT filter_rejected\n                       AND NOT quarantined\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:gate_codes))\n                       AND (exclusion_code IS NULL\n                            OR exclusion_code <> ALL(:quarantine_codes))\n                       AND (task_failed OR final_failure_stage IS NOT NULL\n                            OR exclusion_code LIKE 'Excluded by%')\n                 THEN 'task_exception' END\n        ], NULL) AS candidates\n    FROM generated_generalization_evidence\n),\nall_mechanism_candidates AS (\n    SELECT * FROM test_mechanism_candidates\n    UNION ALL\n    SELECT * FROM assertion_mechanism_candidates\n    UNION ALL\n    SELECT * FROM generalization_mechanism_candidates\n),\nmechanism_evidence AS (\n    SELECT project_id, entity_id, level, candidates[1] AS mechanism\n    FROM all_mechanism_candidates\n    WHERE cardinality(candidates) = 1\n)\n,\nresolved_test_method_evidence AS (\n    SELECT\n        t.id AS entity_id,\n        t.test_class_qualified_name,\n        rtrim(\n            regexp_replace(\n                regexp_replace(\n                    substring(t.test_method_absolute_path from '^(.*)#method'),\n                    '#subPackage\\[name=([^]]+)\\]',\n                    '\\1.',\n                    'g'\n                ),\n                '#containedType\\[name=([^]]+)\\]',\n                '\\1.',\n                'g'\n            ),\n            '.'\n        ) AS declaring_type,\n        split_part(t.exclusion_info, ':', 1) AS exclusion_code\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    WHERE t.test_method_absolute_path IS NOT NULL\n),\ngeneralization_proactive_filter_evidence AS (\n    SELECT\n        g.id AS entity_id,\n        split_part(g.exclusion_info, ':', 1) AS exclusion_code,\n        coalesce(l.generated_source_created, FALSE) AS generated_source_created\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n),\nrecorded_filter_evidence AS (\n    SELECT\n        fa.level,\n        CASE\n            WHEN substring(fa.producer from 'filter\\.(\\w+)Filter$') = 'UnsupportedAssertion'\n                THEN 'AssertionType'\n            ELSE substring(fa.producer from 'filter\\.(\\w+)Filter$')\n        END AS filter,\n        fa.entity_id,\n        fa.decision\n    FROM eligible_filter_evidence fa\n    LEFT JOIN generalization g\n        ON fa.level = 'Generalization' AND g.id = fa.entity_id\n    WHERE fa.producer_mechanism = 'filter_rejection'\n      AND (fa.level <> 'Generalization' OR g.variant = :variant)\n),\nproactive_filter_evidence AS (\n    SELECT\n        'Test' AS level,\n        'InheritedTestMethod' AS filter,\n        entity_id,\n        CASE\n            WHEN exclusion_code = 'INHERITED_METHOD_NOT_FLATTENABLE' THEN 'REJECT'\n            ELSE 'ACCEPT'\n        END AS decision\n    FROM resolved_test_method_evidence\n    WHERE declaring_type <> test_class_qualified_name\n\n    UNION ALL\n\n    SELECT\n        'Generalization',\n        'SeedSpecConsistency',\n        entity_id,\n        CASE\n            WHEN exclusion_code = 'INPUT_SPEC_NOT_SATISFIED_BY_SEED' THEN 'REJECT'\n            ELSE 'ACCEPT'\n        END\n    FROM generalization_proactive_filter_evidence\n\n    UNION ALL\n\n    SELECT\n        'Generalization',\n        'WideningLicense',\n        entity_id,\n        CASE\n            WHEN exclusion_code = 'ORACLE_NOT_WIDENABLE' THEN 'REJECT'\n            WHEN generated_source_created THEN 'ACCEPT'\n        END\n    FROM generalization_proactive_filter_evidence\n    WHERE exclusion_code IS DISTINCT FROM 'INPUT_SPEC_NOT_SATISFIED_BY_SEED'\n)\n,\nall_filter_evidence AS (\n    SELECT * FROM recorded_filter_evidence\n    UNION ALL\n    SELECT * FROM proactive_filter_evidence\n)\nSELECT\n    level,\n    filter,\n    count(DISTINCT entity_id)::bigint AS total,\n    count(DISTINCT entity_id) FILTER (WHERE decision = 'ACCEPT')::bigint AS accept,\n    count(DISTINCT entity_id) FILTER (WHERE decision = 'DEFER')::bigint AS defer,\n    count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT')::bigint AS reject\nFROM all_filter_evidence\nGROUP BY level, filter\nHAVING count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT') > 0\nORDER BY\n    CASE level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    filter\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L787",
+        "value": 0.5230510171574204,
+        "value_kind": "share",
         "version": "0.1.0"
       },
       "realworld.return_type.type_variable_t": {
@@ -5537,7 +5573,7 @@
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.incompatible": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5549,13 +5585,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.resolved": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5567,13 +5603,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 70,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.reviewed_contradicted_mapping": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5585,13 +5621,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 34,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.reviewed_insufficient_specification_evidence": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5603,13 +5639,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 30,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.reviewed_supported_mapping": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5621,13 +5657,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 36,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.total": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5639,13 +5675,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 180548,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.unresolved": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5657,13 +5693,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 180478,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.genuine_absence_ci_lower_pct": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5675,13 +5711,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 4.378705783971964,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.genuine_absence_ci_upper_pct": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5693,13 +5729,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 16.686825843663016,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.genuine_absence_estimate_pct": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5711,13 +5747,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 10.532765813817491,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.incompatible": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5729,13 +5765,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.resolved": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5747,13 +5783,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 100,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.total": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5765,13 +5801,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 24266,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.unresolved": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5783,13 +5819,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 24166,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.absent_artifact": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5801,13 +5837,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 32,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.default_directory_mismatch": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5819,13 +5855,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 1,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.earlier_build_failure": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5837,13 +5873,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 7,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.incompatible": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5855,13 +5891,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 3,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.incompatible_evidence": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5873,13 +5909,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 3,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.resolved": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5891,13 +5927,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 40,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.total": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5909,13 +5945,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 43,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.unresolved": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -5927,7 +5963,7 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -5936,7 +5972,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a"
     },
     "tables": {
       "rq6_assertion_type_rejections": {
@@ -6132,7 +6168,7 @@
         "version": "0.1.0"
       },
       "rq6_reconstruction_outcomes": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "qualname": "_load_reconstruction_audit",
@@ -6150,12 +6186,12 @@
           "output-directories:resolved:default-directory-mismatch",
           "output-directories:resolved:earlier-build-failure"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": "Reviewed outcomes in the reconstructed RepoReapers evidence.",
         "version": "0.1.0"
       },
       "rq6_reconstruction_summary": {
-        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "commit": "79b8a2a73ade4284d34608a8c7c0914eb46c9c4a",
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "qualname": "_load_reconstruction_audit",
@@ -6166,7 +6202,7 @@
           "assertion-to-mut",
           "output-directories"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/79b8a2a73ade4284d34608a8c7c0914eb46c9c4a/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": "Status of reconstructed RepoReapers evidence claims.",
         "version": "0.1.0"
       },
