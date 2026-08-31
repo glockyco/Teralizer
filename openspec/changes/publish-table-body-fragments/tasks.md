@@ -1,0 +1,20 @@
+## 1. Table-Body Fragment Contract
+
+- [ ] 1.1 Replace the float-oriented `Table` fields with the target-neutral description and body-structure fields, migrate every report declaration in one clean cutover, and verify `uv run --directory analysis pytest tests/eval/test_manifest.py tests/eval/test_render_markdown.py -q` passes with unchanged markdown descriptions and provenance entries.
+- [ ] 1.2 Refactor `render_table` to emit only counter setup, tabular structure, generated cells, grouping, rules, bands, ordinals, and row anchors; update representative renderer cases for natural-width, full-width, banded, citable-row, non-floating, and formerly resized tables, and verify `uv run --directory analysis pytest tests/eval/test_render_latex.py -q` passes.
+- [ ] 1.3 Replace every generated `\textwidth` dependency with `\linewidth`, remove every generated float, caption, float-label, placement, style, rotation, and outer-resize command, and verify a full preserved-input report render contains no prohibited presentation command while its CSV values, markdown tables, metric macros, figure files, artifact keys, and row anchors match the pre-change baseline.
+- [ ] 1.4 Run `uv run --directory analysis ruff check --fix src tests`, `uv run --directory analysis ruff format src tests`, and `uv run --directory analysis ty check`; inspect the renderer unit diff, then create one atomic commit for the body-fragment interface cutover.
+
+## 2. Publication-Only Execution
+
+- [ ] 2.1 Deliver declared consumer artifacts from the validated staging set before temporary staging closes, skip generator promotion only when a consumer declaration selects publication-only mode, preserve ordinary regeneration promotion, and verify focused runner tests cover both policies and report no promoted paths for publication.
+- [ ] 2.2 Enforce the clean generator-worktree precondition before publication constructs reports, retain the existing dirty-consumer refusal, name each blocking path, and verify focused tests cover tracked changes, untracked files, ignored staging output, and clean source and consumer states.
+- [ ] 2.3 Extend publication transaction tests so construction, rendering, validation, declaration, and delivery failures leave generator-owned tracked files byte-identical and never deliver a partial report set; verify `uv run --directory analysis pytest tests/eval/test_run.py tests/eval/test_publish.py -q` passes.
+- [ ] 2.4 Update `scripts/publish-analysis.sh` to use the publication-only contract and reject a changed generator or consumer state without starting an experiment; verify its focused command tests and shell checks pass, then create one atomic commit for publication-only execution.
+
+## 3. Consumer Contract Verification
+
+- [ ] 3.1 Publish representative natural-width, full-width, banded, citable-row, and formerly resized fragments to two clean fixture consumers, verify corresponding manuscript-owned wrappers can choose different floats, captions, labels, placement, sizing, and local style, and compile both temporary LaTeX documents without editing the fragments.
+- [ ] 3.2 Run the complete Teralizer publication command against a clean temporary consumer using registered preserved inputs; verify every declared artifact is delivered, two consumers receive byte-identical copies for shared table keys, no corpus or experiment command starts, and generator tracked-file hashes and `git status` are identical before and after the run.
+- [ ] 3.3 Run `uv run --directory analysis pytest -m "not db" -ra`, `uv run --directory analysis ruff check src tests`, `uv run --directory analysis ruff format --check src tests`, and `uv run --directory analysis ty check`; inspect generated LaTeX samples and create a final atomic commit only if integration fixes are required.
+- [ ] 3.4 Run `openspec validate publish-table-body-fragments --type change --strict`, mark completed tasks accurately, and record the breaking paper and thesis wrapper prerequisites without editing either consumer repository.
