@@ -4,7 +4,7 @@ The rejected Teralizer paper no longer describes the implementation or the avail
 
 ## What Changes
 
-- Revise the standalone paper in an editable clone of `test-generalization-paper`; do not edit the read-only thesis submodule.
+- Revise the manuscript in an editable clone of `glockyco/Teralizer-Paper`; do not edit `glockyco/Teralizer` or the read-only thesis submodule.
 - Backport substantive approach changes, including the concepts subsection, formal definitions, the end-to-end algorithm, current stage behavior, widening checks, and reduction semantics.
 - Add RQ0 with the complete twelve-project JARVIS comparison and its reconstruction limitations.
 - Replace the old RepoReapers experiment with version 7 evidence, including current populations, outcomes, exclusion causes, and provenance.
@@ -29,8 +29,9 @@ None.
 
 ## Impact
 
-- Manuscript repository: standalone clone of `git@github.com:glockyco/test-generalization-paper.git` under `/Users/glockyco/src/github.com/glockyco/`.
-- Read-only sources: `../phd-thesis/chapters/05-teralizer/`, the rejected paper submodule, the TOSEM decision letter, and Teralizer Git history.
+- Manuscript repository: standalone clone of `git@github.com:glockyco/Teralizer-Paper.git` under `/Users/glockyco/src/github.com/glockyco/`.
+- Implementation and evidence repository: `https://github.com/glockyco/Teralizer`.
+- Read-only sources: `../phd-thesis/chapters/05-teralizer/`, the rejected paper submodule, the TOSEM decision letter, and `glockyco/Teralizer` Git history.
 - Evidence sources: registered reports, `analysis/reports/provenance.json`, generated publication artifacts, and preserved RepoReapers version 7 data.
 - Deliverables: revised ACM manuscript, updated bibliography and publication assets, verified PDF, and TOSEM resubmission letter.
 - No Teralizer implementation, database schema, corpus identity, preserved run state, or generated dataset changes are authorized by this change.

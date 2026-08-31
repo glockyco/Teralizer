@@ -4,13 +4,14 @@ Defines the evidence, scientific content, claim boundaries, reviewer response, a
 
 ## ADDED Requirements
 
-### Requirement: Standalone revision source
-The revision MUST occur in an editable standalone clone of the paper repository. The thesis paper submodule and all repositories under `projects/` MUST remain unchanged.
+### Requirement: Separate implementation and paper repositories
+The manuscript revision MUST occur in an editable standalone clone of `glockyco/Teralizer-Paper`. The `glockyco/Teralizer` implementation and evidence repository, the thesis paper submodule, and all repositories under `projects/` MUST remain unchanged.
 
 #### Scenario: Revision workspace is prepared
 - **WHEN** manuscript revision starts
-- **THEN** the editable files exist in a standalone `test-generalization-paper` clone outside `projects/`
-- **THEN** the thesis submodule remains unchanged
+- **THEN** the editable files exist in a standalone `Teralizer-Paper` clone outside `projects/`
+- **THEN** its `origin` remote resolves to `glockyco/Teralizer-Paper`
+- **THEN** `glockyco/Teralizer` and the thesis submodule remain unchanged
 
 ### Requirement: Selective scientific backport
 The revised paper MUST incorporate substantive scientific changes from the thesis chapter. It MUST preserve standalone explanations that the thesis omits because other chapters provide them.

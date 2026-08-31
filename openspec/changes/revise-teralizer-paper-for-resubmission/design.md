@@ -2,7 +2,7 @@
 
 See `proposal.md` for motivation and the delta spec for publication requirements. The rejected paper is a standalone manuscript with explanations that the thesis intentionally omits. The thesis chapter contains 161 later commits and 54 changed paths, but many changes are thesis framing, layout work, or generated presentation changes.
 
-The repositories have different authorities. Executable declarations and current tests define implementation behavior. Registered reports and provenance define empirical results. The thesis chapter is the preferred scientific narrative for changes after the paper import. The rejected paper remains authoritative for standalone framing and material that other thesis chapters replace.
+`glockyco/Teralizer` and `glockyco/Teralizer-Paper` are separate repositories with different responsibilities. Executable declarations, tests, registered reports, provenance, and generated evidence belong to `Teralizer`. The editable manuscript and its publication assets belong to `Teralizer-Paper`. The thesis chapter is the preferred scientific narrative for changes after the paper import. The rejected paper remains authoritative for standalone framing and material that other thesis chapters replace.
 
 The paper submodule under `../phd-thesis/projects/` is read-only. Revision work must use a standalone clone. Corpus and project reruns require explicit operator approval and are outside this change.
 
@@ -28,7 +28,7 @@ The paper submodule under `../phd-thesis/projects/` is read-only. Revision work 
 
 ### 1. Revise an independent paper clone
 
-Use `gh repo clone glockyco/test-generalization-paper` under `/Users/glockyco/src/github.com/glockyco/`. Create a dedicated branch before manuscript edits.
+Use `gh repo clone glockyco/Teralizer-Paper` under `/Users/glockyco/src/github.com/glockyco/`. Verify that `origin` resolves to `glockyco/Teralizer-Paper`, not `glockyco/Teralizer`. Create a dedicated branch before manuscript edits.
 
 This preserves the thesis submodule and gives the paper an independent, reviewable history. Editing the submodule was rejected because repository rules make `projects/` read-only.
 

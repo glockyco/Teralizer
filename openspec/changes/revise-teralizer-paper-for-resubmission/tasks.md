@@ -1,10 +1,11 @@
 ## 1. Establish the Standalone Baseline
 
-- [ ] 1.1 Clone `glockyco/test-generalization-paper` outside `projects/`, or verify the existing clone is clean and has the expected remote
-- [ ] 1.2 Read the paper repository guidance and record its build, bibliography, style, and PDF-inspection commands in the work log
-- [ ] 1.3 Create a dedicated resubmission branch and verify the rejected manuscript commit is reachable from the branch history
-- [ ] 1.4 Run the declared manuscript build on the unmodified branch and record the successful baseline PDF checksum and page count
-- [ ] 1.5 Verify the thesis paper submodule is unchanged before any manuscript edit
+- [ ] 1.1 Clone `glockyco/Teralizer-Paper` outside `projects/`, or verify the existing clone is clean and its `origin` resolves to `glockyco/Teralizer-Paper`
+- [ ] 1.2 Verify `glockyco/Teralizer` and `glockyco/Teralizer-Paper` are separate worktrees with separate remotes, then record their implementation/evidence and manuscript responsibilities
+- [ ] 1.3 Read the paper repository guidance and record its build, bibliography, style, and PDF-inspection commands in the work log
+- [ ] 1.4 Create a dedicated resubmission branch and verify the rejected manuscript commit is reachable from the branch history
+- [ ] 1.5 Run the declared manuscript build on the unmodified branch and record the successful baseline PDF checksum and page count
+- [ ] 1.6 Verify `glockyco/Teralizer`, the thesis paper submodule, and all repositories under `projects/` are unchanged before any manuscript edit
 
 ## 2. Build the Traceability Controls
 
@@ -106,5 +107,5 @@
 - [ ] 10.4 Recheck the backport manifest and verify every `PORT`, `ADAPT`, and `VERIFY` item has a final disposition and source location
 - [ ] 10.5 Recheck the reviewer matrix and verify every promised revision exists in the final manuscript or response letter
 - [ ] 10.6 Inspect the complete rendered manuscript and response letter in their actual PDF surfaces and resolve layout, clipping, reference, table, and figure defects
-- [ ] 10.7 Verify the standalone paper clone is clean except for intended submission files and verify the thesis submodule, Teralizer source, preserved data, and generated datasets remain unchanged
+- [ ] 10.7 Verify `Teralizer-Paper` is clean except for intended submission files and verify `Teralizer`, the thesis submodule, preserved data, and generated datasets remain unchanged
 - [ ] 10.8 Create the final atomic commit for submission-only corrections and verify the full check set passes on the committed tree
