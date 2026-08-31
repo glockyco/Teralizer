@@ -39,12 +39,37 @@ def _decimal(value: object) -> str:
     return format(value, "f")
 
 
+_LATEX_ESCAPES = str.maketrans(
+    {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+)
+
+
 def _escape(text: str) -> str:
-    return text.replace("%", "\\%").replace("_", "\\_").replace("#", "\\#")
+    return text.translate(_LATEX_ESCAPES)
 
 
 def _text(text: str) -> str:
-    return _escape(substitute_entities(text, "latex"))
+    parts: list[str] = []
+    offset = 0
+    for match in re.finditer(r"\{entity\.[^{}]+\}", text):
+        parts.append(_escape(text[offset : match.start()]))
+        placeholder = match.group()
+        rendered = substitute_entities(placeholder, "latex")
+        parts.append(rendered if rendered != placeholder else _escape(placeholder))
+        offset = match.end()
+    parts.append(_escape(text[offset:]))
+    return "".join(parts)
 
 
 def _label_component(value: object) -> str:

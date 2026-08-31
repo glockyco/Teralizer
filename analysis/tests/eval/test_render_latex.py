@@ -264,7 +264,12 @@ def test_equal_leaf_headers_parenthesize_their_paired_delta():
 def test_entity_cells_render_latex_while_plain_text_stays_escaped():
     table = Table(
         key="entity",
-        df=pd.DataFrame({"v": [variant_ref("IMPROVED_50_TRIES")], "p": ["a_b 50%"]}),
+        df=pd.DataFrame(
+            {
+                "v": [variant_ref("IMPROVED_50_TRIES")],
+                "p": [r"a_b 50% $5 & {x} ~ ^ C:\tmp"],
+            }
+        ),
         columns=[
             ColumnSpec("Variant", "v", ValueKind.ENTITY),
             ColumnSpec("Plain", "p"),
@@ -274,7 +279,10 @@ def test_entity_cells_render_latex_while_plain_text_stays_escaped():
     body = [
         line for line in render_table(table).splitlines() if "VariantImprovedB" in line
     ]
-    assert body == [r"  \VariantImprovedB{} & a\_b 50\% " + "\\\\"]
+    assert body == [
+        r"  \VariantImprovedB{} & a\_b 50\% \$5 \& \{x\} "
+        r"\textasciitilde{} \textasciicircum{} C:\textbackslash{}tmp " + "\\\\"
+    ]
 
 
 def test_every_natural_width_table_is_a_body_only_fragment():
