@@ -1,11 +1,11 @@
 ## 1. Establish Paper-Local Execution and the Baseline
 
-- [ ] 1.1 Clone `glockyco/Teralizer-Paper` outside `projects/`, or verify that the standalone clone is clean and points to the canonical GitHub paper repository
-- [ ] 1.2 Read the current paper repository guidance, identify the canonical GitHub and GitLab remotes, inspect both CI workflows, and record their effective build, bibliography, style, and PDF-inspection commands
-- [ ] 1.3 Scaffold `revise-teralizer-paper-for-resubmission` through OpenSpec in the standalone paper clone before any manuscript edit
-- [ ] 1.4 Transfer the approved proposal, specification, design, and tasks through the paper-local OpenSpec workflow and store all later traceability controls under that change workspace
-- [ ] 1.5 Validate the paper-local change, mark tasks 1.1--1.5 complete in its task artifact, and designate it as the only owner of manuscript execution progress
-- [ ] 1.6 Stop implementation tracking in this source change and resume application from the validated paper-local change without marking later source tasks complete
+- [x] 1.1 Clone `glockyco/Teralizer-Paper` outside `projects/`, or verify that the standalone clone is clean and points to the canonical GitHub paper repository
+- [x] 1.2 Read the current paper repository guidance, identify the canonical GitHub and GitLab remotes, inspect both CI workflows, and record their effective build, bibliography, style, and PDF-inspection commands
+- [x] 1.3 Scaffold `revise-for-resubmission` through OpenSpec in the standalone paper clone before any manuscript edit
+- [x] 1.4 Transfer the approved proposal, specification, design, and tasks through the paper-local OpenSpec workflow and store all later traceability controls under that change workspace
+- [x] 1.5 Validate the paper-local change, mark tasks 1.1--1.5 complete in its task artifact, and designate it as the only owner of manuscript execution progress
+- [x] 1.6 Stop implementation tracking in this source change and resume application from the validated paper-local change without marking later source tasks complete
 - [ ] 1.7 Create a dedicated resubmission branch and verify the rejected manuscript commit is reachable from the branch history
 - [ ] 1.8 Run the effective local commands for both CI workflows on the unmodified branch and record the successful baseline PDF checksum and page count
 - [ ] 1.9 Verify `glockyco/Teralizer`, the thesis paper submodule, and all repositories under `projects/` are unchanged before any manuscript edit
