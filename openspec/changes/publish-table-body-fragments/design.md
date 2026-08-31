@@ -119,4 +119,14 @@ A minimal consumer fixture wraps representative natural-width, full-width, citab
 8. Record the breaking artifact contract for the separate paper and thesis migrations.
 9. Commit the verified renderer cutover and publication-only execution as separate atomic units.
 
+### Consumer migration prerequisites
+
+The paper and thesis require separate clean-cut migrations before either runs publication:
+
+1. Move every `[latex]` destination in `publish.toml` to a generated-fragment-only path, such as `tables/generated/<key>.tex`. Publication must not overwrite the manuscript-owned wrapper at `tables/<key>.tex`.
+2. Keep each existing `\input{tables/<key>}` call stable by converting `tables/<key>.tex` into a wrapper. The wrapper owns the float environment, caption, label, placement, font size, column spacing, rotation, and any outer resize, then inputs `tables/generated/<key>.tex`.
+3. Preserve the consumer definitions required inside fragments: tool and dataset macros, `booktabs`, `hyperref`, and the `reporttablerow` counter used by citable row anchors.
+4. Add paper wrappers and declaration entries for the new RQ0 artifacts. Migrate the thesis's existing declaration entries without changing artifact keys. Keep structurally distinct tables as distinct generated fragments.
+5. Commit the wrapper and declaration migration before the first publication-only run. Then publish the generated fragments, inspect all affected pages, resolve cross-references, and run each consumer's complete document build.
+
 Rollback reverts the renderer/model unit or the publication-only execution unit independently. Consumer repositories must not republish changed fragments until their manuscript-owned wrappers are ready.
