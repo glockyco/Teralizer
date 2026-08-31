@@ -23,7 +23,6 @@ def _table(columns: list[ColumnSpec]) -> Table:
         ),
         columns=columns,
         caption="Cap",
-        label="tab:export",
     )
 
 
@@ -63,7 +62,6 @@ def test_export_prepends_hidden_semantic_row_key(tmp_path):
         df=table.df.assign(row_key=["first", "second"]),
         columns=table.columns,
         caption=table.caption,
-        label=table.label,
         row_key="row_key",
     )
 
@@ -103,7 +101,6 @@ def test_export_keeps_every_numeric_kind_machine_readable(tmp_path):
             for source in numeric_sources
         ],
         caption="Numeric",
-        label="tab:numeric",
     )
 
     path = render_table(table, tmp_path)

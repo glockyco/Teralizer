@@ -39,11 +39,6 @@ def test_rq2_complexity_table_preserves_thesis_statistics():
         "avg_model_operation_count",
     ]
     assert table.key == "tab-mutation-detection-comparison"
-    assert table.label == "tab:mutation-detection-comparison"
-    assert table.short_caption == (
-        "Operations and constraints for {entity.variant.improved_c} detections and misses"
-    )
-    assert table.body_style == r"\tabstyle"
     assert table.full_width
     assert table.group_by == "project_group"
     assert table.columns[0].kind is ValueKind.ENTITY

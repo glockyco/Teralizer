@@ -500,7 +500,6 @@ def non_passing_outcome_table(frame: pd.DataFrame) -> Table:
             ColumnSpec("Share", "share", kind=ValueKind.SHARE, align="r"),
         ],
         caption="Recorded outcomes of tests rejected by NonPassingTest.",
-        label="tab:rq6-non-passing-outcomes",
         row_key="outcome",
         note=(
             "Each test appears once. When repeated executions disagree, the table "
@@ -520,7 +519,6 @@ def non_passing_failure_type_table(frame: pd.DataFrame) -> Table:
             ColumnSpec("Rejected tests", "tests", kind=ValueKind.COUNT, align="r"),
         ],
         caption="Most frequent failure types among NonPassingTest rejections.",
-        label="tab:rq6-non-passing-failure-types",
         row_key="failure_type",
         note=(
             "Rows count distinct tests. A test can appear under more than one type "
@@ -543,7 +541,6 @@ def assertion_type_rejection_table(frame: pd.DataFrame) -> Table:
             ColumnSpec("All assertions", "share", kind=ValueKind.SHARE, align="r"),
         ],
         caption="Assertion names rejected by AssertionType.",
-        label="tab:rq6-assertion-type-rejections",
         row_key="assertion_name",
         provenance=capture(
             fetch_assertion_type_rejections, query=ASSERTION_TYPE_REJECTION_SQL
@@ -562,7 +559,6 @@ def missing_value_cause_table(frame: pd.DataFrame) -> Table:
             ColumnSpec("Share", "share", kind=ValueKind.SHARE, align="r"),
         ],
         caption="Recorded resolver causes for MissingValue rejections.",
-        label="tab:rq6-missing-value-causes",
         row_key="reason_code",
         note=(
             "The resolver reason is the primary cause. detail_json can record "
@@ -583,7 +579,6 @@ def parameter_type_rejection_table(frame: pd.DataFrame) -> Table:
             ColumnSpec("Share", "share", kind=ValueKind.SHARE, align="r"),
         ],
         caption="Selected-MUT evidence for ParameterType rejections.",
-        label="tab:rq6-parameter-type-rejections",
         row_key="category",
         provenance=capture(
             fetch_parameter_type_rejections, query=PARAMETER_TYPE_REJECTION_SQL
@@ -602,7 +597,6 @@ def return_type_rejection_table(frame: pd.DataFrame) -> Table:
             ColumnSpec("Share", "share", kind=ValueKind.SHARE, align="r"),
         ],
         caption="Most frequent encoded types rejected by ReturnType.",
-        label="tab:rq6-return-type-rejections",
         row_key="return_type",
         note="The table shows the ten most frequent of all recorded rejected types.",
         provenance=capture(

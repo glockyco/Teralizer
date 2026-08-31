@@ -205,7 +205,7 @@ def _band_row(
     body = boxed + "\\hfill{}" + "\\hfill{}".join(fields)
     return (
         f"  \\multicolumn{{{columns}}}{{@{{}}l@{{}}}}"
-        f"{{\\textit{{\\makebox[\\textwidth][l]{{{body}}}}}}} \\\\"
+        f"{{\\textit{{\\makebox[\\linewidth][l]{{{body}}}}}}} \\\\"
     )
 
 
@@ -273,23 +273,7 @@ def render_table(table: Table) -> str:
             *columns,
         ]
     cols = "".join(_ALIGN[c.align] for c in columns)
-    command = "\\caption" if table.floating else "\\captionof{table}"
-    short = "" if table.short_caption is None else f"[{_text(table.short_caption)}]"
-    # The trailing comment keeps the line break out of the caption, which would
-    # otherwise put a stray space before the label.
-    end = "%" if table.short_caption else ""
-    indent = "  " if table.floating else ""
-    style = "\n".join(f"{indent}{line}" for line in table.body_style.splitlines())
-    caption = _text(table.caption)
-    lines = [
-        f"{indent}{command}{short}{{{caption}}}{end}",
-        f"{indent}\\label{{{table.label}}}",
-        style,
-    ]
-    if table.floating:
-        lines.insert(
-            0, "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else "")
-        )
+    lines: list[str] = []
     if table.row_key is not None:
         table_anchor = _label_component(table.key)
         lines += [
@@ -297,8 +281,6 @@ def render_table(table: Table) -> str:
             f"{{{table_anchor}.\\arabic{{reporttablerow}}}}",
             "  \\setcounter{reporttablerow}{0}",
         ]
-    if table.latex_resize_to_width:
-        lines.append("  \\noindent\\resizebox{\\textwidth}{!}{%")
     header_rows: list[str] = []
     if any(c.group_header is not None for c in columns):
         header_rows += _group_header_rows(columns, table.group_header_align)
@@ -321,9 +303,9 @@ def render_table(table: Table) -> str:
     header_rows.append("  " + " & ".join(leaf) + " \\\\")
     if table.full_width:
         # \extracolsep{\fill} spreads the slack between columns, so the table
-        # occupies the text width instead of being scaled down to fit it.
+        # occupies the available line width instead of being scaled down to fit it.
         opening = (
-            "  \\begin{tabular*}{\\textwidth}"
+            "  \\begin{tabular*}{\\linewidth}"
             f"{{@{{\\hspace{{\\tabcolsep}}\\extracolsep{{\\fill}}}}{cols}}}"
         )
     else:
@@ -407,14 +389,7 @@ def render_table(table: Table) -> str:
         lines.append("  \\midrule")
         lines.append(_band_row(table.overall_band, len(columns), band_widths))
     closing = "  \\end{tabular*}" if table.full_width else "  \\end{tabular}"
-    if table.latex_resize_to_width:
-        closing += "%"
-    lines += ["  \\bottomrule", closing]
-    if table.latex_resize_to_width:
-        lines.append("  }")
-    if table.floating:
-        lines.append("\\end{table}")
-    lines.append("")
+    lines += ["  \\bottomrule", closing, ""]
     return "\n".join(lines)
 
 

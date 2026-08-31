@@ -30,7 +30,7 @@ def test_rq5_has_breakdown_and_filtering_tables():
     input_spec = get("rq5").inputs[0]
     assert isinstance(input_spec, CorpusInputSpec)
     assert (input_spec.role, input_spec.corpus_id) == ("controlled", "controlled")
-    labels = {t.label for t in report.tables()}
+    labels = {t.key for t in report.tables()}
     assert any("exclusions-breakdown" in lbl for lbl in labels)
     assert any("exclusions-filtering" in lbl for lbl in labels)
     assert {table.key for table in report.tables()} == {
@@ -41,7 +41,7 @@ def test_rq5_has_breakdown_and_filtering_tables():
 
 def test_rq5_breakdown_levels_and_nonnegative_counts():
     report = _report()
-    breakdown = next(t for t in report.tables() if "breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "breakdown" in t.key)
     assert set(breakdown.df["level"]) <= {"Test", "Assertion", "Generalization"}
     for col in ("total", "included", "filtering", "failures"):
         assert (breakdown.df[col] >= 0).all()
@@ -51,7 +51,7 @@ def test_rq5_breakdown_levels_and_nonnegative_counts():
 
 def test_rq5_breakdown_matches_published_goldens():
     report = _report()
-    breakdown = next(t for t in report.tables() if "breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "breakdown" in t.key)
     df = breakdown.df
     cols = ["total", "included", "filtering", "failures"]
 
@@ -107,13 +107,13 @@ def test_rq5_breakdown_matches_published_goldens():
 
 def test_rq5_filtering_is_test_and_assertion_only():
     report = _report()
-    filtering = next(t for t in report.tables() if "filtering" in t.label)
+    filtering = next(t for t in report.tables() if "filtering" in t.key)
     assert set(filtering.df["level"]) == {"Test", "Assertion"}
 
 
 def test_rq5_breakdown_centers_excluded_spanner():
     report = _report()
-    breakdown = next(t for t in report.tables() if "breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "breakdown" in t.key)
 
     assert breakdown.group_header_align == "c"
     assert "\\multicolumn{2}{c}{Excluded}" in render_table(breakdown)
@@ -121,7 +121,7 @@ def test_rq5_breakdown_centers_excluded_spanner():
 
 def test_rq5_generalization_strategy_order():
     report = _report()
-    breakdown = next(t for t in report.tables() if "breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "breakdown" in t.key)
     gen = breakdown.df[breakdown.df["level"] == "Generalization"]
     assert list(gen["strategy"]) == [
         variant_ref("BASELINE"),
@@ -136,7 +136,7 @@ def test_rq5_generalization_strategy_order():
 
 def test_rq5_filtering_row_order():
     report = _report()
-    filtering = next(t for t in report.tables() if "filtering" in t.label)
+    filtering = next(t for t in report.tables() if "filtering" in t.key)
     order = list(zip(filtering.df["level"], filtering.df["filter"]))
     assert order == [
         ("Test", "NonPassingTest"),

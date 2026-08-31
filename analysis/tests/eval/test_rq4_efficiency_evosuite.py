@@ -10,7 +10,7 @@ from teralizer.eval.reports.rq4_efficiency_evosuite import (
 )
 
 
-def test_rq4_pareto_tables_match_thesis_keys_and_nonfloating_layout():
+def test_rq4_pareto_tables_render_body_fragments_with_stable_keys():
     data = pd.DataFrame(
         {
             "project_name": ["eqbench", "eqbench", "commons-utils"],
@@ -30,25 +30,16 @@ def test_rq4_pareto_tables_match_thesis_keys_and_nonfloating_layout():
         "tab-pareto-eqbench",
         "tab-pareto-commons",
     ]
-    assert all(not table.floating for table in (eqbench, commons))
-    assert (
-        eqbench.body_style
-        == "\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}"
-    )
-    assert commons.body_style == eqbench.body_style
-
     eqbench_tex = render_table(eqbench)
     commons_tex = render_table(commons)
-    assert "\\begin{table}" not in eqbench_tex
-    assert "\\begin{table}" not in commons_tex
-    assert (
-        "\\captionof{table}[\\ToolEvoSuite{} and \\ToolTeralizer{} Pareto points"
-        in eqbench_tex
-    )
-    assert "\\label{tab:pareto-eqbench}" in eqbench_tex
+    for fragment in (eqbench_tex, commons_tex):
+        assert "\\begin{tabular}" in fragment
+        assert "caption" not in fragment
+        assert "tabstyle" not in fragment
+        assert "begin{table}" not in fragment
     assert "1 & 1s & -- & 48.1 & 26,479" in eqbench_tex
     assert "2 & 10s & \\VariantImprovedB{} & 51.4 & 37,457" in eqbench_tex
-    assert "\\label{tab:pareto-commons}" in commons_tex
+    assert "1 & 1s & -- & 56.8 & 4,649" in commons_tex
 
 
 def test_rq4_efficiency_figure_matches_notebook_two_project_layout():

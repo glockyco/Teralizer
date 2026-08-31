@@ -445,7 +445,6 @@ def test_csv_headers_follow_table_source_order(tmp_path):
             ColumnSpec("Teralizer PVC", "suite_pvc", ValueKind.COUNT),
         ],
         caption="caption",
-        label="tab:label",
     )
     path = render_table(table, tmp_path)
     assert path.read_text(encoding="utf-8").splitlines()[0] == (

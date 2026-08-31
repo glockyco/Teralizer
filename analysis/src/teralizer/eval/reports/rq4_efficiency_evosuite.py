@@ -59,19 +59,15 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
     table_info = {
         "eqbench": (
             "tab-pareto-eqbench",
-            r"{entity.tool.evosuite} and {entity.tool.teralizer} Pareto points for {entity.dataset.eqbench}",
             "Pareto points for eqbench.",
-            "tab:pareto-eqbench",
         ),
         "commons-utils": (
             "tab-pareto-commons",
-            r"{entity.tool.evosuite} and {entity.tool.teralizer} Pareto points for commons-utils",
             "Pareto points for commons-utils.",
-            "tab:pareto-commons",
         ),
     }
     try:
-        key, short_caption, caption, label = table_info[project_name]
+        key, caption = table_info[project_name]
     except KeyError as error:
         raise ValueError(
             f"No thesis Pareto table configured for {project_name!r}"
@@ -109,10 +105,6 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
         result,
         columns,
         caption,
-        label,
-        short_caption=short_caption,
-        body_style="\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}",
-        floating=False,
         provenance=capture(compute_pareto_efficiency_analysis),
     )
 
@@ -163,7 +155,6 @@ def _phase_table(data: pd.DataFrame) -> Table:
         result,
         cols,
         "Mean EvoSuite runtime per phase, by project and search budget.",
-        "tab:evosuite-runtime-analysis",
         provenance=capture(compute_evosuite_phase_statistics),
         note="Each row is the mean over the runs of one project at one search budget.",
     )

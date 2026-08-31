@@ -228,13 +228,10 @@ def build(context: ReportContext) -> RQReport:
     filtering = build_filtering_table(
         _fetch_filtering(conn),
         key="tab-exclusions-filtering",
-        label="tab:exclusions-filtering",
         caption=(
             "Filtering results for tests and assertions in the "
             "{entity.dataset.commons} and {entity.dataset.eqbench_es} projects."
         ),
-        short_caption="Filtering decisions by level and filter",
-        body_style="\\tabstyle",
         full_width=True,
     )
     filtering = replace(
@@ -249,13 +246,10 @@ def build(context: ReportContext) -> RQReport:
     breakdown = build_breakdown_table(
         _fetch_breakdown(conn),
         key="tab-exclusions-breakdown",
-        label="tab:exclusions-breakdown",
         caption=(
             "Exclusion results for tests, assertions, and generalizations in the "
             "{entity.dataset.commons} and {entity.dataset.eqbench_es} projects."
         ),
-        short_caption="Inclusion, filtering, and failure counts by level",
-        body_style="\\tabstyle\\setlength{\\tabcolsep}{3pt}",
         full_width=True,
         include_strategy=True,
     )

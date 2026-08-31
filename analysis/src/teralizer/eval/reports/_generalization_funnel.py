@@ -206,7 +206,6 @@ def _build_table(
             "Unknown means that no independent task record proves the reported "
             "failure stage ran."
         ),
-        label="tab:rq6-generalization-funnel",
         row_key="population_key",
         provenance=provenance,
         note=(

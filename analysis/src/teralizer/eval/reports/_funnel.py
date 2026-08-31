@@ -1071,10 +1071,6 @@ def _build_table(
             "Project-level exclusions by stage and cause for the "
             "{entity.variant.improved_c} generalization strategy in RepoReapers projects."
         ),
-        label="tab:processing-failures",
-        short_caption="RepoReapers exclusions by stage and cause",
-        body_style="\\tabstyle",
-        float_spec="tbp",
         full_width=True,
         group_by="stage",
         row_key="row_key",

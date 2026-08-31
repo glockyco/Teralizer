@@ -94,7 +94,6 @@ def build_mechanism_table(
             "Included entities and exclusion mechanisms for "
             "{entity.variant.improved_c}, with shares of each entity-level population."
         ),
-        label="tab:rq6-exclusion-mechanisms",
         group_by="level",
         row_key="row_key",
         provenance=provenance,
@@ -125,10 +124,7 @@ def build_filtering_table(
     df: pd.DataFrame,
     *,
     key: str,
-    label: str,
     caption: str,
-    short_caption: str | None = None,
-    body_style: str | None = None,
     full_width: bool = False,
 ) -> Table:
     """Render evaluated populations and verdict counts for each filter."""
@@ -180,10 +176,7 @@ def build_filtering_table(
         df=out,
         columns=columns,
         caption=caption,
-        label=label,
         group_by="_filter_group",
-        short_caption=short_caption,
-        body_style="\\centering" if body_style is None else body_style,
         full_width=full_width,
     )
 
@@ -192,12 +185,9 @@ def build_breakdown_table(
     df: pd.DataFrame,
     *,
     key: str,
-    label: str,
     caption: str,
     include_strategy: bool = False,
     outcomes: Sequence[Outcome] = LEGACY_OUTCOMES,
-    short_caption: str | None = None,
-    body_style: str | None = None,
     full_width: bool = False,
     group_header_align: str = "c",
 ) -> Table:
@@ -247,10 +237,7 @@ def build_breakdown_table(
         df=out,
         columns=columns,
         caption=caption,
-        label=label,
         group_by=group_by,
-        short_caption=short_caption,
-        body_style="\\centering" if body_style is None else body_style,
         full_width=full_width,
         group_header_align=group_header_align,
     )

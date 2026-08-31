@@ -113,12 +113,6 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
     assert row["uncovered"] == 3
     assert row["uncovered_share"] == Decimal("0.3")
     assert table.key == "tab-mutants-per-project"
-    assert table.label == "tab:mutants-per-project"
-    assert table.short_caption == (
-        "Included tests and classes with covered and uncovered mutants per project"
-    )
-    assert table.body_style == ""
-    assert table.float_spec == "H"
     assert table.group_header_align == "r"
     assert table.group_by == "project_group"
     assert row["project_group"] == "eqbench"
@@ -204,8 +198,6 @@ def test_rq1_mutator_table_keeps_missing_variant_columns_renderable():
     assert table.df.loc[0, "NAIVE_200_TRIES"] == 0
     assert table.df.loc[0, "IMPROVED_200_TRIES"] == 0
     assert table.key == "tab-detections-per-mutator"
-    assert table.short_caption == "Mutants and detections by mutator and dataset"
-    assert table.body_style == r"\tabstyle"
     assert table.full_width
     assert table.group_header_align == "c"
     assert [column.header for column in table.columns] == [

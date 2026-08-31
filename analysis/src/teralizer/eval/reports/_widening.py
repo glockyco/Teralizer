@@ -163,7 +163,6 @@ def widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
             "Causes for generalization attempts that produce no generalized test "
             "in the real-world dataset."
         ),
-        label="tab:widening-refusals",
         row_key="code",
         note=(
             "Refusals are decided before a generalized test is written, so they "

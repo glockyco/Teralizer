@@ -23,7 +23,7 @@ def test_filtering_table_shapes_columns_and_percentages():
             "reject": [12, 48],
         }
     )
-    table = build_filtering_table(df, key="filtering", label="tab:x", caption="C")
+    table = build_filtering_table(df, key="filtering", caption="C")
     assert isinstance(table, Table)
     assert [c.source for c in table.columns] == [
         "level",
@@ -68,7 +68,7 @@ def test_filtering_table_uses_reader_facing_filter_names():
         }
     )
 
-    table = build_filtering_table(frame, key="filtering", label="tab:x", caption="C")
+    table = build_filtering_table(frame, key="filtering", caption="C")
 
     assert table.df["filter"].tolist() == ["InheritedTest", "Mocking"]
 
@@ -83,7 +83,7 @@ def test_breakdown_table_percentages_over_total():
             "failures": [382, 10, 7842],
         }
     )
-    table = build_breakdown_table(df, key="breakdown", label="tab:y", caption="C")
+    table = build_breakdown_table(df, key="breakdown", caption="C")
     assert table.df["level"].tolist() == ["Test", "Assertion", "Generalization"]
     row = table.df.set_index("level").loc["Test"]
     assert round(row["included_pct"], 3) == Decimal("0.408")
@@ -125,9 +125,7 @@ def test_breakdown_table_with_strategy_column():
             "failures": [2, 10, 0, 1],
         }
     )
-    table = build_breakdown_table(
-        df, key="b", label="tab:z", caption="C", include_strategy=True
-    )
+    table = build_breakdown_table(df, key="b", caption="C", include_strategy=True)
     assert table.columns[0].source == "strategy"
     assert table.columns[0].kind is ValueKind.ENTITY
     assert table.columns[1].source == "level"
@@ -173,9 +171,7 @@ def test_breakdown_strategy_rows_ordered():
             "failures": [0, 0, 0, 0, 0, 0, 0, 0, 0],
         }
     )
-    table = build_breakdown_table(
-        df, key="b", label="tab:z", caption="C", include_strategy=True
-    )
+    table = build_breakdown_table(df, key="b", caption="C", include_strategy=True)
     assert list(table.df["level"])[:2] == ["Test", "Assertion"]
     gen = table.df[table.df["level"] == "Generalization"]
     assert list(gen["strategy"]) == [
@@ -211,7 +207,7 @@ def test_filtering_table_groups_populations_and_orders_decisions():
     df.loc[:, "accept"] = df["total"] - df["reject"]
     df.loc[:, "defer"] = 0
 
-    table = build_filtering_table(df, key="f", label="tab:z", caption="C")
+    table = build_filtering_table(df, key="f", caption="C")
 
     assert table.group_by == "_filter_group"
     assert table.df["_filter_group"].tolist() == [

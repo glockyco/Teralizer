@@ -130,10 +130,7 @@ def _table(df: pd.DataFrame) -> Table:
         result,
         columns,
         "Model properties of mutants that are (not) detected by the {entity.variant.improved_c} variant.",
-        "tab:mutation-detection-comparison",
-        short_caption="Operations and constraints for {entity.variant.improved_c} detections and misses",
         group_by="project_group",
-        body_style="\\tabstyle",
         full_width=True,
         provenance=capture(compute_mutation_model_complexity),
     )

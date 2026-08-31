@@ -340,7 +340,6 @@ def _reconstruction_summary_table(
             ColumnSpec("Finding", "finding", kind=ValueKind.TEXT),
         ],
         caption="Status of reconstructed RepoReapers evidence claims.",
-        label="tab:rq6-reconstruction-summary",
         row_key="claim_key",
         provenance=provenance,
         note=(
@@ -390,7 +389,6 @@ def _reconstruction_outcomes_table(
             ColumnSpec("Count", "reviewed_count", kind=ValueKind.COUNT),
         ],
         caption="Reviewed outcomes in the reconstructed RepoReapers evidence.",
-        label="tab:rq6-reconstruction-outcomes",
         row_key="row_key",
         provenance=provenance,
         note=(
@@ -737,19 +735,13 @@ def build(context: ReportContext) -> RQReport:
     breakdown = build_breakdown_table(
         collapse_mechanisms(breakdown_data),
         key="tab-exclusions-breakdown-extended",
-        label="tab:exclusions-breakdown-extended",
         caption="Exclusion results for {entity.variant.improved_c} in the RepoReapers projects.",
-        short_caption=(
-            "{entity.variant.improved_c} inclusion, filtering, and failure counts in RepoReapers"
-        ),
-        body_style="\\tabstyle",
         full_width=True,
         include_strategy=False,
     )
     breakdown = replace(
         breakdown,
         row_key="level",
-        float_spec="!t",
         provenance=mechanism_provenance,
     )
 
@@ -798,12 +790,7 @@ def build(context: ReportContext) -> RQReport:
     filtering = build_filtering_table(
         filtering_data,
         key="tab-exclusions-filtering-extended",
-        label="tab:exclusions-filtering-extended",
         caption="Filtering results for {entity.variant.improved_c} in the RepoReapers projects.",
-        short_caption=(
-            "RepoReapers filtering decisions for {entity.variant.improved_c} by level and filter"
-        ),
-        body_style="\\tabstyle\n\\renewcommand{\\arraystretch}{1.1}",
         full_width=False,
     )
     filtering = replace(
@@ -812,8 +799,6 @@ def build(context: ReportContext) -> RQReport:
             row_key=filtering.df["level"] + ":" + filtering.df["filter"]
         ),
         row_key="row_key",
-        float_spec="!t",
-        latex_resize_to_width=True,
         provenance=capture(
             exclusion.fetch_filter_decisions, query=exclusion.FILTER_DECISION_SQL
         ),

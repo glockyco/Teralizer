@@ -266,7 +266,6 @@ def build_filtering_comparison_table(
             ),
         ],
         caption="Filtering results for controlled and RepoReapers generalized tests.",
-        label="tab:rq6-filtering-comparison",
         row_key="dataset_key",
         provenance=provenance,
         note=(

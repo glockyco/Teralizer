@@ -68,12 +68,12 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
             "analysis/data/report-inputs/reporeapers-output-directories-population.json",
         ),
     ]
-    labels = {t.label for t in report.tables()}
-    assert any("processing-failures" in lbl for lbl in labels)
-    assert any("exclusions-breakdown" in lbl for lbl in labels)
-    assert any("exclusions-filtering" in lbl for lbl in labels)
-    assert "tab:jpf-exception-causes" in labels
-    assert "tab:mut-choice-sensitivity" in labels
+    keys = {table.key for table in report.tables()}
+    assert any("processing-failures" in key for key in keys)
+    assert any("exclusions-breakdown" in key for key in keys)
+    assert any("exclusions-filtering" in key for key in keys)
+    assert "rq6_jpf_exception_causes" in keys
+    assert "rq6_mut_choice_sensitivity" in keys
     assert {table.key for table in report.tables()} == {
         "tab-processing-failures",
         "rq6_generalization_funnel",
@@ -94,9 +94,7 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
         "rq6_reconstruction_outcomes",
     }
     choice = next(
-        table
-        for table in report.tables()
-        if table.label == "tab:mut-choice-sensitivity"
+        table for table in report.tables() if table.key == "rq6_mut_choice_sensitivity"
     )
     counts = choice.df.set_index("category")["count"]
     total = int(counts.sum())
@@ -258,7 +256,7 @@ def test_rq6_eligibility_partition_is_complete(rq6_report):
 
 def test_rq6_funnel_causes_use_reader_facing_categories(rq6_report):
     report = rq6_report
-    funnel = next(t for t in report.tables() if "processing-failures" in t.label)
+    funnel = next(t for t in report.tables() if "processing-failures" in t.key)
     assert list(funnel.df.columns) == ["stage", "cause", "count", "row_key"]
     assert [column.source for column in funnel.columns] == ["cause", "count"]
     assert list(
@@ -323,7 +321,7 @@ def test_rq6_funnel_causes_use_reader_facing_categories(rq6_report):
 
 def test_rq6_breakdown_conservation(rq6_report):
     report = rq6_report
-    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.key)
     assert set(breakdown.df["level"]) <= {"Test", "Assertion", "Generalization"}
     # The rendered table is the reader-facing collapse. The per-mechanism
     # partition it folds is asserted in test_rq6_invariants.py.
@@ -357,7 +355,7 @@ def test_rq6_mechanism_table_renders_text_identities(rq6_report):
 
 def test_rq6_breakdown_matches_eligible_entity_denominators(rq6_report, rq6_conn):
     report = rq6_report
-    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.key)
     with rq6_conn.begin_nested():
         conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
@@ -403,7 +401,7 @@ def test_rq6_breakdown_matches_eligible_entity_denominators(rq6_report, rq6_conn
 
 def test_rq6_generalization_inclusion_uses_validated_signal(rq6_report, rq6_conn):
     report = rq6_report
-    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.key)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
     with rq6_conn.begin_nested():
         conn = rq6_conn
@@ -426,7 +424,7 @@ def test_rq6_generalization_reduction_attrition_stays_included(rq6_report, rq6_c
     # A reduction-dependent inclusion signal would push Stage-5 PIT losses into an
     # exclusion column. Inclusion must key on the generation-side filter verdict.
     report = rq6_report
-    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
+    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.key)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
     with rq6_conn.begin_nested():
         conn = rq6_conn
@@ -474,12 +472,9 @@ def test_rq6_filtering_table_is_entity_conservative(rq6_report):
         for table in report.tables()
         if table.key == "tab-exclusions-breakdown-extended"
     )
-    filtering = next(t for t in report.tables() if "exclusions-filtering" in t.label)
-    assert breakdown.float_spec == "!t"
-    assert filtering.float_spec == "!t"
-    assert filtering.latex_resize_to_width
+    filtering = next(t for t in report.tables() if "exclusions-filtering" in t.key)
+    assert breakdown.full_width
     assert not filtering.full_width
-    assert filtering.body_style == "\\tabstyle\n\\renewcommand{\\arraystretch}{1.1}"
     assert [column.header for column in filtering.columns] == [
         "Level",
         "Filter Name",

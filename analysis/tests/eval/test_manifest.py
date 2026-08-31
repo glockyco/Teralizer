@@ -116,7 +116,6 @@ def test_manifest_records_table_row_identities(tmp_path: Path):
         ),
         columns=[ColumnSpec("Count", "count", ValueKind.COUNT)],
         caption="Mechanisms",
-        label="tab:mechanisms",
         row_key="row_key",
         provenance=provenance,
     )

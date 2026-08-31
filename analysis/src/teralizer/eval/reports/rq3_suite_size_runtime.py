@@ -103,7 +103,7 @@ def _runtime_overhead(conn: Connection) -> pd.DataFrame:
     )
 
 
-def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
+def _effects_table(key: str, df: pd.DataFrame, unit: str) -> Table:
     prefix = "runtime" if unit == "runtime" else f"{unit}s"
     result = df.copy()
     delta = f"{prefix}_delta"
@@ -168,33 +168,16 @@ def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
     ]
     if unit == "runtime":
         caption = "Test suite runtime before and after generalization, with changes, per project."
-        short_caption = (
-            "Test-suite runtime additions, removals, and deltas after generalization"
-        )
-        body_style = "\\tabstyle\n\\setlength{\\tabcolsep}{3pt}"
-        float_spec = "tbp"
     elif unit == "test":
         caption = "Number of tests before and after generalization, with changes, per project."
-        short_caption = (
-            "Test count additions, removals, and deltas after generalization"
-        )
-        body_style = "\\tabstyle"
-        float_spec = None
     else:
         caption = "Number of test lines before and after generalization, with changes, per project."
-        short_caption = "Test-line additions, removals, and deltas after generalization"
-        body_style = "\\tabstyle"
-        float_spec = None
     return Table(
         key,
         result,
         columns,
         caption,
-        label,
         group_by="project_group",
-        short_caption=short_caption,
-        body_style=body_style,
-        float_spec=float_spec,
         full_width=True,
         provenance=capture(_effects),
     )
@@ -233,7 +216,6 @@ def _overhead_table(df: pd.DataFrame) -> Table:
         result,
         columns,
         "Runtime overhead of generalized tests per test and per try.",
-        "fig:test-runtime-differences",
         provenance=capture(_runtime_overhead),
     )
 
@@ -307,11 +289,9 @@ def build(context: ReportContext) -> RQReport:
     runtimes = _effects(conn, "runtime")
     overhead = _runtime_overhead(conn)
     tables = [
-        _effects_table("tab-tests-per-project", tests, "test", "tab:tests-per-project"),
-        _effects_table("tab-lines-per-project", lines, "line", "tab:lines-per-project"),
-        _effects_table(
-            "tab-runtime-per-project", runtimes, "runtime", "tab:runtime-per-project"
-        ),
+        _effects_table("tab-tests-per-project", tests, "test"),
+        _effects_table("tab-lines-per-project", lines, "line"),
+        _effects_table("tab-runtime-per-project", runtimes, "runtime"),
         _overhead_table(overhead),
     ]
     metrics = [

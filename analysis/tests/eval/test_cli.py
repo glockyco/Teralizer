@@ -15,7 +15,6 @@ def _fixture_report(_conn):
         df=pd.DataFrame({"a": [1]}),
         columns=[ColumnSpec("A", "a", ValueKind.COUNT)],
         caption="c",
-        label="tab:k",
     )
     return RQReport(
         _conn.report,

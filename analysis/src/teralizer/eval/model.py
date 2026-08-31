@@ -107,7 +107,6 @@ class Table:
     df: "pd.DataFrame"
     columns: list[ColumnSpec]
     caption: str
-    label: str
     group_by: str | None = None  # column that drives midrules / section splits
     group_style: str = "midrule"
     row_key: str | None = None
@@ -118,17 +117,7 @@ class Table:
     # mean; the renderer decides how a spanning row is typeset.
     bands: dict[str, BandSummary] | None = None
     overall_band: BandSummary | None = None
-    latex_resize_to_width: bool = False
-    # A consuming document sets its own house style. These carry the parts of it
-    # that the generator must emit itself, because they sit inside the float it
-    # writes; everything else stays in the document's preamble.
-    short_caption: str | None = None  # \caption[short]{caption} for the list of tables
-    body_style: str = "\\centering"  # a document's own style macros, one per line
-    float_spec: str | None = None  # placement, e.g. H or tbp
-    # A table the document places itself -- side by side in minipages, say --
-    # cannot open its own float, and captions itself with \captionof instead.
-    floating: bool = True
-    full_width: bool = False  # tabular* stretched to \textwidth
+    full_width: bool = False  # tabular* stretched to the consumer's line width
     group_header_align: str = "c"  # alignment of spanning group headers
     # Opt-in, because two columns may legitimately carry the same header without
     # one label being meant to cover both.
@@ -137,8 +126,6 @@ class Table:
     provenance: "Provenance | None" = None
 
     def __post_init__(self) -> None:
-        if self.latex_resize_to_width and self.full_width:
-            raise ValueError("resize-to-width and full-width are mutually exclusive")
         if self.row_key is None:
             return
         if self.row_key not in self.df:

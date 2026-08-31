@@ -658,16 +658,12 @@ def build(context: ReportContext) -> RQReport:
                 group_header="{entity.tool.teralizer}",
             ),
         ],
-        full_width=True,
         caption=(
             "Parameter value coverage (PVC) before generalization, after "
-            "generalization with JARVIS, and "
-            "after generalization with {entity.tool.teralizer} for each of the 10 "
-            "scenarios reported by JARVIS."
+            "generalization with JARVIS, and after generalization with "
+            "{entity.tool.teralizer} for each of the 10 scenarios reported by JARVIS."
         ),
-        short_caption="PVC per JARVIS scenario before and after generalization",
-        label="tab:teralizer-rq0-table2",
-        latex_resize_to_width=False,
+        full_width=True,
         note=(
             "JARVIS CUT and PBT PVC are the published values, with PBT PVC "
             "measuring the synthesized properties alone. For Teralizer, PVC "
@@ -711,13 +707,8 @@ def build(context: ReportContext) -> RQReport:
                 group_header="{entity.tool.teralizer}",
             ),
         ],
+        caption="MUTs with a generalized test and the PVC of those tests, per project.",
         group_by="row_group",
-        caption=(
-            "MUTs with a generalized test and the PVC of those tests, per project."
-        ),
-        short_caption="MUTs with generalized tests and their PVC per project",
-        label="tab:teralizer-rq0-breadth",
-        latex_resize_to_width=False,
         full_width=True,
         # The spanning tool labels sit over numeric columns, so they follow the
         # same right alignment as the values and as the scenario comparison table.
@@ -774,11 +765,6 @@ def build(context: ReportContext) -> RQReport:
             "rows. PVC sums the distinct input values that the tests exercise, "
             "and Score is the killed mutants divided by the covered mutants."
         ),
-        short_caption="PVC and mutation testing results per sampling budget",
-        label="tab:teralizer-rq0-pvc",
-        body_style="\\tabstyle",
-        float_spec="H",
-        latex_resize_to_width=False,
         full_width=True,
         group_header_align="r",
         # The caption defines PVC and the score, so the note carries only what a

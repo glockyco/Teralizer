@@ -41,7 +41,6 @@ def _report():
             ),
         ],
         caption="Cap",
-        label="tab:x",
         provenance=prov,
     )
     report = RQReport(
@@ -76,7 +75,6 @@ def test_render_parenthesizes_delta_paired_by_a_merged_header():
             ColumnSpec("Delta %", "percent_delta", ValueKind.PERCENT_DELTA, align="r"),
         ],
         caption="Paired values",
-        label="tab:paired",
         merge_equal_headers=True,
     )
     report = RQReport("example", "Example", [Section("Data", [table])])

@@ -19,11 +19,6 @@ def test_dataset_table_matches_thesis_structure():
         )
     )
     assert table.key == "tab-dataset-statistics"
-    assert (
-        table.short_caption
-        == "Implementation and test-suite size per evaluation project"
-    )
-    assert table.body_style == r"\tabstyle"
     assert table.full_width
     assert table.group_header_align == "r"
     assert [column.header for column in table.columns] == [

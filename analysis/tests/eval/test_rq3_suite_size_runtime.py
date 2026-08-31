@@ -35,15 +35,8 @@ def test_rq3_effects_preserve_thesis_test_counts():
     assert result.loc[0, "tests_before"] == 4718
     assert result.loc[0, "added_tests"] == 177
     assert result.loc[0, "b_variant"] == "NAIVE_200_TRIES"
-    table = _effects_table(
-        "tab-tests-per-project", result, "test", "tab:tests-per-project"
-    )
+    table = _effects_table("tab-tests-per-project", result, "test")
     assert table.key == "tab-tests-per-project"
-    assert (
-        table.short_caption
-        == "Test count additions, removals, and deltas after generalization"
-    )
-    assert table.body_style == r"\tabstyle"
     assert table.full_width
     assert table.group_by == "project_group"
     assert [column.group_header for column in table.columns[2:]] == ["Tests"] * 6
@@ -84,16 +77,8 @@ def test_rq3_runtime_effects_use_singular_runtime_columns():
     frame.to_sql("mv_generalization_effects", engine, index=False)
     with engine.connect() as conn:
         result = _effects(conn, "runtime")
-    table = _effects_table(
-        "tab-runtime-per-project", result, "runtime", "tab:runtime-per-project"
-    )
+    table = _effects_table("tab-runtime-per-project", result, "runtime")
     assert table.key == "tab-runtime-per-project"
-    assert (
-        table.short_caption
-        == "Test-suite runtime additions, removals, and deltas after generalization"
-    )
-    assert table.body_style == "\\tabstyle\n\\setlength{\\tabcolsep}{3pt}"
-    assert table.float_spec == "tbp"
     assert table.full_width
     assert table.group_by == "project_group"
     assert [column.group_header for column in table.columns[2:]] == [

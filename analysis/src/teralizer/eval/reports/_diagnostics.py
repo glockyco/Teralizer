@@ -128,7 +128,6 @@ def jpf_exception_table(df: pd.DataFrame) -> Table:
             "Retrospective classification of generic JPF uncaught-exception "
             "diagnostics from retained detail."
         ),
-        label="tab:jpf-exception-causes",
         row_key="category",
         note=(
             "This recovery changes cause attribution only; it does not change "
@@ -213,7 +212,6 @@ def mut_choice_table(df: pd.DataFrame) -> Table:
             "Choice sensitivity of ParameterType rejections classified from "
             "retained MUT candidate details."
         ),
-        label="tab:mut-choice-sensitivity",
         row_key="category",
         note=(
             "Choice-dependent rows divided by all ParameterType rejections are "

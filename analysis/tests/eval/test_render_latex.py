@@ -59,7 +59,6 @@ def test_render_table_is_booktabs_with_formatted_cells():
             ColumnSpec("Count", "count", ValueKind.COUNT, align="r"),
         ],
         caption="Cap",
-        label="tab:funnel",
     )
     tex = render_table(t)
     row_end = chr(92) * 2  # LaTeX terminates a row with two backslashes
@@ -67,10 +66,6 @@ def test_render_table_is_booktabs_with_formatted_cells():
         tex
         == "\n".join(
             [
-                "\\begin{table}",
-                "  \\caption{Cap}",
-                "  \\label{tab:funnel}",
-                "  \\centering",
                 "  \\begin{tabular}{lr}",
                 "  \\toprule",
                 "  Reason & Count " + row_end,
@@ -79,7 +74,6 @@ def test_render_table_is_booktabs_with_formatted_cells():
                 "  B & 12 " + row_end,
                 "  \\bottomrule",
                 "  \\end{tabular}",
-                "\\end{table}",
             ]
         )
         + "\n"
@@ -95,7 +89,6 @@ def test_full_width_band_distributes_fields_within_table_width():
             ColumnSpec("Count", "count", ValueKind.COUNT, align="r"),
         ],
         caption="Funnel",
-        label="tab:funnel",
         group_by="stage",
         bands={"1": BandSummary("Stage 1 + 2 - Project Analysis", 584, 293, 291)},
         full_width=True,
@@ -104,7 +97,7 @@ def test_full_width_band_distributes_fields_within_table_width():
     tex = render_table(table)
 
     assert "\\multicolumn{2}{@{}l@{}}" in tex
-    assert "\\makebox[\\textwidth][l]" in tex
+    assert "\\makebox[\\linewidth][l]" in tex
     assert tex.count("\\hfill{}") == 4
     assert "\\enspace{}" not in tex
 
@@ -120,7 +113,6 @@ def test_render_table_labels_semantic_rows_independently_of_order():
         ),
         columns=[ColumnSpec("Cause", "cause", ValueKind.TEXT, align="l")],
         caption="Mechanisms",
-        label="tab:mechanisms",
         row_key="row_key",
         ordinal_header="#",
     )
@@ -157,7 +149,6 @@ def test_render_table_formats_delta_sign_grouping_and_absent_zero():
             )
         ],
         caption="Deltas",
-        label="tab:deltas",
     )
 
     tex = render_table(table)
@@ -182,7 +173,6 @@ def test_render_table_stacks_headers_only_when_a_group_header_is_set():
             ),
         ],
         caption="Cap",
-        label="tab:stacked",
     )
     lines = render_table(table).splitlines()
     row_end = chr(92) * 2  # LaTeX terminates a row with two backslashes
@@ -193,7 +183,7 @@ def test_render_table_stacks_headers_only_when_a_group_header_is_set():
     assert not any("cmidrule" in line for line in lines)
 
 
-def test_render_table_emits_the_consuming_documents_house_style():
+def test_render_table_emits_full_width_body_without_manuscript_presentation():
     table = Table(
         key="styled",
         df=pd.DataFrame({"p": ["x"], "a": [1], "b": [2]}),
@@ -202,25 +192,18 @@ def test_render_table_emits_the_consuming_documents_house_style():
             ColumnSpec("Files", "a", ValueKind.COUNT, "r", group_header="Impl"),
             ColumnSpec("SLOC", "b", ValueKind.COUNT, "r", group_header="Impl"),
         ],
-        caption="Long caption.",
-        label="tab:styled",
-        short_caption="Short caption",
-        body_style="\\tabstyle",
-        float_spec="H",
+        caption="Report description only.",
         full_width=True,
         group_header_align="r",
     )
     lines = render_table(table).splitlines()
-    assert lines[0] == "\\begin{table}[H]"
-    # The trailing comment keeps a stray space out of the float.
-    assert lines[1] == "  \\caption[Short caption]{Long caption.}%"
-    assert lines[3] == "  \\tabstyle"
-    assert lines[4] == (
-        "  \\begin{tabular*}{\\textwidth}"
+    assert lines[0] == (
+        "  \\begin{tabular*}{\\linewidth}"
         "{@{\\hspace{\\tabcolsep}\\extracolsep{\\fill}}lrr}"
     )
     assert "  \\end{tabular*}" in lines
     assert any("\\multicolumn{2}{r}{Impl}" in line for line in lines)
+    assert "Report description only." not in "\n".join(lines)
 
 
 def test_equal_leaf_headers_span_only_when_the_table_asks():
@@ -237,7 +220,6 @@ def test_equal_leaf_headers_span_only_when_the_table_asks():
             df=df,
             columns=columns,
             caption="Cap",
-            label="tab:m",
             merge_equal_headers=True,
         )
     )
@@ -246,9 +228,7 @@ def test_equal_leaf_headers_span_only_when_the_table_asks():
     assert "cmidrule" not in merged
 
     # Default: two columns may share a header without one label covering both.
-    plain = render_table(
-        Table(key="m", df=df, columns=columns, caption="Cap", label="tab:m")
-    )
+    plain = render_table(Table(key="m", df=df, columns=columns, caption="Cap"))
     assert "  Mutator & Naive & Naive \\\\" in plain.splitlines()
 
 
@@ -272,7 +252,6 @@ def test_equal_leaf_headers_parenthesize_their_paired_delta():
             ),
         ],
         caption="Cap",
-        label="tab:deltas",
         merge_equal_headers=True,
     )
 
@@ -291,7 +270,6 @@ def test_entity_cells_render_latex_while_plain_text_stays_escaped():
             ColumnSpec("Plain", "p"),
         ],
         caption="Cap",
-        label="tab:entity",
     )
     body = [
         line for line in render_table(table).splitlines() if "VariantImprovedB" in line
@@ -299,39 +277,31 @@ def test_entity_cells_render_latex_while_plain_text_stays_escaped():
     assert body == [r"  \VariantImprovedB{} & a\_b 50\% " + "\\\\"]
 
 
-def test_render_table_captions_itself_when_the_document_owns_the_float():
+def test_every_natural_width_table_is_a_body_only_fragment():
     table = Table(
         key="sidebyside",
         df=pd.DataFrame({"a": [1]}),
         columns=[ColumnSpec("A", "a", ValueKind.COUNT)],
         caption="Pareto points.",
-        label="tab:pareto",
-        short_caption="Pareto",
-        body_style="\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}",
-        floating=False,
     )
     lines = render_table(table).splitlines()
-    # Nothing may open or close a float the surrounding document already opened.
-    assert not any("begin{table}" in line or "end{table}" in line for line in lines)
-    assert lines[0] == "\\captionof{table}[Pareto]{Pareto points.}%"
-    assert lines[1] == "\\label{tab:pareto}"
-    assert lines[2:4] == ["\\tabstyle[\\footnotesize]", "\\setlength{\\tabcolsep}{3pt}"]
+    assert lines[0] == "  \\begin{tabular}{l}"
+    assert lines[-1] == "  \\end{tabular}"
+    prohibited = ("begin{table}", "end{table}", "caption", "tab:pareto", "tabstyle")
+    assert not any(token in line for token in prohibited for line in lines)
 
 
-def test_render_table_defaults_stay_on_the_plain_centred_float():
+def test_natural_width_fragment_does_not_select_page_layout():
     table = Table(
         key="plain",
         df=pd.DataFrame({"a": [1]}),
         columns=[ColumnSpec("A", "a", ValueKind.COUNT)],
         caption="Cap",
-        label="tab:plain",
     )
     lines = render_table(table).splitlines()
-    assert lines[0] == "\\begin{table}"
-    assert lines[1] == "  \\caption{Cap}"
-    assert lines[3] == "  \\centering"
-    assert lines[4] == "  \\begin{tabular}{l}"
+    assert lines[0] == "  \\begin{tabular}{l}"
     assert not any("tabular*" in line for line in lines)
+    assert not any("textwidth" in line or "resizebox" in line for line in lines)
 
 
 def test_render_table_spans_and_rules_group_headers_shared_by_columns():
@@ -358,7 +328,6 @@ def test_render_table_spans_and_rules_group_headers_shared_by_columns():
             ),
         ],
         caption="Cap",
-        label="tab:spanned",
     )
     lines = render_table(table).splitlines()
     row_end = chr(92) * 2
@@ -407,7 +376,6 @@ def test_render_table_label_rows_indent_members_and_flatten_empty_groups():
             ColumnSpec("Count", "count", ValueKind.COUNT, align="r"),
         ],
         caption="Cap",
-        label="tab:labels",
         group_by="group",
         group_style="label-row",
     )
@@ -438,7 +406,6 @@ def test_render_table_midrule_group_style_preserves_existing_group_breaks():
         df=pd.DataFrame({"group": ["A", "A", "B"], "value": [1, 2, 3]}),
         columns=[ColumnSpec("Value", "value", ValueKind.COUNT)],
         caption="Cap",
-        label="tab:groups",
         group_by="group",
         group_style="midrule",
     )
@@ -451,23 +418,21 @@ def test_render_table_midrule_group_style_preserves_existing_group_breaks():
     assert not any("A " + row_end in line or "B " + row_end in line for line in lines)
 
 
-def test_render_table_can_fit_text_width():
+def test_render_table_leaves_page_level_resizing_to_the_consumer():
     table = Table(
         key="wide",
         df=pd.DataFrame({"key": ["one"], "value": [1]}),
         columns=[ColumnSpec("Value", "value", ValueKind.COUNT, align="r")],
         caption="Wide",
-        label="tab:wide",
         row_key="key",
-        latex_resize_to_width=True,
     )
     tex = render_table(table)
-    resize = "\\noindent\\resizebox{\\textwidth}{!}{%"
-    assert resize in tex
-    assert tex.index("\\setcounter{reporttablerow}{0}") < tex.index(resize)
+    assert tex.index("\\setcounter{reporttablerow}{0}") < tex.index("\\begin{tabular}")
     assert "\\begin{tabular}{r}" in tex
     assert "tabular*" not in tex
-    assert "  \\end{tabular}%\n  }\n\\end{table}" in tex
+    assert "textwidth" not in tex
+    assert "resizebox" not in tex
+    assert tex.endswith("  \\end{tabular}\n")
 
 
 def test_render_macros_one_newcommand_per_metric():
