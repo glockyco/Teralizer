@@ -4,7 +4,7 @@ The rejected Teralizer paper no longer describes the implementation or the avail
 
 ## What Changes
 
-- Revise the manuscript in an editable clone of `glockyco/Teralizer-Paper`; do not edit `glockyco/Teralizer` or the read-only thesis submodule.
+- Revise the manuscript in an editable clone of `glockyco/Teralizer-Paper`. Do not edit `glockyco/Teralizer` or the read-only thesis submodule.
 - Backport substantive approach changes, including the concepts subsection, formal definitions, the end-to-end algorithm, current stage behavior, widening checks, and reduction semantics.
 - Add RQ0 with the complete twelve-project JARVIS comparison and its reconstruction limitations.
 - Replace the old RepoReapers experiment with version 7 evidence, including current populations, outcomes, exclusion causes, and provenance.

@@ -13,7 +13,8 @@
 - [ ] 2.2 Add every Senior Associate Editor and reviewer concern to a response matrix and verify each decision-letter paragraph has a row
 - [ ] 2.3 Map each empirical paper claim to a registered report, provenance entry, generated artifact, or preserved run source and flag every evidence gap
 - [ ] 2.4 Record the section correspondence between the rejected paper and thesis chapter and verify every paper section has an intended source strategy
-- [ ] 2.5 Commit the verified baseline, manifest, evidence map, and reviewer matrix as one planning unit with no scientific manuscript changes
+- [ ] 2.5 Add each design reference formulation to a formulation register with its manuscript or letter destination and a `USE`, `ADAPT`, or `OMIT` disposition
+- [ ] 2.6 Commit the verified baseline, manifest, evidence map, reviewer matrix, and formulation register with no scientific manuscript changes
 
 ## 3. Revise Concepts and the End-to-End Approach
 
@@ -74,7 +75,8 @@
 - [ ] 7.7 Add the focused LLM comparison and bounded hybrid direction and verify it does not claim an implemented or evaluated integration
 - [ ] 7.8 Preserve the standard mutation-proxy threat, remove the unsupported mutation-overfitting concession, and verify the remaining limitation concerns construct validity rather than test creation
 - [ ] 7.9 Review paper length only for genuine repetition and verify that no distinct method, result, research question, or validity condition was removed solely to reduce pages
-- [ ] 7.10 Run the recorded manuscript checks, inspect the revised discussion and related-work pages, and commit the cross-cutting scientific revision atomically
+- [ ] 7.10 Reconcile the formulation register against the revised manuscript and verify every `ADAPT` or `OMIT` decision preserves the design's scientific distinctions
+- [ ] 7.11 Run the recorded manuscript checks, inspect the revised discussion and related-work pages, and commit the cross-cutting scientific revision atomically
 
 ## 8. Update Paper-Level Framing and Publication Assets
 
