@@ -96,13 +96,15 @@ This order keeps high-level claims dependent on stable methods and results. Upda
 
 ### 5. Treat RQ0 as three bounded comparisons
 
+RQ0 inherits its subject projects from JARVIS's published benchmark. The Teralizer team did not manually choose project subjects or define a new project population. JARVIS names twelve Apache Commons projects, but it does not report their exact revisions, the evaluation date, or its project-selection procedure. State that the project set is reused and that only the revisions are reconstructed through the documented cutoff rule.
+
 Separate these analyses:
 
 1. project-level applicability across all twelve JARVIS projects.
 2. PVC for the ten scenarios that JARVIS reported successfully.
 3. the relation between PVC and mutation detection in Teralizer.
 
-Report JARVIS values as published and Teralizer values as measured. State that JARVIS was not executed because its implementation is unavailable. Preserve reconstruction and comparability threats.
+Report JARVIS values as published and Teralizer values as measured. State that JARVIS was not executed because its implementation is unavailable. Preserve subject-selection opacity, revision-reconstruction, and comparability threats.
 
 Use “substantially broader measured applicability on the shared benchmark.” Do not use statistical significance or a universal state-of-the-art claim.
 
@@ -160,15 +162,18 @@ Use separate language for:
 
 - the general semantics-based approach.
 - the Java prototype and its supported operations.
+- the inherited JARVIS benchmark in RQ0.
 - the shared controlled evaluation in RQ1--RQ5.
 - the real-world evaluation in RQ6.
 - conclusions supported by each experiment.
+
+RQ0 reuses JARVIS's twelve named subject projects rather than defining a Teralizer-selected population. Because the published benchmark omits exact revisions, the reconstructed revisions are a validity limitation rather than a subject-selection decision.
 
 RQ1--RQ5 reuse the same primary evaluation datasets to study effectiveness, constraint complexity, retained-suite size and runtime, processing efficiency, and failure causes under controlled conditions. EqBench supplies numeric-focused benchmark cases. Selected numeric utility methods from Apache Commons bridge toward real-world complexity while retaining the controlled focus. RQ5 does not own this subject selection. It analyzes unsuccessful attempts within the same population already used by RQ1--RQ4.
 
 RQ6 measures practical applicability by following selected RepoReapers projects, tests, assertions, and attempts through successful, unsupported, excluded, and failed outcomes. Apply the complete-population exclusion framing to RQ6.
 
-Keep implementation versions and detailed restrictions in the approach, setup, and validity sections. Use short qualifiers in the abstract and conclusion. Preserve the distinction between the shared RQ1--RQ5 controlled evaluation and RQ6 real-world evaluation whenever the paper summarizes evaluation scope.
+Keep implementation versions and detailed restrictions in the approach, setup, and validity sections. Use short qualifiers in the abstract and conclusion. Preserve the distinction among the inherited RQ0 benchmark, the shared RQ1--RQ5 controlled evaluation, and the RQ6 real-world evaluation whenever the paper summarizes evaluation scope.
 
 ### 10. Preserve the paper's standalone architecture
 

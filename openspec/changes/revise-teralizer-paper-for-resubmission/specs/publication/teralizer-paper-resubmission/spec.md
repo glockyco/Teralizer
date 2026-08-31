@@ -32,6 +32,12 @@ The revised approach MUST define the assertion-to-MUT pair, MUT calls, input-out
 ### Requirement: Approach, prototype, and evaluation scope
 The paper MUST distinguish the general approach from the Java prototype. It MUST also distinguish the shared controlled evaluation in RQ1--RQ5 from the real-world evaluation in RQ6.
 
+#### Scenario: RQ0 benchmark scope is described
+- **WHEN** the paper introduces the JARVIS comparison
+- **THEN** it states that RQ0 reuses all twelve subject projects named by JARVIS without manual Teralizer project selection
+- **THEN** it distinguishes the inherited project set from the reconstructed project revisions
+- **THEN** it states that JARVIS does not report the exact revisions, evaluation date, or project-selection procedure
+
 #### Scenario: Controlled evaluation scope is described
 - **WHEN** the paper summarizes RQ1--RQ5
 - **THEN** it states that these research questions reuse the EqBench and Apache Commons datasets to evaluate complementary aspects of the approach under controlled conditions
@@ -49,7 +55,7 @@ The paper MUST distinguish the general approach from the Java prototype. It MUST
 
 #### Scenario: Evaluation scope is summarized across the paper
 - **WHEN** the abstract, contributions, evaluation design, discussion, or conclusion describes empirical scope
-- **THEN** it preserves the distinction between the shared RQ1--RQ5 controlled evaluation and RQ6 real-world evaluation
+- **THEN** it preserves the distinction among the inherited RQ0 benchmark, the shared RQ1--RQ5 controlled evaluation, and the RQ6 real-world evaluation
 - **THEN** it identifies prototype restrictions without presenting them as inherent limits of the general approach
 
 #### Scenario: Detailed prototype limits are needed
@@ -71,7 +77,7 @@ The revised paper MUST include RQ0 for all twelve Apache Commons projects used i
 
 #### Scenario: JARVIS validity is discussed
 - **WHEN** the paper interprets RQ0
-- **THEN** it states the project-reconstruction, unavailable-implementation, scenario-comparability, and PVC construct limitations
+- **THEN** it states the opaque JARVIS project-selection procedure, reconstructed revisions, unavailable implementation, scenario-comparability, and PVC construct limitations
 - **THEN** it characterizes the result as benchmark evidence rather than a universal state-of-the-art ranking
 
 ### Requirement: RepoReapers version 7 evaluation

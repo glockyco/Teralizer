@@ -44,12 +44,12 @@
 
 ## 5. Add RQ0 and the JARVIS Comparison
 
-- [ ] 5.1 Add the JARVIS background, reconstruction method, twelve-project population, ten-scenario protocol, and 100-sample configuration and verify them against RQ0 provenance
+- [ ] 5.1 Add the JARVIS background and state that RQ0 reuses all twelve projects named by JARVIS without manual Teralizer project selection, document that JARVIS omits its selection procedure and exact revisions, explain the revision-reconstruction method, and verify the ten-scenario protocol and 100-sample configuration against RQ0 provenance
 - [ ] 5.2 Add the RQ0 table keys to the paper's `publish.toml`, publish the project-breadth, scenario-PVC, and sampling-budget tables through Teralizer, import them unchanged, and verify every cell and label against the registered RQ0 report
 - [ ] 5.3 Report 9 of 12 versus 2 of 12 projects and 337 versus 9 distinct MUTs and verify the manuscript distinguishes measured Teralizer results from published JARVIS results
 - [ ] 5.4 Report higher, lower, and missing Teralizer PVC outcomes for the ten scenarios and verify the category counts and individual scenarios
 - [ ] 5.5 Explain the PVC-budget result and verify that unchanged mutation detection is not presented as an executed JARVIS fault-effectiveness comparison
-- [ ] 5.6 Add reconstruction, unavailable-implementation, comparability, PVC, and external-validity limits beside the RQ0 interpretation and verify no universal state-of-the-art claim remains
+- [ ] 5.6 Add JARVIS subject-selection opacity, revision-reconstruction, unavailable-implementation, comparability, PVC, and external-validity limits beside the RQ0 interpretation and verify no universal state-of-the-art claim remains
 - [ ] 5.7 Run the recorded manuscript checks, inspect all RQ0 tables, and commit the complete RQ0 package as one atomic unit
 
 ## 6. Replace RQ6 with RepoReapers Version 7
@@ -72,7 +72,7 @@
 - [ ] 7.2 Explain that Stage 5 preserves mutation effectiveness only to reduce retained-suite size and execution runtime, then verify that RQ3 and RQ4 distinguish this benefit from mutation-testing cost in the generalization process
 - [ ] 7.3 Inspect preserved evidence for unreduced and reduced mutation scores, report an existing comparison if available, and otherwise record the evidence gap without running an experiment
 - [ ] 7.4 Revise exactness and intent language to use developer-anchored, implementation-derived, path-bounded claims and verify all prominent exactness phrases follow this contract
-- [ ] 7.5 Distinguish the general approach, Java prototype, shared RQ1--RQ5 controlled evaluation, and RQ6 real-world evaluation in the approach, setup, validity, and discussion and verify that complete-population exclusion claims apply specifically to RQ6
+- [ ] 7.5 Distinguish the general approach, Java prototype, inherited RQ0 benchmark, shared RQ1--RQ5 controlled evaluation, and RQ6 real-world evaluation in the approach, setup, validity, and discussion and verify that the paper does not present RQ0 as a Teralizer-selected project population or apply RQ6 complete-population claims to another study
 - [ ] 7.6 Update the discussion with RQ0 applicability, version 7 applicability, widening as a safety boundary, current failure mechanisms, and remaining prototype restrictions and verify each conclusion cites its evidence
 - [ ] 7.7 Position identified LLM techniques under their adjacent specification-extraction, test-generation, or oracle-inference tasks, describe a Teralizer hybrid only as a separate future contribution, and verify the paper does not imply an existing LLM test-generalization approach or evaluated integration
 - [ ] 7.8 Preserve the standard mutation-proxy threat, remove the unsupported mutation-overfitting concession, and verify the remaining limitation concerns construct validity rather than test creation
