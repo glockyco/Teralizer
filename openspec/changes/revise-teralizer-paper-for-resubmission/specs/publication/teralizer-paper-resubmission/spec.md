@@ -1,17 +1,25 @@
 ## Purpose
 
-Defines the evidence, scientific content, claim boundaries, reviewer response, and publication checks for a revised Teralizer paper and TOSEM resubmission.
+Defines the evidence, scientific content, claim boundaries, submission correspondence, and publication checks for a revised Teralizer paper and new TOSEM submission.
 
 ## ADDED Requirements
 
 ### Requirement: Separate implementation and paper repositories
-The manuscript revision MUST occur in an editable standalone clone of `glockyco/Teralizer-Paper`. The `glockyco/Teralizer` implementation and evidence repository, the thesis repository, the thesis paper submodule, and all repositories under `projects/` MUST remain unchanged.
+The manuscript revision MUST occur in an editable standalone clone of `glockyco/Teralizer-Paper`. Before the first manuscript edit, execution MUST move to a paper-local OpenSpec change that contains the approved planning artifacts. The `glockyco/Teralizer` implementation and evidence repository, the thesis repository, the thesis paper submodule, and all repositories under `projects/` MUST remain unchanged.
 
 #### Scenario: Revision workspace is prepared
 - **WHEN** manuscript revision starts
 - **THEN** the editable files exist in a standalone `Teralizer-Paper` clone outside `projects/`
-- **THEN** its `origin` remote resolves to `glockyco/Teralizer-Paper`
+- **THEN** its GitHub and GitLab remotes resolve to the canonical paper repositories
+- **THEN** a paper-local OpenSpec change owns task progress and manuscript execution
+- **THEN** traceability controls remain under that change workspace and outside the submission bundle
 - **THEN** `glockyco/Teralizer`, the thesis repository, and the thesis paper submodule remain unchanged
+
+#### Scenario: Remote readiness is reported
+- **WHEN** the revision reports repository or CI status
+- **THEN** it distinguishes local verification from remote synchronization and remote CI results
+- **THEN** it does not push either remote without explicit operator authorization
+- **THEN** it claims equivalent remote states or green remote builds only after observing them
 
 ### Requirement: Selective scientific backport
 The revised paper MUST incorporate substantive scientific changes from the thesis chapter. It MUST preserve standalone explanations that the thesis omits because other chapters provide them.
@@ -30,7 +38,7 @@ The revised approach MUST define the assertion-to-MUT pair, MUT calls, input-out
 - **THEN** the algorithm agrees with the evaluated implementation
 
 ### Requirement: Approach, prototype, and evaluation scope
-The paper MUST distinguish the general approach from the Java prototype. It MUST also distinguish the shared controlled evaluation in RQ1--RQ5 from the real-world evaluation in RQ6.
+The paper MUST distinguish the general approach from the Java prototype. It MUST also distinguish the inherited RQ0 benchmark, the shared RQ1--RQ5 controlled evaluation, and the RQ6 real-world evaluation.
 
 #### Scenario: RQ0 benchmark scope is described
 - **WHEN** the paper introduces the JARVIS comparison
@@ -163,6 +171,13 @@ All paper sections, generated assets, and bibliography entries MUST use the same
 - **THEN** the abstract, introduction, framework, discussion, conclusion, tables, figures, macros, citations, and artifact statement are audited for dependent changes
 - **THEN** no stale headline value or superseded replication-package DOI remains
 
+#### Scenario: Publication interface is verified
+- **WHEN** the baseline workspace is ready and scientific editing has not started
+- **THEN** `publish.toml` declares every required RQ0--RQ6 artifact key and consumer destination
+- **THEN** the complete Teralizer publication command resolves all generated dependencies, labels, and ACM presentation commands against preserved evidence
+- **THEN** the command does not start an experiment or modify Teralizer source, the thesis, preserved data, or generated datasets
+- **THEN** a missing artifact blocks scientific editing instead of causing a manual substitute
+
 #### Scenario: Paper consumes a generated asset
 - **WHEN** the paper includes a macro file, table, or figure emitted by a registered analysis report
 - **THEN** the paper declares the generated artifact key and destination in its own `publish.toml`
@@ -195,8 +210,13 @@ The related-work discussion MUST state that the identified LLM-based techniques 
 - **THEN** it does not imply that an existing LLM technique directly generalizes conventional tests into PBTs
 - **THEN** it does not claim an implemented or evaluated hybrid
 
-### Requirement: Reviewer response
-The resubmission package MUST include a response letter that maps each editorial and reviewer concern to a manuscript change, existing evidence, remaining limitation, or reasoned rebuttal.
+### Requirement: Submission correspondence
+The new-submission package MUST include a concise cover letter and a separate point-by-point prior-review response. The cover letter MUST identify TOSEM-2025-1249 as the rejected predecessor without implying a requested revision. The prior-review response MUST map each editorial and reviewer concern to a manuscript change, existing evidence, remaining limitation, or reasoned rebuttal.
+
+#### Scenario: Cover letter is prepared
+- **WHEN** the revised manuscript is ready for a new TOSEM submission
+- **THEN** the cover letter summarizes the substantive changes and identifies the rejected predecessor
+- **THEN** it does not describe the manuscript as an invited revision, a major revision, or a continuation of the previous review round
 
 #### Scenario: A concern is not accepted as stated
 - **WHEN** the authors reject the reviewer's causal interpretation or requested experiment
@@ -216,10 +236,10 @@ The resubmission package MUST include a response letter that maps each editorial
 - **THEN** it retains mutation score as a construct-validity limitation
 
 ### Requirement: Publication verification
-The revised manuscript and response letter MUST pass the paper repository's focused publication checks before the change is complete.
+The revised manuscript, cover letter, and prior-review response MUST pass their focused publication checks before the change is complete.
 
 #### Scenario: Revision is ready for submission
 - **WHEN** all scientific revisions are complete
 - **THEN** the manuscript builds through its repository wrapper
 - **THEN** bibliography, labels, references, generated assets, and style checks pass
-- **THEN** the rendered PDF is inspected for content and layout defects
+- **THEN** the rendered manuscript, cover letter, and prior-review response are inspected for content and layout defects

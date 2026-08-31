@@ -31,7 +31,13 @@ The paper submodule under `../phd-thesis/projects/` is read-only. Revision work 
 
 Use `gh repo clone glockyco/Teralizer-Paper` under `/Users/glockyco/src/github.com/glockyco/`. Verify that `origin` resolves to `glockyco/Teralizer-Paper`, not `glockyco/Teralizer`. Create a dedicated branch before manuscript edits.
 
+The current OpenSpec change authorizes edits only inside `glockyco/Teralizer`. After the clone is ready, scaffold the same approved change in `Teralizer-Paper`. Copy the approved planning content through the OpenSpec workflow. Use the paper-local change for task progress and manuscript execution. Retain this change as the planning and evidence record. Do not mark its implementation tasks complete for work performed in another repository.
+
+Store the work log, backport manifest, reviewer matrix, evidence map, section correspondence, and formulation register under the paper-local change workspace. Do not place these controls in the manuscript root or submission bundle.
+
 This preserves the thesis submodule and gives the paper an independent, reviewable history. Editing the submodule was rejected because repository rules make `projects/` read-only. This repository boundary is an editing safeguard, not manuscript framing. The paper identifies the public replication package through its Zenodo record.
+
+The paper repository guidance requires equivalent GitHub and GitLab states and green CI on both remotes. Record both canonical remote URLs and inspect both build workflows before editing. Verify each revision locally against their effective commands. Pushing and remote CI execution require explicit operator authorization. Until that authorization is given, describe the branch as locally verified and push-ready, not remotely synchronized or green.
 
 ### 2. Use an authority hierarchy instead of treating either manuscript as ground truth
 
@@ -89,7 +95,7 @@ evaluation framework
  introduction, contributions, abstract, conclusion
               |
               v
- TOSEM response letter
+ submission correspondence
 ```
 
 This order keeps high-level claims dependent on stable methods and results. Updating the abstract first was rejected because it creates repeated rewrites and stale intermediate claims.
@@ -179,7 +185,9 @@ Keep implementation versions and detailed restrictions in the approach, setup, a
 
 Keep the paper's background, motivation, contribution list, full related work, and conclusion structure unless scientific changes require revision. Adapt thesis cross-references to paper sections. Do not port the thesis bridge or references to other thesis chapters.
 
-Import the new algorithm listing and required concepts. Add a `publish.toml` declaration to `Teralizer-Paper` and publish every analysis-owned macro, table, and figure with `PAPER_OUT=<paper-clone> ./scripts/publish-analysis.sh` from `Teralizer`. Import the generated aggregate macro file unchanged. Replace hard-coded empirical values with its `Tz` macros and update cross-references to generated table labels.
+Before scientific edits, add a `publish.toml` declaration to `Teralizer-Paper`. Run `PAPER_OUT=<paper-clone> ./scripts/publish-analysis.sh` from a clean `Teralizer` worktree against preserved evidence. This preflight must resolve every required RQ0--RQ6 artifact key, consumer path, generated dependency, label, and ACM presentation command. It must leave `Teralizer`, the thesis, preserved data, and generated datasets unchanged. It must not start a corpus, project, or JARVIS experiment. If an artifact is unavailable, record the gap and revise the plan. Do not create a manual substitute.
+
+Import the new algorithm listing and required concepts. Publish every analysis-owned macro, table, and figure through the verified command. Import the generated aggregate macro file unchanged. Replace hard-coded empirical values with its `Tz` macros and update cross-references to generated table labels.
 
 Generated ownership stops at the figure PDF. The thesis and paper may require different figure environments, captions, labels, placement, sizing, and accessibility descriptions. Keep those structures in each manuscript and adapt them to its layout. Verify factual statements in each caption against the registered report and rendered figure.
 
@@ -191,9 +199,11 @@ State that the identified LLM-based techniques address adjacent specification ex
 
 A hybrid could potentially strengthen results by proposing assertions, abstractions, or models. Treat that hybrid as a separate possible future contribution. Do not present it as part of the current approach or evaluation.
 
-### 12. Build the response letter from a live reviewer matrix
+### 12. Separate the cover letter from the prior-review response
 
-Maintain one row for every editorial and reviewer concern. Each row records the response type, manuscript locations, evidence, and remaining limitation.
+TOSEM treats a revised rejected manuscript as a new submission. Prepare a concise cover letter that identifies TOSEM-2025-1249 as the rejected predecessor and summarizes the substantive revision. Do not describe the new manuscript as an invited revision, a major revision, or a continuation of the previous review round.
+
+Prepare a separate point-by-point prior-review response from a live reviewer matrix. Maintain one row for every editorial and reviewer concern. Each row records the response type, manuscript locations, evidence, and remaining limitation.
 
 Use these response types:
 
@@ -203,17 +213,19 @@ Use these response types:
 - rebutted with mechanism and evidence.
 - not implemented, with rationale.
 
-Draft the final letter after manuscript claims stabilize. This prevents the letter from promising changes that the paper does not contain.
+Draft both documents after manuscript claims stabilize. This prevents either document from promising changes that the paper does not contain. Render and inspect each document separately.
 
 ### 13. Commit coherent revision units
 
-Use separate commits for the source baseline, approach, RQ0, RQ6, cross-cutting claims, related work, and response letter. Each commit must include the affected generated assets and focused verification.
+Use separate commits for the source baseline, publication preflight, approach, evaluation framework, RQ1--RQ2, RQ3, RQ4, RQ5, RQ0, RQ6, cross-cutting claims, related work, cover letter, and prior-review response. Each commit must include the affected generated assets and focused verification.
+
+RQ0 and RQ6 remain atomic evidence packages. Their populations, tables, denominators, results, and validity arguments must change together. Do not combine all RQ1--RQ5 revisions into one commit. Their distinct measures and interpretations require smaller reviewable units.
 
 This structure permits rollback and reviewer-oriented inspection. A single manuscript-wide commit was rejected because it would hide causality and make stale-value failures harder to locate.
 
 ## Reference Formulations
 
-These formulations are starting points for the manuscript and response letter. They are not mandatory verbatim text. Adapt tense, notation, and local context without weakening the stated distinction. Record each material adaptation in the backport manifest.
+These formulations are starting points for the manuscript and prior-review response. They are not mandatory verbatim text. Adapt tense, notation, and local context without weakening the stated distinction. Record each material adaptation in the backport manifest.
 
 ### Mutation-independent generation and mutation-based reduction
 
@@ -221,7 +233,7 @@ Candidate manuscript formulation:
 
 > Mutation analysis does not guide specification extraction or generalized-test creation. Teralizer first produces every candidate PBT from the implementation and developer-written tests. Stage 5 then removes tests that do not kill any mutant beyond those already killed by the original suite. This reduction preserves the unreduced suite's mutation score while reducing the retained suite's size and execution runtime. It does not improve generalization efficiency because mutation testing adds substantial processing cost.
 
-Candidate response-letter formulation:
+Candidate prior-review-response formulation:
 
 > We agree that mutation score remains a proxy for real-fault detection. However, mutants do not influence the generalized tests that Teralizer creates. Every candidate PBT exists before mutation testing begins. Mutation testing only selects a smaller retained suite with the same mutation score as the unreduced suite. This lowers the retained suite's size and execution runtime but makes Teralizer's processing more expensive. Held-out mutants would therefore evaluate whether the reduction criterion transfers to another fault sample. They would not remedy overfitting of generalized-test creation because no such feedback occurs.
 
@@ -325,7 +337,7 @@ Candidate future-work formulation:
 
 ### Length and research-question structure
 
-Candidate response-letter formulation:
+Candidate prior-review-response formulation:
 
 > We reviewed the manuscript for redundancy and condensed local explanations where this did not remove methodological or validity information. We retained the separate research questions because they examine distinct properties through different experimental designs and populations.
 
@@ -333,21 +345,24 @@ Do not promise wholesale condensation or combined RQs when the revised structure
 
 ### Independent validation boundary
 
-Candidate response-letter formulation:
+Candidate prior-review-response formulation:
 
 > We did not add a held-out-mutant or real-bug experiment to this revision. Held-out mutants would evaluate transfer of the mutation-based reduction criterion, whereas generalized-test creation itself does not consume mutant information. We instead clarify this stage boundary and retain the broader construct-validity limitation that mutation score is an imperfect proxy for real-fault detection.
 
-Use this response in the final letter. Do not describe preserved mutation-score or PVC evidence as independent validation.
+Use this response in the final prior-review response. Do not describe preserved mutation-score or PVC evidence as independent validation.
 
 ## Risks / Trade-offs
 
+- **[Risk] Implementation is tracked from an OpenSpec change that does not authorize the paper clone.** → Scaffold the executable change in `Teralizer-Paper` before manuscript edits.
+- **[Risk] Local success is reported as dual-remote success.** → Require explicit push authorization and observed CI results before claiming synchronization or green remote builds.
+- **[Risk] Traceability controls leak into the submission bundle.** → Keep them under the paper-local OpenSpec change workspace.
 - **[Risk] Thesis wording omits context required by a standalone paper.** → Keep the paper passage until the adapted replacement is independently understandable.
 - **[Risk] An empirical value is copied from prose instead of its owner.** → Require a report, provenance, or generated-artifact source before changing it.
 - **[Risk] RQ6 values remain stale outside the RQ6 section.** → Run a paper-wide stale-value and denominator audit after the atomic replacement.
 - **[Risk] JARVIS results appear more comparable than they are.** → Separate published and measured values and retain reconstruction threats beside the result.
 - **[Risk] Scope qualifiers collapse the controlled and real-world designs.** → State the shared RQ1--RQ5 controlled population separately. State that RQ6 exclusions and unsupported cases remain measured real-world outcomes.
 - **[Risk] Exactness qualifiers weaken the developer-oracle contribution.** → Lead with developer anchoring, then state the implementation-relative boundary.
-- **[Risk] The response letter concedes an incorrect mutation-overfitting claim.** → Explain the stage boundary and reduction invariant before discussing construct validity.
+- **[Risk] The prior-review response concedes an incorrect mutation-overfitting claim.** → Explain the stage boundary and reduction invariant before discussing construct validity.
 - **[Risk] New content increases length.** → Remove actual redundancy only after scientific content stabilizes. Do not combine distinct RQs by default.
 - **[Risk] Generated LaTeX assumes thesis-only presentation commands.** → Make the ACM preamble provide the generator's presentation-only contract. Keep metric macros, complete generated tables, and figure PDFs unchanged and verify the rendered result.
 - **[Risk] Publication-specific figure captions drift from the evidence.** → Permit layout-specific wording, labels, and accessibility text, but verify every factual caption claim against the registered report and rendered figure.
@@ -355,11 +370,15 @@ Use this response in the final letter. Do not describe preserved mutation-score 
 
 ## Migration Plan
 
-1. Clone the standalone paper repository and establish a clean baseline build.
-2. Create the backport manifest and reviewer matrix without changing scientific content.
-3. Apply the revision units in dependency order and commit each verified unit.
-4. Run the repository's focused build, bibliography, reference, and style checks after each unit.
-5. Run the full manuscript build and inspect the rendered PDF after all units.
-6. Finalize the response letter against the completed manuscript.
+1. Clone the standalone paper repository and verify both canonical remotes.
+2. Scaffold the paper-local OpenSpec change and transfer the approved planning artifacts through the OpenSpec workflow.
+3. Establish the clean baseline build, PDF checksum, page count, and effective CI commands.
+4. Create the traceability controls under the paper-local change workspace.
+5. Add `publish.toml` and complete the publication-interface preflight without changing scientific content.
+6. Apply the revision units in dependency order and commit each verified unit.
+7. Run the focused build, bibliography, reference, and style checks after each unit.
+8. Run the full manuscript build and inspect the rendered PDF after all units.
+9. Finalize and inspect the cover letter and prior-review response against the completed manuscript.
+10. With explicit operator authorization, synchronize both remotes and verify both CI workflows.
 
 Rollback uses the atomic commit history. Revert the smallest revision unit whose evidence or rendering is invalid. Do not reset unrelated manuscript work.

@@ -1,21 +1,26 @@
-## 1. Establish the Standalone Baseline
+## 1. Establish Paper-Local Execution and the Baseline
 
-- [ ] 1.1 Clone `glockyco/Teralizer-Paper` outside `projects/`, or verify the existing clone is clean and its `origin` resolves to `glockyco/Teralizer-Paper`
-- [ ] 1.2 Verify `glockyco/Teralizer` and `glockyco/Teralizer-Paper` are separate worktrees with separate remotes, then record their implementation/evidence and manuscript responsibilities
-- [ ] 1.3 Read the paper repository guidance and record its build, bibliography, style, and PDF-inspection commands in the work log
-- [ ] 1.4 Create a dedicated resubmission branch and verify the rejected manuscript commit is reachable from the branch history
-- [ ] 1.5 Run the declared manuscript build on the unmodified branch and record the successful baseline PDF checksum and page count
-- [ ] 1.6 Verify `glockyco/Teralizer`, the thesis paper submodule, and all repositories under `projects/` are unchanged before any manuscript edit
+- [ ] 1.1 Clone `glockyco/Teralizer-Paper` outside `projects/`, or verify that the standalone clone is clean and points to the canonical GitHub paper repository
+- [ ] 1.2 Read the current paper repository guidance, identify the canonical GitHub and GitLab remotes, inspect both CI workflows, and record their effective build, bibliography, style, and PDF-inspection commands
+- [ ] 1.3 Scaffold `revise-teralizer-paper-for-resubmission` through OpenSpec in the standalone paper clone before any manuscript edit
+- [ ] 1.4 Transfer the approved proposal, specification, design, and tasks through the paper-local OpenSpec workflow and store all later traceability controls under that change workspace
+- [ ] 1.5 Validate the paper-local change, mark tasks 1.1--1.5 complete in its task artifact, and designate it as the only owner of manuscript execution progress
+- [ ] 1.6 Stop implementation tracking in this source change and resume application from the validated paper-local change without marking later source tasks complete
+- [ ] 1.7 Create a dedicated resubmission branch and verify the rejected manuscript commit is reachable from the branch history
+- [ ] 1.8 Run the effective local commands for both CI workflows on the unmodified branch and record the successful baseline PDF checksum and page count
+- [ ] 1.9 Verify `glockyco/Teralizer`, the thesis paper submodule, and all repositories under `projects/` are unchanged before any manuscript edit
+- [ ] 1.10 Record that no remote will be pushed and no remote CI result will be claimed without explicit operator authorization
 
 ## 2. Build the Traceability Controls
 
-- [ ] 2.1 Create the section-level backport manifest with `PORT`, `ADAPT`, `KEEP-PAPER`, `DROP`, and `VERIFY` decisions for all 54 audited changed paths
-- [ ] 2.2 Add every Senior Associate Editor and reviewer concern to a response matrix and verify each decision-letter paragraph has a row
-- [ ] 2.3 Map each empirical paper claim to a registered report, provenance entry, generated artifact, or preserved run source and flag every evidence gap
-- [ ] 2.4 Record the section correspondence between the rejected paper and thesis chapter and verify every paper section has an intended source strategy
-- [ ] 2.5 Add each design reference formulation to a formulation register with its manuscript or letter destination and a `USE`, `ADAPT`, or `OMIT` disposition
-- [ ] 2.6 Add the aggregate macro artifact to the paper's `publish.toml`, publish it through Teralizer's complete-report command, import it unchanged in the ACM manuscript, and verify no hand-maintained metric alias or value mapping remains
-- [ ] 2.7 Commit the verified baseline, publication interface, manifest, evidence map, reviewer matrix, and formulation register with no scientific manuscript changes
+- [ ] 2.1 Create the section-level backport manifest under the paper-local change workspace with `PORT`, `ADAPT`, `KEEP-PAPER`, `DROP`, and `VERIFY` decisions for all 54 audited changed paths
+- [ ] 2.2 Add every Senior Associate Editor and reviewer concern to a response matrix under the paper-local change workspace and verify each decision-letter paragraph has a row
+- [ ] 2.3 Map each empirical paper claim to a registered report, provenance entry, generated artifact, or preserved run source in the paper-local evidence map and flag every evidence gap
+- [ ] 2.4 Record the section correspondence under the paper-local change workspace and verify every rejected-paper section has an intended source strategy
+- [ ] 2.5 Add each design reference formulation to the paper-local formulation register with its manuscript, cover-letter, or prior-review-response destination and a `USE`, `ADAPT`, or `OMIT` disposition
+- [ ] 2.6 Add every required RQ0--RQ6 artifact key and destination to the paper's `publish.toml`, run Teralizer's complete-report publication command against preserved evidence, and verify all dependencies, labels, presentation commands, and consumer paths without starting an experiment or changing an evidence repository
+- [ ] 2.7 Import the generated aggregate macro file unchanged, verify that the ACM manuscript builds without a hand-maintained metric alias, value mapping, or manual artifact substitute, and record any missing artifact as a blocker
+- [ ] 2.8 Commit the verified baseline, paper-local controls, and publication interface with no scientific manuscript changes
 
 ## 3. Revise Concepts and the End-to-End Approach
 
@@ -30,17 +35,17 @@
 - [ ] 3.9 Review the full approach as a standalone account and verify that it does not depend on thesis chapters or thesis-only cross-references
 - [ ] 3.10 Run the recorded manuscript checks, inspect the rendered approach pages, and commit the verified approach revision as one atomic unit
 
-## 4. Reconcile the Evaluation Framework and RQ1-RQ5
+## 4. Reconcile the Evaluation Framework and RQ1--RQ5
 
 - [ ] 4.1 Add RQ0 to the research-question sequence and verify numbering, labels, cross-references, and roadmap text remain consistent through RQ6
 - [ ] 4.2 Update the evaluation framework for current variants, sampling budgets, project selection, datasets, timeouts, and measurement terminology and verify that RQ1--RQ5 reuse the same controlled population
 - [ ] 4.3 Add the controlled-study table and figure keys to the paper's `publish.toml`, publish them through Teralizer, use generated table labels and manuscript-owned figure labels, and verify the delivered files remain unedited
-- [ ] 4.4 Audit RQ1 and RQ2 against the thesis and generated evidence, port substantive corrections, and verify all mutation-score values and denominators
-- [ ] 4.5 Audit RQ3 test counts, lines of code, retained-suite runtimes, reduction explanations, and filtering terminology and verify each value against generated tables or macros
-- [ ] 4.6 Audit RQ4 processing-time totals, mutation-testing costs, Pareto comparisons, and generalization-efficiency claims and verify each claim against the registered reports and figures
-- [ ] 4.7 Audit RQ5 exclusion terms, percentages, references, and controlled-condition interpretations, verify every denominator and filter name, and state that RQ5 analyzes failures in the RQ1--RQ4 population rather than selecting separate failure-oriented subjects
-- [ ] 4.8 Preserve unchanged controlled-study measurements while removing stale terminology and verify no paper value changed without an evidence source
-- [ ] 4.9 Run the recorded manuscript checks, inspect all RQ1-RQ5 tables and figures, and commit the verified framework and RQ1-RQ5 revision atomically
+- [ ] 4.4 Preserve unchanged controlled-study measurements while removing stale terminology and verify no paper value changed without an evidence source
+- [ ] 4.5 Run the recorded manuscript checks, inspect the evaluation framework and generated assets, and commit the verified framework revision
+- [ ] 4.6 Audit RQ1 and RQ2 against the thesis and generated evidence, verify all mutation-score values and denominators, run the focused manuscript checks, inspect the rendered result, and commit the RQ1--RQ2 revision
+- [ ] 4.7 Audit RQ3 test counts, lines of code, retained-suite runtimes, reduction explanations, and filtering terminology against generated evidence, run the focused manuscript checks, inspect the rendered result, and commit the RQ3 revision
+- [ ] 4.8 Audit RQ4 processing-time totals, mutation-testing costs, Pareto comparisons, and generalization-efficiency claims against registered reports and figures, run the focused manuscript checks, inspect the rendered result, and commit the RQ4 revision
+- [ ] 4.9 Audit RQ5 exclusion terms, percentages, references, and controlled-condition interpretations, verify that RQ5 analyzes failures in the RQ1--RQ4 population, run the focused manuscript checks, inspect the rendered result, and commit the RQ5 revision
 
 ## 5. Add RQ0 and the JARVIS Comparison
 
@@ -90,26 +95,30 @@
 - [ ] 8.6 Audit the complete paper `publish.toml`, aggregate macro import, generated tables and figure PDFs, listings, publication-specific figure captions and labels, variant names, and RQ identifiers and verify every analysis-owned artifact is direct and unedited while every factual caption claim matches its report and rendered figure
 - [ ] 8.7 Run the recorded manuscript checks, inspect the abstract through conclusion in the rendered PDF, and commit the framing and publication-asset revision atomically
 
-## 9. Prepare the TOSEM Response Letter
+## 9. Prepare the TOSEM Submission Correspondence
 
-- [ ] 9.1 Draft the editor overview around the concepts and algorithm, complete JARVIS benchmark, version 7 RepoReapers evaluation, and claim clarifications and verify each headline maps to manuscript locations
-- [ ] 9.2 Answer the mutation-selection concern with the stage boundary, reduction invariant, retained-suite benefit, generalization cost, mutation-proxy limitation, and any existing pre/post evidence and verify the response does not concede generation overfitting
-- [ ] 9.3 Answer the applicability concerns with both the JARVIS and RepoReapers results and verify all denominators and comparison limits are explicit
-- [ ] 9.4 Answer the exactness and intended-behavior concerns with the developer-anchored, implementation-derived account and verify the response matches paper terminology
-- [ ] 9.5 Answer type, purity, project, and framework scope concerns and verify the response distinguishes approach limits from prototype and evaluation outcomes
-- [ ] 9.6 Answer the LLM request with the expanded comparison and future direction and verify no unimplemented integration is promised
-- [ ] 9.7 Answer the length request by identifying removed redundancy and retained distinct RQs and verify the tone remains factual and respectful
-- [ ] 9.8 Mark independent real-bug or held-out-mutant validation as not added, explain the rationale and remaining construct limit, and verify the letter does not imply such evidence exists
-- [ ] 9.9 Complete the reviewer matrix with final page, section, figure, table, and listing references and verify every concern has one disposition
-- [ ] 9.10 Build or render the response letter through its declared workflow, inspect it, and commit the verified response package atomically
+- [ ] 9.1 Draft a concise new-submission cover letter that identifies TOSEM-2025-1249 as the rejected predecessor, summarizes the substantive revision, and does not imply an invited or requested revision
+- [ ] 9.2 Draft the prior-review-response overview around the concepts and algorithm, complete JARVIS benchmark, version 7 RepoReapers evaluation, and claim clarifications and verify each headline maps to manuscript locations
+- [ ] 9.3 Answer the mutation-selection concern with the stage boundary, reduction invariant, retained-suite benefit, generalization cost, mutation-proxy limitation, and any existing pre/post evidence and verify the response does not concede generation overfitting
+- [ ] 9.4 Answer the applicability concerns with both the JARVIS and RepoReapers results and verify all denominators and comparison limits are explicit
+- [ ] 9.5 Answer the exactness and intended-behavior concerns with the developer-anchored, implementation-derived account and verify the response matches paper terminology
+- [ ] 9.6 Answer type, purity, project, and framework scope concerns and verify the response distinguishes approach limits from prototype and evaluation outcomes
+- [ ] 9.7 Answer the LLM request with the expanded comparison and future direction and verify no unimplemented integration is promised
+- [ ] 9.8 Answer the length request by identifying removed redundancy and retained distinct RQs and verify the tone remains factual and respectful
+- [ ] 9.9 Mark independent real-bug or held-out-mutant validation as not added, explain the rationale and remaining construct limit, and verify the prior-review response does not imply such evidence exists
+- [ ] 9.10 Complete the reviewer matrix with final page, section, figure, table, and listing references and verify every concern has one disposition
+- [ ] 9.11 Build or render the cover letter through its declared workflow, inspect it, and commit it as a verified correspondence unit
+- [ ] 9.12 Build or render the prior-review response through its declared workflow, inspect it, and commit it as a separate verified correspondence unit
 
 ## 10. Perform Submission Verification
 
 - [ ] 10.1 Run the complete manuscript build from a clean generated state and verify the command succeeds without unresolved references or bibliography errors
-- [ ] 10.2 Run the paper repository's complete style, spelling, hygiene, and pre-commit checks and resolve every task-owned failure
+- [ ] 10.2 Run the effective local commands for both paper CI workflows and the repository's complete style, spelling, hygiene, and pre-commit checks and resolve every task-owned failure
 - [ ] 10.3 Compare all manuscript empirical values with the evidence map and verify each measure has its denominator and provenance owner
 - [ ] 10.4 Recheck the backport manifest and verify every `PORT`, `ADAPT`, and `VERIFY` item has a final disposition and source location
-- [ ] 10.5 Recheck the reviewer matrix and verify every promised revision exists in the final manuscript or response letter
-- [ ] 10.6 Inspect the complete rendered manuscript and response letter in their actual PDF surfaces and resolve layout, clipping, reference, table, and figure defects
-- [ ] 10.7 Verify `Teralizer-Paper` is clean except for intended submission files and verify `Teralizer`, the thesis submodule, preserved data, and generated datasets remain unchanged
-- [ ] 10.8 Create the final atomic commit for submission-only corrections and verify the full check set passes on the committed tree
+- [ ] 10.5 Recheck the reviewer matrix and verify every promised revision exists in the final manuscript or prior-review response
+- [ ] 10.6 Inspect the complete rendered manuscript, cover letter, and prior-review response in their actual PDF surfaces and resolve layout, clipping, reference, table, and figure defects
+- [ ] 10.7 Verify `Teralizer-Paper` is clean except for intended manuscript, correspondence, generated publication, and paper-local OpenSpec files and verify `Teralizer`, the thesis submodule, preserved data, and generated datasets remain unchanged
+- [ ] 10.8 Create the final atomic commit for submission-only corrections and verify the full local check set passes on the committed tree
+- [ ] 10.9 Report the branch as locally verified and push-ready unless the operator explicitly authorizes synchronization of both canonical remotes
+- [ ] 10.10 If synchronization is explicitly authorized, push both canonical remotes, observe both CI workflows, and report their exact results
