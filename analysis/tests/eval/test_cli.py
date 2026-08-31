@@ -77,17 +77,19 @@ def test_cli_resolves_declared_inputs_before_build(monkeypatch, tmp_path):
     assert events == [("resolve", "complete", ()), ("build", "complete")]
 
 
-def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
-    monkeypatch.setenv(provenance.DIRTY_PROVENANCE_ENV, "1")
+def test_cli_publishes_csv_without_promoting_generator_outputs(monkeypatch, tmp_path):
     monkeypatch.setattr(
         registry,
         "REPORTS",
         {"smoke_csv": registry.ReportSpec(_fixture_report, ())},
     )
     monkeypatch.setattr(cli.run.inputs, "resolve_inputs", _resolved)
-    monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
-    monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
-    monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
+    generator = tmp_path / "generator"
+    generator.mkdir()
+    subprocess.run(["git", "init", "-q", str(generator)], check=True)
+    monkeypatch.setattr(cli, "_ANALYSIS", generator)
+    monkeypatch.setattr(cli, "REPORTS_DIR", generator / "reports")
+    monkeypatch.setattr(cli, "BUILD_DIR", generator / "build")
     paper = tmp_path / "paper"
     paper.mkdir()
     subprocess.run(["git", "init", "-q", str(paper)], check=True)
@@ -103,8 +105,9 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
             str(paper),
         ]
     )
-    assert (tmp_path / "build" / "smoke_csv" / "k.csv").exists()
-    assert (tmp_path / "paper" / "tables" / "k.tex").exists()
+    assert not (generator / "build").exists()
+    assert not (generator / "reports").exists()
+    assert (paper / "tables" / "k.tex").exists()
     csv_path = tmp_path / "paper" / "data" / "k.csv"
     assert csv_path.exists()
     assert csv_path.read_text(encoding="utf-8").splitlines()[0] == "a"
@@ -139,11 +142,49 @@ def test_publishing_omitted_declared_target_fails_before_build(monkeypatch, tmp_
     assert events == []
 
 
-def test_publishing_dirty_tree_is_refused(monkeypatch, tmp_path):
-    monkeypatch.delenv(provenance.DIRTY_PROVENANCE_ENV, raising=False)
-    monkeypatch.setattr(provenance, "_git_snapshot", lambda: ("a" * 40, True))
-    with pytest.raises(RuntimeError, match=provenance.DIRTY_PROVENANCE_ENV):
-        cli.main(["all", "--paper-out", str(tmp_path)])
+def test_publishing_without_a_declaration_fails_before_build(monkeypatch, tmp_path):
+    events: list[str] = []
+
+    def build(context):
+        events.append("build")
+        return _fixture_report(context)
+
+    monkeypatch.setattr(registry, "REPORTS", {"smoke": registry.ReportSpec(build, ())})
+    paper = tmp_path / "paper"
+    paper.mkdir()
+    subprocess.run(["git", "init", "-q", str(paper)], check=True)
+
+    with pytest.raises(SystemExit):
+        cli.main(["all", "--paper-out", str(paper)])
+
+    assert events == []
+
+
+def test_publishing_dirty_generator_is_refused_before_build(monkeypatch, tmp_path):
+    events: list[str] = []
+
+    def build(context):
+        events.append("build")
+        return _fixture_report(context)
+
+    monkeypatch.setattr(registry, "REPORTS", {"smoke": registry.ReportSpec(build, ())})
+    generator = tmp_path / "generator"
+    generator.mkdir()
+    subprocess.run(["git", "init", "-q", str(generator)], check=True)
+    (generator / "dirty.txt").write_text("dirty")
+    monkeypatch.setattr(cli, "_ANALYSIS", generator)
+    monkeypatch.setattr(cli, "REPORTS_DIR", generator / "reports")
+    monkeypatch.setattr(cli, "BUILD_DIR", generator / "build")
+    paper = tmp_path / "paper"
+    paper.mkdir()
+    subprocess.run(["git", "init", "-q", str(paper)], check=True)
+    (paper / "publish.toml").write_text('[latex]\nk = "tables/k.tex"\n')
+
+    with pytest.raises(cli.publish.PublishError, match="dirty.txt"):
+        cli.main(["all", "--paper-out", str(paper)])
+
+    assert events == []
+    assert not (paper / "tables" / "k.tex").exists()
 
 
 def test_publishing_one_report_is_refused(tmp_path):

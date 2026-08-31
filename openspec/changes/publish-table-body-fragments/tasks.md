@@ -7,10 +7,10 @@
 
 ## 2. Publication-Only Execution
 
-- [ ] 2.1 Deliver declared consumer artifacts from the validated staging set before temporary staging closes, skip generator promotion only when a consumer declaration selects publication-only mode, preserve ordinary regeneration promotion, and verify focused runner tests cover both policies and report no promoted paths for publication.
-- [ ] 2.2 Enforce the clean generator-worktree precondition before publication constructs reports, retain the existing dirty-consumer refusal, name each blocking path, and verify focused tests cover tracked changes, untracked files, ignored staging output, and clean source and consumer states.
-- [ ] 2.3 Extend publication transaction tests so construction, rendering, validation, declaration, and delivery failures leave generator-owned tracked files byte-identical and never deliver a partial report set; verify `uv run --directory analysis pytest tests/eval/test_run.py tests/eval/test_publish.py -q` passes.
-- [ ] 2.4 Update `scripts/publish-analysis.sh` to use the publication-only contract and reject a changed generator or consumer state without starting an experiment; verify its focused command tests and shell checks pass, then create one atomic commit for publication-only execution.
+- [x] 2.1 Deliver declared consumer artifacts from the validated staging set before temporary staging closes, skip generator promotion only when a consumer declaration selects publication-only mode, preserve ordinary regeneration promotion, and verify focused runner tests cover both policies and report no promoted paths for publication.
+- [x] 2.2 Enforce the clean generator-worktree precondition before publication constructs reports, retain the existing dirty-consumer refusal, name each blocking path, and verify focused tests cover tracked changes, untracked files, ignored staging output, and clean source and consumer states.
+- [x] 2.3 Extend publication transaction tests so construction, rendering, validation, declaration, and delivery failures leave generator-owned tracked files byte-identical and never deliver a partial report set; verify `uv run --directory analysis pytest tests/eval/test_run.py tests/eval/test_publish.py -q` passes.
+- [x] 2.4 Update `scripts/publish-analysis.sh` to use the publication-only contract and reject a changed generator or consumer state without starting an experiment; verify its focused command tests and shell checks pass, then create one atomic commit for publication-only execution.
 
 ## 3. Consumer Contract Verification
 

@@ -1,3 +1,5 @@
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -268,6 +270,73 @@ def test_uncommitted_table_refuses_every_delivery(tmp_path: Path):
 
     assert table.read_text() == "hand edited"
     assert not (declaration.root / "data" / "summary.csv").exists()
+
+
+def test_staging_copy_failure_delivers_nothing(tmp_path: Path):
+    declaration = _declaration(
+        _consumer(
+            tmp_path,
+            '[latex]\na = "tables/a.tex"\nb = "tables/b.tex"\n',
+        )
+    )
+    artifacts = _targeted_artifacts(
+        tmp_path,
+        (RenderTarget.LATEX, "a", "tex", "new a"),
+        (RenderTarget.LATEX, "b", "tex", "new b"),
+    )
+
+    def fail_second_copy(source: Path, target: Path) -> None:
+        if target.name == "000001":
+            raise OSError("copy failed")
+        shutil.copy2(source, target)
+
+    with pytest.raises(OSError, match="copy failed"):
+        deliver(declaration, artifacts, copy=fail_second_copy)
+
+    assert not (declaration.root / "tables").exists()
+
+
+def test_install_failure_restores_every_consumer_artifact(tmp_path: Path):
+    declaration = _declaration(
+        _consumer(
+            tmp_path,
+            '[latex]\na = "tables/a.tex"\nb = "tables/b.tex"\n',
+        )
+    )
+    first = declaration.root / "tables" / "a.tex"
+    second = declaration.root / "tables" / "b.tex"
+    first.parent.mkdir(parents=True)
+    first.write_text("old a")
+    second.write_text("old b")
+    _commit_all(declaration.root)
+    artifacts = _targeted_artifacts(
+        tmp_path,
+        (RenderTarget.LATEX, "a", "tex", "new a"),
+        (RenderTarget.LATEX, "b", "tex", "new b"),
+    )
+    replacements = 0
+
+    def fail_second_install(source: Path, target: Path) -> None:
+        nonlocal replacements
+        replacements += 1
+        if replacements == 4:
+            raise OSError("install failed")
+        os.replace(source, target)
+
+    with pytest.raises(OSError, match="install failed"):
+        deliver(declaration, artifacts, replace=fail_second_install)
+
+    assert first.read_text() == "old a"
+    assert second.read_text() == "old b"
+    assert (
+        subprocess.run(
+            ["git", "-C", str(declaration.root), "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+        == ""
+    )
 
 
 def test_publish_preserves_undeclared_existing_file(tmp_path: Path):

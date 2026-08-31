@@ -49,8 +49,6 @@ def build_reports(
     """Build every selected report sequentially before rendering any output."""
     built_reports: list[BuiltReport] = []
     for report_id in report_ids:
-        if publishing:
-            provenance.require_publishable_tree()
         spec = registry.get(report_id)
         with inputs.resolve_inputs(report_id, spec.inputs) as context:
             report = spec.build(context)
@@ -315,9 +313,11 @@ def execute(
     publishing: bool = False,
     replace: Replace = os.replace,
 ) -> RunResult:
-    """Execute one coherent report run and optionally deliver declared figures."""
+    """Execute one coherent report run and optionally deliver declared artifacts."""
     if full and set(report_ids) != set(registry.REPORTS):
         raise ValueError("a full run must select every registered report")
+    if declaration is not None:
+        publish.require_clean_generator_worktree(paths.analysis_root)
     # Capture source state before generated outputs can make the checkout appear dirty.
     provenance.checkout_snapshot()
     built_reports = build_reports(report_ids, publishing=publishing)
@@ -338,16 +338,18 @@ def execute(
             base_manifest=base_manifest,
         )
         _validate_artifacts(artifacts, built_reports, declaration)
-        stale = _stale_paths(
-            existing,
-            artifacts,
-            report_ids,
-            targets,
-            full=full,
-            final_root=final_root,
-        )
-        promoted = promote(artifacts, final_root, stale, replace=replace)
-    delivered = (
-        tuple(publish.deliver(declaration, promoted)) if declaration is not None else ()
-    )
+        if declaration is not None:
+            delivered = tuple(publish.deliver(declaration, artifacts))
+            promoted = ArtifactSet(final_root)
+        else:
+            stale = _stale_paths(
+                existing,
+                artifacts,
+                report_ids,
+                targets,
+                full=full,
+                final_root=final_root,
+            )
+            promoted = promote(artifacts, final_root, stale, replace=replace)
+            delivered = ()
     return RunResult(built_reports, promoted, delivered)

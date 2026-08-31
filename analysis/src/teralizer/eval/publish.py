@@ -16,9 +16,12 @@ repository retains an artifact.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import tempfile
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,6 +31,10 @@ DECLARATION_NAME = "publish.toml"
 _DECLARABLE_TARGETS = frozenset(
     target for target in RenderTarget if target is not RenderTarget.MANIFEST
 )
+
+
+def _copy2(source: Path, target: Path) -> object:
+    return shutil.copy2(source, target)
 
 
 class PublishError(RuntimeError):
@@ -127,6 +134,37 @@ def read_declaration(destination: Path) -> ArtifactDeclaration | None:
     )
 
 
+def require_clean_generator_worktree(path: Path) -> None:
+    """Reject publication when the generator Git worktree has any changes."""
+    try:
+        root = Path(
+            subprocess.run(
+                ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+        ).resolve()
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        raise PublishError(
+            [f"cannot resolve the generator repository root for {path}"]
+        ) from exc
+    result = subprocess.run(
+        ["git", "-C", str(root), "status", "--porcelain", "--untracked-files=all"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise PublishError([f"cannot check generator worktree {root}"])
+    reasons = [
+        f"generator worktree has uncommitted change: {line[3:]}"
+        for line in result.stdout.splitlines()
+        if line.strip()
+    ]
+    if reasons:
+        raise PublishError(reasons)
+
+
 def _uncommitted(declaration: ArtifactDeclaration) -> list[str]:
     """Report consumer edits to any path that delivery would overwrite."""
     paths = sorted(set(declaration.targets.values()))
@@ -158,12 +196,63 @@ def validate(declaration: ArtifactDeclaration, artifacts: ArtifactSet) -> None:
         raise PublishError(reasons)
 
 
-def deliver(declaration: ArtifactDeclaration, artifacts: ArtifactSet) -> list[Path]:
-    """Copy every declared artifact and no undeclared artifact."""
+def deliver(
+    declaration: ArtifactDeclaration,
+    artifacts: ArtifactSet,
+    *,
+    copy: Callable[[Path, Path], object] = _copy2,
+    replace: Callable[[Path, Path], object] = os.replace,
+) -> list[Path]:
+    """Atomically replace every declared artifact and no undeclared artifact."""
     validate(declaration, artifacts)
-    written: list[Path] = []
-    for artifact_id, target in sorted(declaration.targets.items()):
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(artifacts.get(artifact_id).path, target)
-        written.append(target)
-    return written
+    declared = sorted(declaration.targets.items())
+    with tempfile.TemporaryDirectory(
+        prefix=".publish-stage-", dir=declaration.root
+    ) as stage_name:
+        stage_root = Path(stage_name)
+        staged: list[tuple[Path, Path]] = []
+        for index, (artifact_id, target) in enumerate(declared):
+            staged_path = stage_root / "artifacts" / f"{index:06d}"
+            staged_path.parent.mkdir(parents=True, exist_ok=True)
+            copy(artifacts.get(artifact_id).path, staged_path)
+            staged.append((staged_path, target))
+
+        backup_root = stage_root / "backups"
+        backup_root.mkdir()
+        backups: list[tuple[Path, Path]] = []
+        installed: list[Path] = []
+        created_dirs: list[Path] = []
+
+        def ensure_parent(path: Path) -> None:
+            missing: list[Path] = []
+            parent = path.parent
+            while parent != declaration.root and not parent.exists():
+                missing.append(parent)
+                parent = parent.parent
+            for directory in reversed(missing):
+                directory.mkdir()
+                created_dirs.append(directory)
+
+        try:
+            for index, (staged_path, target) in enumerate(staged):
+                ensure_parent(target)
+                if target.exists():
+                    backup = backup_root / f"{index:06d}"
+                    replace(target, backup)
+                    backups.append((target, backup))
+                replace(staged_path, target)
+                installed.append(target)
+        except Exception:
+            for target in reversed(installed):
+                if target.exists():
+                    target.unlink()
+            for target, backup in reversed(backups):
+                if backup.exists():
+                    replace(backup, target)
+            for directory in reversed(created_dirs):
+                try:
+                    directory.rmdir()
+                except OSError:
+                    pass
+            raise
+    return [target for _, target in declared]

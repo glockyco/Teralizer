@@ -34,6 +34,10 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--paper-out requires 'all'. Publish the whole set or none of it")
     paper_root = Path(args.paper_out) if args.paper_out else None
     declaration = publish.read_declaration(paper_root) if paper_root else None
+    if paper_root is not None and declaration is None:
+        parser.error(
+            f"{paper_root / publish.DECLARATION_NAME} must declare at least one artifact"
+        )
     selected_targets = frozenset(RenderTarget(target) for target in target_names)
     missing_targets = (
         declaration.required_targets - selected_targets

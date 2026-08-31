@@ -40,6 +40,38 @@ def install_reports(monkeypatch, *report_ids: str) -> None:
     monkeypatch.setattr(run.inputs, "resolve_inputs", resolved)
 
 
+def init_git(root: Path) -> None:
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+
+
+def commit_all(root: Path, message: str = "fixture") -> None:
+    subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "-qm",
+            message,
+        ],
+        check=True,
+    )
+
+
+def git_status(root: Path) -> str:
+    return subprocess.run(
+        ["git", "-C", str(root), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+
+
 def execute(root: Path, report_ids: tuple[str, ...], *, full: bool):
     return run.execute(
         report_ids,
@@ -118,10 +150,12 @@ def test_manifest_failure_preserves_final_paths(monkeypatch, tmp_path):
 
 
 def test_consumer_preflight_failure_precedes_promotion(monkeypatch, tmp_path):
+    init_git(tmp_path)
     install_reports(monkeypatch, "a")
     sentinel = tmp_path / "reports" / "a.md"
     sentinel.parent.mkdir()
     sentinel.write_text("previous")
+    commit_all(tmp_path)
     declaration = ArtifactDeclaration(
         root=tmp_path,
         targets={
@@ -140,14 +174,61 @@ def test_consumer_preflight_failure_precedes_promotion(monkeypatch, tmp_path):
             declaration=declaration,
         )
     assert sentinel.read_text() == "previous"
+    assert git_status(tmp_path) == ""
     assert not declaration.targets[ArtifactId(RenderTarget.FIGURES, "missing")].exists()
 
 
-def test_artifact_owned_by_final_report_is_delivered_after_promotion(
+@pytest.mark.parametrize("failure", ["construction", "rendering"])
+def test_publication_failure_leaves_generator_state_unchanged(
+    monkeypatch, tmp_path, failure
+):
+    init_git(tmp_path)
+    sentinel = tmp_path / "reports" / "a.md"
+    sentinel.parent.mkdir()
+    sentinel.write_text("previous")
+    commit_all(tmp_path)
+    target = tmp_path / "consumer" / "a.md"
+    declaration = ArtifactDeclaration(
+        root=tmp_path,
+        targets={ArtifactId(RenderTarget.MARKDOWN, "a"): target},
+    )
+    install_reports(monkeypatch, "a")
+    if failure == "construction":
+
+        def fail(_context):
+            raise RuntimeError("construction failed")
+
+        monkeypatch.setattr(registry, "REPORTS", {"a": registry.ReportSpec(fail, ())})
+    else:
+        monkeypatch.setattr(
+            run.markdown_renderer,
+            "render",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                RuntimeError("rendering failed")
+            ),
+        )
+
+    before = sentinel.read_bytes()
+    with pytest.raises(RuntimeError, match=f"{failure} failed"):
+        run.execute(
+            ("a",),
+            frozenset({RenderTarget.MARKDOWN}),
+            paths(tmp_path),
+            repo_url="https://example.test/repo",
+            full=True,
+            declaration=declaration,
+        )
+
+    assert sentinel.read_bytes() == before
+    assert git_status(tmp_path) == ""
+    assert not target.exists()
+
+
+def test_artifact_owned_by_final_report_is_delivered_without_promotion(
     monkeypatch, tmp_path
 ):
     install_reports(monkeypatch, "a", "b")
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    init_git(tmp_path)
     target = tmp_path / "consumer" / "b.md"
     declaration = ArtifactDeclaration(
         root=tmp_path,
@@ -164,8 +245,75 @@ def test_artifact_owned_by_final_report_is_delivered_after_promotion(
     )
 
     assert result.delivered == (target,)
-    assert target.read_text() == (tmp_path / "reports" / "b.md").read_text()
+    assert "# B" in target.read_text()
+    assert len(result.artifacts) == 0
+    assert not (tmp_path / "reports").exists()
+    assert not (tmp_path / "build").exists()
     assert not (tmp_path / "consumer" / "a.md").exists()
+
+
+def test_dirty_generator_paths_fail_before_report_construction(monkeypatch, tmp_path):
+    init_git(tmp_path)
+    tracked = tmp_path / "tracked.txt"
+    tracked.write_text("committed")
+    commit_all(tmp_path)
+    tracked.write_text("changed")
+    (tmp_path / "untracked.txt").write_text("new")
+
+    def fail_if_built(_context):
+        pytest.fail("dirty publication constructed a report")
+
+    monkeypatch.setattr(
+        registry, "REPORTS", {"a": registry.ReportSpec(fail_if_built, ())}
+    )
+    declaration = ArtifactDeclaration(
+        root=tmp_path,
+        targets={
+            ArtifactId(RenderTarget.MARKDOWN, "a"): tmp_path / "consumer" / "a.md"
+        },
+    )
+
+    with pytest.raises(PublishError) as error:
+        run.execute(
+            ("a",),
+            frozenset({RenderTarget.MARKDOWN}),
+            paths(tmp_path),
+            repo_url="https://example.test/repo",
+            full=True,
+            declaration=declaration,
+        )
+
+    assert "tracked.txt" in str(error.value)
+    assert "untracked.txt" in str(error.value)
+    assert not declaration.targets[ArtifactId(RenderTarget.MARKDOWN, "a")].exists()
+
+
+def test_ignored_generator_output_does_not_block_publication(monkeypatch, tmp_path):
+    init_git(tmp_path)
+    (tmp_path / ".gitignore").write_text(".report-stage-*\n")
+    commit_all(tmp_path)
+    ignored = tmp_path / ".report-stage-old" / "cached.txt"
+    ignored.parent.mkdir()
+    ignored.write_text("ignored")
+    install_reports(monkeypatch, "a")
+    target = tmp_path / "consumer" / "a.md"
+    declaration = ArtifactDeclaration(
+        root=tmp_path,
+        targets={ArtifactId(RenderTarget.MARKDOWN, "a"): target},
+    )
+
+    result = run.execute(
+        ("a",),
+        frozenset({RenderTarget.MARKDOWN}),
+        paths(tmp_path),
+        repo_url="https://example.test/repo",
+        full=True,
+        declaration=declaration,
+    )
+
+    assert result.delivered == (target,)
+    assert target.is_file()
+    assert ignored.read_text() == "ignored"
 
 
 def test_partial_run_preserves_registered_unselected_manifest_entry(
