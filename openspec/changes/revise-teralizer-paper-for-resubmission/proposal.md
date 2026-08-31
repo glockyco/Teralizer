@@ -11,7 +11,7 @@ The rejected Teralizer paper no longer describes the implementation or the avail
 - Update the abstract, introduction, contributions, evaluation framework, discussion, related work, conclusion, tables, figures, macros, citations, artifact statement, and replication-package DOI when the revised evidence affects them.
 - State scope precisely without falsely limiting the evaluation to supported cases. The evaluation includes eligible supported and unsupported cases and measures exclusions throughout the pipeline.
 - Describe generated oracles as developer-anchored and implementation-derived. Limit path-exactness claims to the analyzed implementation, symbolic model, purity assumptions, and accepted widening evidence.
-- Clarify that mutation analysis does not guide generalized-test creation. Stage 5 only removes generalized tests that add no mutant detections beyond the original suite.
+- Clarify that mutation analysis does not guide generalized-test creation. Stage 5 removes tests that add no mutant detections beyond the original suite. Its purpose is to reduce the size and execution runtime of the retained generalized suite. It does not improve generalization efficiency because mutation testing adds substantial processing cost.
 - Add a focused comparison with LLM-based specification and oracle inference. Treat hybrid use as future work, not an evaluated contribution.
 - Preserve useful standalone-paper material. Exclude thesis-only framing, chapter bridges, monograph cross-references, and cosmetic reflow edits.
 - Prepare a TOSEM resubmission letter that maps each reviewer concern to evidence, manuscript revisions, remaining limits, or a reasoned rebuttal.

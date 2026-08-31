@@ -34,8 +34,8 @@
 - [ ] 4.1 Add RQ0 to the research-question sequence and verify numbering, labels, cross-references, and roadmap text remain consistent through RQ6
 - [ ] 4.2 Update the evaluation framework for current variants, sampling budgets, project selection, datasets, timeouts, and measurement terminology and verify each declaration against the evaluated configuration
 - [ ] 4.3 Audit RQ1 and RQ2 against the thesis and generated evidence, port substantive corrections, and verify all mutation-score values and denominators
-- [ ] 4.4 Audit RQ3 test counts, lines of code, runtimes, reduction explanations, and filtering terminology and verify each value against generated tables or macros
-- [ ] 4.5 Audit RQ4 processing-time totals, Pareto comparisons, and efficiency claims and verify each claim against the registered reports and figures
+- [ ] 4.4 Audit RQ3 test counts, lines of code, retained-suite runtimes, reduction explanations, and filtering terminology and verify each value against generated tables or macros
+- [ ] 4.5 Audit RQ4 processing-time totals, mutation-testing costs, Pareto comparisons, and generalization-efficiency claims and verify each claim against the registered reports and figures
 - [ ] 4.6 Audit RQ5 exclusion terms, percentages, references, and controlled-condition interpretations and verify every denominator and filter name
 - [ ] 4.7 Preserve unchanged controlled-study measurements while removing stale terminology and verify no paper value changed without an evidence source
 - [ ] 4.8 Run the recorded manuscript checks, inspect all RQ1-RQ5 tables and figures, and commit the verified framework and RQ1-RQ5 revision atomically
@@ -67,7 +67,7 @@
 ## 7. Reconcile Cross-Cutting Scientific Claims
 
 - [ ] 7.1 Explain that Stages 1-4 do not consume mutants and verify the statement against the algorithm and implementation account
-- [ ] 7.2 Explain the Stage 5 reduction invariant and verify the mathematical claim against the implemented retention rule
+- [ ] 7.2 Explain that Stage 5 preserves mutation effectiveness only to reduce retained-suite size and execution runtime, then verify that RQ3 and RQ4 distinguish this benefit from mutation-testing cost in the generalization process
 - [ ] 7.3 Inspect preserved evidence for unreduced and reduced mutation scores, report an existing comparison if available, and otherwise record the evidence gap without running an experiment
 - [ ] 7.4 Revise exactness and intent language to use developer-anchored, implementation-derived, path-bounded claims and verify all prominent exactness phrases follow this contract
 - [ ] 7.5 Distinguish the general approach, Java prototype, and evaluated population in the approach, setup, validity, and discussion and verify no passage limits the evaluation to successful pure or supported cases
@@ -91,7 +91,7 @@
 ## 9. Prepare the TOSEM Response Letter
 
 - [ ] 9.1 Draft the editor overview around the concepts and algorithm, complete JARVIS benchmark, version 7 RepoReapers evaluation, and claim clarifications and verify each headline maps to manuscript locations
-- [ ] 9.2 Answer the mutation-selection concern with the stage boundary, reduction invariant, mutation-proxy limitation, and any existing pre/post evidence and verify the response does not concede generation overfitting
+- [ ] 9.2 Answer the mutation-selection concern with the stage boundary, reduction invariant, retained-suite benefit, generalization cost, mutation-proxy limitation, and any existing pre/post evidence and verify the response does not concede generation overfitting
 - [ ] 9.3 Answer the applicability concerns with both the JARVIS and RepoReapers results and verify all denominators and comparison limits are explicit
 - [ ] 9.4 Answer the exactness and intended-behavior concerns with the developer-anchored, implementation-derived account and verify the response matches paper terminology
 - [ ] 9.5 Answer type, purity, project, and framework scope concerns and verify the response distinguishes approach limits from prototype and evaluation outcomes

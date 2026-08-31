@@ -91,13 +91,30 @@ Every empirical value MUST trace to a registered report, generated publication a
 - **THEN** it does not infer a value or authorize a rerun
 
 ### Requirement: Mutation-analysis semantics
-The paper MUST state that mutation results do not influence specification extraction or generalized-test creation. It MUST describe Stage 5 as post-generation filtering against mutant detections beyond the original suite.
+The paper MUST state that mutation results do not influence specification extraction or generalized-test creation. It MUST describe Stage 5 as post-generation reduction after every candidate PBT already exists. Stage 5 MUST preserve the unreduced suite's mutation score while reducing the retained suite's size and execution runtime. The paper MUST NOT describe Stage 5 as improving the efficiency of generalization because mutation testing adds substantial processing cost.
 
 #### Scenario: Effectiveness and reduction use the same mutants
 - **WHEN** the paper addresses the reviewer's mutation-overfitting concern
 - **THEN** it distinguishes mutation-independent generation from mutation-based retention
-- **THEN** it explains that removing mutation-redundant generated tests cannot increase the score over the unreduced generated suite
+- **THEN** it states that Stage 5 does not create the effectiveness gain
+- **THEN** it explains that removing mutation-redundant generated tests preserves the score of the unreduced generated suite
 - **THEN** it retains the ordinary construct-validity limitation of mutation score as a proxy for real faults
+
+#### Scenario: Reduction is omitted
+- **WHEN** the paper explains the optional reduction stage
+- **THEN** it states that omitting Stage 5 retains every generated PBT and its full pre-reduction detection capability
+- **THEN** it identifies increased suite size and runtime as the resulting costs
+
+#### Scenario: Another retention criterion is considered
+- **WHEN** the paper discusses a replacement for mutation-based retention
+- **THEN** it permits a criterion that defines and preserves the capability that the reduced suite must retain
+- **THEN** it does not claim that an arbitrary criterion preserves effectiveness under unrelated metrics
+
+#### Scenario: Generalization efficiency is discussed
+- **WHEN** RQ3 or RQ4 discusses the costs and benefits of Stage 5
+- **THEN** it attributes smaller and faster retained suites to reduction
+- **THEN** it attributes mutation-testing time to the cost of generalization
+- **THEN** it does not use retained-suite efficiency as evidence that the generalization process is more efficient
 
 #### Scenario: Existing evidence supports a reduction comparison
 - **WHEN** preserved results contain mutation scores before and after Stage 5

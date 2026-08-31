@@ -130,7 +130,13 @@ PIT results remove tests redundant to T
        Stage 5 retains G'
 ```
 
-For mutant set `M`, original suite `T`, and generated suite `G`, every discarded test kills only mutants already killed by `T`. Therefore, reduction cannot increase `K_M(T ∪ G')` over `K_M(T ∪ G)`.
+For mutant set `M`, original suite `T`, and generated suite `G`, every discarded test kills only mutants already killed by `T`. Therefore, `K_M(T ∪ G')` equals `K_M(T ∪ G)`.
+
+The sole purpose of Stage 5 is to avoid bloat in the retained generalized test suite. Every candidate PBT and every detection capability it provides already exist before reduction. Stage 5 preserves the unreduced suite's mutation score while reducing the retained suite's test count and execution runtime. It must not receive credit for the effectiveness gain.
+
+This benefit belongs to the resulting generalized test suite, not to the efficiency of generalization. Stage 5 invokes expensive mutation testing and increases Teralizer's processing cost. RQ3 must describe the resulting suite's size and runtime. RQ4 must account for mutation testing in end-to-end processing efficiency.
+
+Dropping Stage 5 retains every generated PBT and therefore preserves the full pre-reduction suite capability at higher downstream execution cost. It also avoids the mutation-testing cost of reduction. Another retention criterion could replace mutation score if it defines and preserves the capability that the reduced suite must retain. An arbitrary criterion does not guarantee preservation under unrelated effectiveness metrics.
 
 If preserved evidence exposes pre-reduction and post-reduction scores, report them. Otherwise, explain the invariant without creating new measurements. Retain the standard threat that mutation score is a proxy for real faults.
 
@@ -198,11 +204,15 @@ These formulations are starting points for the manuscript and response letter. T
 
 Candidate manuscript formulation:
 
-> Mutation analysis does not guide specification extraction or generalized-test creation. Teralizer first produces generalized tests from the implementation and developer-written tests. Stage 5 subsequently removes generalized tests that do not kill any mutant beyond those already killed by the original suite. Therefore, reduction cannot increase the mutation score relative to the unreduced generalized suite. It only removes tests that are redundant under this effectiveness criterion.
+> Mutation analysis does not guide specification extraction or generalized-test creation. Teralizer first produces every candidate PBT from the implementation and developer-written tests. Stage 5 then removes tests that do not kill any mutant beyond those already killed by the original suite. This reduction preserves the unreduced suite's mutation score while reducing the retained suite's size and execution runtime. It does not improve generalization efficiency because mutation testing adds substantial processing cost.
 
 Candidate response-letter formulation:
 
-> We agree that mutation score remains a proxy for real-fault detection. However, mutants do not influence the generalized tests that Teralizer creates. They are used only after generation to remove tests that add no mutant detection beyond the original suite. Held-out mutants would therefore evaluate whether the reduction criterion transfers to another fault sample. They would not remedy overfitting of generalized-test creation because no such feedback occurs.
+> We agree that mutation score remains a proxy for real-fault detection. However, mutants do not influence the generalized tests that Teralizer creates. Every candidate PBT exists before mutation testing begins. Mutation testing only selects a smaller retained suite with the same mutation score as the unreduced suite. This lowers the retained suite's size and execution runtime but makes Teralizer's processing more expensive. Held-out mutants would therefore evaluate whether the reduction criterion transfers to another fault sample. They would not remedy overfitting of generalized-test creation because no such feedback occurs.
+
+Candidate no-reduction formulation:
+
+> Teralizer could omit Stage 5 and retain every generated PBT. This would preserve the full detection capability of the unreduced suite and avoid the cost of mutation-based selection, but it would produce a larger generalized suite with higher downstream execution cost.
 
 Optional formal statement:
 
