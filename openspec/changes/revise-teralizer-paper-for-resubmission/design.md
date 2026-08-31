@@ -4,7 +4,7 @@ See `proposal.md` for motivation and the delta spec for publication requirements
 
 `glockyco/Teralizer` and `glockyco/Teralizer-Paper` are separate repositories with different responsibilities. Executable declarations, tests, registered reports, provenance, and generated evidence belong to `Teralizer`. The editable manuscript and its publication assets belong to `Teralizer-Paper`. The thesis chapter is the preferred scientific narrative for changes after the paper import. The rejected paper remains authoritative for standalone framing and material that other thesis chapters replace.
 
-The paper submodule under `../phd-thesis/projects/` is read-only. Revision work must use a standalone clone. Corpus and project reruns require explicit operator approval and are outside this change.
+The paper submodule under `../phd-thesis/projects/` is read-only. Revision work must use a standalone clone. The thesis and Teralizer repositories remain read-only sources for this change. Corpus and project reruns require explicit operator approval and are outside this change.
 
 ## Goals / Non-Goals
 
@@ -15,12 +15,13 @@ The paper submodule under `../phd-thesis/projects/` is read-only. Revision work 
 - Separate approach scope, prototype support, evaluation population, and measured exclusions.
 - Resolve reviewer concerns through manuscript changes or explicit, evidence-based rebuttals.
 - Keep the manuscript buildable after each coherent revision unit.
+- Make generated metrics, complete table artifacts, and figure PDFs flow directly from Teralizer reports into the paper.
 
 **Non-Goals:**
 
 - Synchronize every textual difference between the thesis and paper.
 - Make the paper text identical to the thesis chapter.
-- Change Teralizer, rerun experiments, or regenerate measurements.
+- Change Teralizer, the analysis publication interface, the thesis, or any measurement.
 - Add held-out-mutant, real-bug, LLM-integration, or new JARVIS experiments.
 - Shorten or combine research questions only to reduce page count.
 
@@ -109,7 +110,7 @@ Use “substantially broader measured applicability on the shared benchmark.” 
 
 Replace its population, selection method, lifecycle model, tables, generated macros, result narrative, and causal interpretation together. Audit every old `632`, `11`, `1.7%`, and related denominator outside the RQ6 section.
 
-The revised account includes eligible cases that later fail or are excluded. It must not describe the evaluation as restricted to successful pure methods or supported data types. Prototype limits explain outcomes. They do not define away measured exclusions.
+The revised account includes selected cases that later fail or are excluded. It must not describe the evaluation as restricted to successful pure methods or supported data types. Prototype limits explain outcomes. They do not define away measured exclusions.
 
 Do not claim a paired improvement from 11 of 632 to 85 of 584. Report both measurements with their own denominators and changed pipeline semantics.
 
@@ -159,22 +160,31 @@ Use separate language for:
 
 - the general semantics-based approach.
 - the Java prototype and its supported operations.
-- the evaluation population, including successful and excluded cases.
+- the shared controlled evaluation in RQ1--RQ5.
+- the real-world evaluation in RQ6.
 - conclusions supported by each experiment.
 
-Keep implementation versions and detailed restrictions in the approach, setup, and validity sections. Use short qualifiers in the abstract and conclusion. Never summarize the evaluation as covering only the prototype's successful fragment.
+RQ1--RQ5 reuse the same primary evaluation datasets to study effectiveness, constraint complexity, retained-suite size and runtime, processing efficiency, and failure causes under controlled conditions. EqBench supplies numeric-focused benchmark cases. Selected numeric utility methods from Apache Commons bridge toward real-world complexity while retaining the controlled focus. RQ5 does not own this subject selection. It analyzes unsuccessful attempts within the same population already used by RQ1--RQ4.
+
+RQ6 measures practical applicability by following selected RepoReapers projects, tests, assertions, and attempts through successful, unsupported, excluded, and failed outcomes. Apply the complete-population exclusion framing to RQ6.
+
+Keep implementation versions and detailed restrictions in the approach, setup, and validity sections. Use short qualifiers in the abstract and conclusion. Preserve the distinction between the shared RQ1--RQ5 controlled evaluation and RQ6 real-world evaluation whenever the paper summarizes evaluation scope.
 
 ### 10. Preserve the paper's standalone architecture
 
 Keep the paper's background, motivation, contribution list, full related work, and conclusion structure unless scientific changes require revision. Adapt thesis cross-references to paper sections. Do not port the thesis bridge or references to other thesis chapters.
 
-Import the new algorithm listing and required concepts. Adapt macros and captions to paper conventions rather than importing the thesis macro environment wholesale.
+Import the new algorithm listing and required concepts. Add a `publish.toml` declaration to `Teralizer-Paper` and publish every analysis-owned macro, table, and figure with `PAPER_OUT=<paper-clone> ./scripts/publish-analysis.sh` from `Teralizer`. Import the generated aggregate macro file unchanged. Replace hard-coded empirical values with its `Tz` macros and update cross-references to generated table labels.
+
+Generated ownership stops at the figure PDF. The thesis and paper may require different figure environments, captions, labels, placement, sizing, and accessibility descriptions. Keep those structures in each manuscript and adapt them to its layout. Verify factual statements in each caption against the registered report and rendered figure.
+
+Do not introduce paper-specific aliases for generated metric macros, hand-maintained value mappings, or edited generated macros, tables, or figure PDFs. Those layers would become stale when a registered report changes. The ACM document may define presentation-only commands such as the table body style expected by the generator. Such commands must not contain empirical values or rename the generated macro or table interface.
 
 ### 11. Add a bounded LLM synthesis
 
-Extend the related-work discussion with one focused comparison. Contrast LLM semantic breadth with Teralizer's path evidence, refusal behavior, and current model restrictions. Describe LLM-proposed assertions or abstractions as possible future inputs that still require validation.
+State that the identified LLM-based techniques address adjacent specification extraction, test generation, or oracle inference rather than test generalization. Discuss each technique in the related-work category that owns its task. Contrast LLM semantic breadth with Teralizer's path evidence, refusal behavior, and current model restrictions where the comparison is informative.
 
-Do not present an LLM hybrid as implemented or evaluated. A broader AI survey was rejected because it does not advance the paper's contribution.
+A hybrid could potentially strengthen results by proposing assertions, abstractions, or models. Treat that hybrid as a separate possible future contribution. Do not present it as part of the current approach or evaluation.
 
 ### 12. Build the response letter from a live reviewer matrix
 
@@ -244,13 +254,17 @@ Candidate approach/prototype distinction:
 
 > The semantics-based approach is not inherently restricted to Java, JUnit, or the models supported by the current symbolic backend. Teralizer is a Java prototype of this approach, and its present implementation inherits concrete framework, type, purity, and project-structure restrictions.
 
-Candidate evaluation-population distinction:
+Candidate controlled-evaluation distinction:
 
-> The evaluation does not preselect only methods and data types that Teralizer can generalize. It follows eligible projects, tests, assertions, and generalization attempts through the pipeline and retains unsupported cases, filtering decisions, processing failures, and widening refusals as measured outcomes.
+> RQ1--RQ5 reuse the EqBench and Apache Commons datasets to evaluate complementary aspects of Teralizer under controlled conditions. RQ5 analyzes unsuccessful attempts within this shared population rather than defining a separate failure-oriented subject selection.
+
+Candidate real-world-evaluation distinction:
+
+> RQ6 does not preselect only methods and data types that Teralizer can generalize. It follows selected RepoReapers projects, tests, assertions, and generalization attempts through the pipeline and retains unsupported cases, filtering decisions, processing failures, and widening refusals as measured outcomes.
 
 Candidate compact abstract sentence:
 
-> We evaluate the Java prototype in controlled and real-world settings, including unsupported and unsuccessful cases as measured exclusions and failures.
+> We evaluate Teralizer's effectiveness, efficiency, and applicability. RQ1--RQ5 use shared controlled datasets, while RQ6 evaluates real-world applicability across selected RepoReapers projects.
 
 Candidate contribution split:
 
@@ -258,9 +272,9 @@ Candidate contribution split:
 
 Candidate real-world conclusion:
 
-> Across the complete eligible RepoReapers population, including projects that later encounter unsupported constructs or processing failures, the current prototype completes all pipeline stages for 85 of 584 projects.
+> Across all 584 selected RepoReapers projects, including projects that later encounter unsupported constructs or processing failures, the current prototype completes all pipeline stages for 85 projects.
 
-Do not use “we evaluate the approach on the pure-method and data-type fragment supported by the current analyses.” That sentence falsely narrows the evaluated population to successful cases.
+Do not use “we evaluate the approach on the pure-method and data-type fragment supported by the current analyses” as a summary of the complete evaluation or of RQ6. The controlled datasets deliberately emphasize cases suited to numeric symbolic analysis, but RQ6 measures exclusions and failures across the selected real-world population.
 
 ### JARVIS applicability
 
@@ -282,11 +296,11 @@ Avoid “statistically significantly better” unless a statistical test support
 
 Candidate historical comparison:
 
-> The rejected manuscript reported completion for 11 of 632 projects (1.7%). After extending the implementation and collecting a new complete RepoReapers run, the revised pipeline completed all stages for 85 of 584 eligible projects (14.6%). The revised pipeline also introduces conservative widening checks that reject specifications without sufficient evidence for sound input generalization.
+> The rejected manuscript reported completion for 11 of 632 projects (1.7%). After extending the implementation and collecting a new complete RepoReapers run, the revised pipeline completed all stages for 85 of 584 selected projects (14.6%). The revised pipeline also introduces conservative widening checks that reject specifications without sufficient evidence for sound input generalization.
 
 Candidate interpretation:
 
-> The two measurements use different eligible populations and pipeline semantics and are therefore not a paired before-and-after comparison. They nevertheless show that the revised implementation completes the end-to-end process for a substantially larger share of its declared eligible population.
+> The two measurements use different project selections and pipeline semantics and are therefore not a paired before-and-after comparison. They nevertheless show that the revised implementation completes the end-to-end process for a substantially larger share of the selected projects.
 
 Candidate balanced applicability synthesis:
 
@@ -298,7 +312,7 @@ Do not write “applicability improved from 1.7% to 14.6% on the same corpus.”
 
 Candidate related-work formulation:
 
-> LLM-based techniques can propose assertions and abstractions for semantic domains that the current symbolic backend cannot model, but their outputs can hallucinate or overfit implementation behavior. Teralizer provides complementary path-conditioned evidence and refuses generalization when its widening checks lack sufficient support.
+> The identified LLM-based techniques address adjacent tasks such as specification extraction, test generation, and oracle inference rather than test generalization. Such techniques can propose assertions and abstractions for semantic domains that the current symbolic backend cannot model, but their outputs can hallucinate or overfit implementation behavior. Teralizer provides complementary path-conditioned evidence and refuses generalization when its widening checks lack sufficient support.
 
 Candidate future-work formulation:
 
@@ -318,7 +332,7 @@ Candidate response-letter formulation:
 
 > We did not add a held-out-mutant or real-bug experiment to this revision. Held-out mutants would evaluate transfer of the mutation-based reduction criterion, whereas generalized-test creation itself does not consume mutant information. We instead clarify this stage boundary and retain the broader construct-validity limitation that mutation score is an imperfect proxy for real-fault detection.
 
-Use this only if the final resubmission still contains no independent validation. If existing preserved evidence supports a stronger statement, update both the manuscript and response letter from that evidence.
+Use this response in the final letter. Do not describe preserved mutation-score or PVC evidence as independent validation.
 
 ## Risks / Trade-offs
 
@@ -326,11 +340,12 @@ Use this only if the final resubmission still contains no independent validation
 - **[Risk] An empirical value is copied from prose instead of its owner.** → Require a report, provenance, or generated-artifact source before changing it.
 - **[Risk] RQ6 values remain stale outside the RQ6 section.** → Run a paper-wide stale-value and denominator audit after the atomic replacement.
 - **[Risk] JARVIS results appear more comparable than they are.** → Separate published and measured values and retain reconstruction threats beside the result.
-- **[Risk] Scope qualifiers falsely narrow the evaluated population.** → State that exclusions and unsupported cases are measured outcomes.
+- **[Risk] Scope qualifiers collapse the controlled and real-world designs.** → State the shared RQ1--RQ5 controlled population separately. State that RQ6 exclusions and unsupported cases remain measured real-world outcomes.
 - **[Risk] Exactness qualifiers weaken the developer-oracle contribution.** → Lead with developer anchoring, then state the implementation-relative boundary.
 - **[Risk] The response letter concedes an incorrect mutation-overfitting claim.** → Explain the stage boundary and reduction invariant before discussing construct validity.
 - **[Risk] New content increases length.** → Remove actual redundancy only after scientific content stabilizes. Do not combine distinct RQs by default.
-- **[Risk] Paper macros cannot consume thesis-generated assets directly.** → Adapt each asset at its publication boundary and verify the rendered result.
+- **[Risk] Generated LaTeX assumes thesis-only presentation commands.** → Make the ACM preamble provide the generator's presentation-only contract. Keep metric macros, complete generated tables, and figure PDFs unchanged and verify the rendered result.
+- **[Risk] Publication-specific figure captions drift from the evidence.** → Permit layout-specific wording, labels, and accessibility text, but verify every factual caption claim against the registered report and rendered figure.
 - **[Risk] An existing report cannot support a desired comparison.** → Record the gap and omit the claim. Do not rerun an experiment.
 
 ## Migration Plan

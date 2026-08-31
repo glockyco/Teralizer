@@ -5,13 +5,13 @@ Defines the evidence, scientific content, claim boundaries, reviewer response, a
 ## ADDED Requirements
 
 ### Requirement: Separate implementation and paper repositories
-The manuscript revision MUST occur in an editable standalone clone of `glockyco/Teralizer-Paper`. The `glockyco/Teralizer` implementation and evidence repository, the thesis paper submodule, and all repositories under `projects/` MUST remain unchanged.
+The manuscript revision MUST occur in an editable standalone clone of `glockyco/Teralizer-Paper`. The `glockyco/Teralizer` implementation and evidence repository, the thesis repository, the thesis paper submodule, and all repositories under `projects/` MUST remain unchanged.
 
 #### Scenario: Revision workspace is prepared
 - **WHEN** manuscript revision starts
 - **THEN** the editable files exist in a standalone `Teralizer-Paper` clone outside `projects/`
 - **THEN** its `origin` remote resolves to `glockyco/Teralizer-Paper`
-- **THEN** `glockyco/Teralizer` and the thesis submodule remain unchanged
+- **THEN** `glockyco/Teralizer`, the thesis repository, and the thesis paper submodule remain unchanged
 
 ### Requirement: Selective scientific backport
 The revised paper MUST incorporate substantive scientific changes from the thesis chapter. It MUST preserve standalone explanations that the thesis omits because other chapters provide them.
@@ -30,11 +30,26 @@ The revised approach MUST define the assertion-to-MUT pair, MUT calls, input-out
 - **THEN** the algorithm agrees with the evaluated implementation
 
 ### Requirement: Approach, prototype, and evaluation scope
-The paper MUST distinguish the general approach from the Java prototype and from the evaluated population. It MUST NOT claim that the evaluation includes only pure methods or only supported data types.
+The paper MUST distinguish the general approach from the Java prototype. It MUST also distinguish the shared controlled evaluation in RQ1--RQ5 from the real-world evaluation in RQ6.
 
-#### Scenario: Evaluation scope is summarized
-- **WHEN** the abstract, contributions, evaluation design, or conclusion describes empirical scope
-- **THEN** it states that eligible projects, tests, assertions, and attempts include both successful and excluded cases
+#### Scenario: Controlled evaluation scope is described
+- **WHEN** the paper summarizes RQ1--RQ5
+- **THEN** it states that these research questions reuse the EqBench and Apache Commons datasets to evaluate complementary aspects of the approach under controlled conditions
+- **THEN** it explains that EqBench provides numeric-focused benchmark cases and the selected Apache Commons utility methods bridge toward real-world complexity
+
+#### Scenario: RQ5 scope is described
+- **WHEN** the paper introduces RQ5
+- **THEN** it states that RQ5 analyzes unsuccessful attempts within the same controlled population used by RQ1--RQ4
+- **THEN** it does not imply that the controlled subjects were selected specifically to study failures
+
+#### Scenario: RQ6 scope is described
+- **WHEN** the paper summarizes the real-world evaluation
+- **THEN** it states that RQ6 follows the selected RepoReapers projects, tests, assertions, and attempts through the pipeline
+- **THEN** it retains successful, unsupported, excluded, and failed cases as measured outcomes
+
+#### Scenario: Evaluation scope is summarized across the paper
+- **WHEN** the abstract, contributions, evaluation design, discussion, or conclusion describes empirical scope
+- **THEN** it preserves the distinction between the shared RQ1--RQ5 controlled evaluation and RQ6 real-world evaluation
 - **THEN** it identifies prototype restrictions without presenting them as inherent limits of the general approach
 
 #### Scenario: Detailed prototype limits are needed
@@ -64,12 +79,12 @@ The revised paper MUST replace the rejected manuscript's RepoReapers account wit
 
 #### Scenario: Headline applicability is reported
 - **WHEN** the paper reports end-to-end RepoReapers applicability
-- **THEN** it reports completion for 85 of 584 eligible projects, or 14.6%
+- **THEN** it reports completion for 85 of 584 selected projects, or 14.6%
 - **THEN** it does not describe this as a paired increase from the old 632-project population
 
 #### Scenario: Exclusions are part of the evaluation
 - **WHEN** the paper reports test, assertion, generalization, or project outcomes
-- **THEN** the denominator includes the applicable eligible or attempted population
+- **THEN** the denominator uses the appropriate selected-project, test, assertion, or generalization-attempt population
 - **THEN** unsupported cases and failures remain measured outcomes rather than being removed from the evaluation scope
 
 #### Scenario: Causes are interpreted
@@ -135,20 +150,44 @@ The paper MUST describe generalized oracles as developer-anchored and implementa
 - **THEN** it does not claim that one concrete assertion proves intended behavior for every generalized input
 
 ### Requirement: Paper-wide consistency
-All paper sections, generated assets, and bibliography entries MUST use the same research-question numbering, variant names, populations, terminology, and current artifact identity.
+All paper sections, generated assets, and bibliography entries MUST use the same research-question numbering, variant names, populations, terminology, and current artifact identity. The paper MUST consume the analysis-generated macro interface and each generator-owned publication asset that it includes directly.
 
 #### Scenario: Scientific content is updated
 - **WHEN** RQ0, RQ6, implementation behavior, or replication metadata changes
 - **THEN** the abstract, introduction, framework, discussion, conclusion, tables, figures, macros, citations, and artifact statement are audited for dependent changes
 - **THEN** no stale headline value or superseded replication-package DOI remains
 
+#### Scenario: Paper consumes a generated asset
+- **WHEN** the paper includes a macro file, table, or figure emitted by a registered analysis report
+- **THEN** the paper declares the generated artifact key and destination in its own `publish.toml`
+- **THEN** the Teralizer publication command writes the artifact into the paper repository unchanged
+
+#### Scenario: Paper uses a generated metric macro
+- **WHEN** the aggregate macro file exposes a metric used by the manuscript
+- **THEN** the paper imports the generated aggregate macro file unchanged
+- **THEN** the manuscript uses the generated macro name directly without an alias, hand-maintained mapping, or transcribed value
+
+#### Scenario: Paper presents a generated figure
+- **WHEN** the paper includes a generated figure PDF
+- **THEN** `publish.toml` declares the PDF artifact directly
+- **THEN** the paper owns its figure environment, caption, label, placement, sizing, and accessibility description
+- **THEN** factual caption content agrees with the registered report and generated figure
+
+#### Scenario: ACM presentation differs from thesis presentation
+- **WHEN** a generated artifact relies on consumer-provided house style
+- **THEN** the paper provides the required presentation-only style commands
+- **THEN** those commands contain no empirical values or semantic renaming
+- **THEN** the generated artifact itself remains unchanged
+
 ### Requirement: Focused LLM comparison
-The related-work discussion MUST compare Teralizer with LLM-based specification and oracle inference. It MUST present unimplemented combinations only as future work.
+The related-work discussion MUST state that the identified LLM-based techniques address adjacent specification extraction, test generation, or oracle inference rather than Teralizer-style test generalization. It MUST present a Teralizer and LLM hybrid only as a separate possible future contribution.
 
 #### Scenario: LLM work is positioned
 - **WHEN** the paper discusses SpecGen, ClassInvGen, or inferred test oracles
-- **THEN** it compares semantic breadth, path evidence, soundness limits, and implementation-overfitting risk
-- **THEN** it identifies a bounded complementary role without claiming evaluated integration
+- **THEN** it identifies the adjacent task that each technique addresses
+- **THEN** it compares semantic breadth, path evidence, soundness limits, and implementation-overfitting risk where relevant
+- **THEN** it does not imply that an existing LLM technique directly generalizes conventional tests into PBTs
+- **THEN** it does not claim an implemented or evaluated hybrid
 
 ### Requirement: Reviewer response
 The resubmission package MUST include a response letter that maps each editorial and reviewer concern to a manuscript change, existing evidence, remaining limitation, or reasoned rebuttal.
@@ -162,6 +201,13 @@ The resubmission package MUST include a response letter that maps each editorial
 - **WHEN** the letter compares rejected and revised RepoReapers results
 - **THEN** it gives both measures and denominators separately
 - **THEN** it discloses the changed implementation, eligibility, and lifecycle semantics
+
+#### Scenario: Independent validation request is answered
+- **WHEN** the letter addresses held-out mutants or real-bug validation
+- **THEN** it states that the revision does not add an independent-validation experiment
+- **THEN** it explains that mutants do not influence generalized-test creation
+- **THEN** it explains that held-out mutants would test transfer of the reduction criterion instead
+- **THEN** it retains mutation score as a construct-validity limitation
 
 ### Requirement: Publication verification
 The revised manuscript and response letter MUST pass the paper repository's focused publication checks before the change is complete.
