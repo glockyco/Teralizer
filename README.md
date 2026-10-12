@@ -13,6 +13,7 @@ Our work proposes a semantics-based test generalization approach that automatica
 - [Links](#links)
 - [Package Contents](#package-contents)
 - [Quick Start](#quick-start)
+- [Native Windows Development](#native-windows-development)
 - [Verification Workflows](#verification-workflows)
 - [Complete Reproduction](#complete-reproduction)
 - [Project Structure](#project-structure)
@@ -84,6 +85,38 @@ Python project with `uv`.
 docker compose down      # Stop containers (preserves data)
 docker compose down -v   # Stop and remove all data
 ```
+
+---
+
+## Native Windows Development
+
+Use Git for Windows, Git LFS, Docker Desktop with Linux containers, `uv`,
+Python 3.13, and `lefthook`. Run these commands from the repository root:
+
+```powershell
+git lfs pull
+git submodule update --init --recursive jpf-symbc
+lefthook install
+lefthook run pre-commit --all-files
+openspec validate --all --strict
+docker build -t teralizer .
+docker run --rm teralizer timeout 600 ./gradlew test --tests teralizer.util.ConfigurationTest --tests teralizer.processing.PipelinePlannerTest --tests teralizer.transformer.GoldenRenderingTest --tests teralizer.jpf.TestGeneralizationListenerSymbolicTest --no-daemon
+```
+
+The image provides Java 8, Gradle, Maven, and the Linux runtime needed by
+Symbolic Pathfinder. The bounded test command checks configuration, pipeline
+planning, rendering, and a real symbolic-return capture without starting a
+measurement corpus or changing local databases. Initialize `projects/EqBench`
+only before a workflow that needs its sources.
+
+Hooks use the locked analysis tools through native `uv` on Windows. They read
+the root `.python-version` rather than selecting a newer unsupported interpreter.
+Mac and Linux hooks retain the Nix devshell entrypoint from `flake.nix`.
+
+Git may materialize tracked symlinks as target-name text files on Windows.
+The Docker build excludes `project-configs/fusion-spike/`, so those aliases are
+not part of this image workflow. The root agent-file aliases are not runtime inputs.
+Run fusion-spike profiles from a checkout that supports symlinks.
 
 ---
 
