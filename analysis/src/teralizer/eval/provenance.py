@@ -77,7 +77,7 @@ def _relative_to_repo(source: str | None) -> str | None:
     if source is None:
         return None
     try:
-        return str(Path(source).resolve().relative_to(_REPO_ROOT))
+        return Path(source).resolve().relative_to(_REPO_ROOT).as_posix()
     except ValueError:
         return None
 

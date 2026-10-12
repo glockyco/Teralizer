@@ -29,9 +29,18 @@ single-path symbolic analysis. The Python project under `analysis/` builds evalu
 
 ## Use the pinned environment
 
-Enter the Nix devshell before running project commands. It pins Java 8 because the build and
-jpf-core bytecode model require it. Use `direnv allow`, `nix develop`, or
-`nix develop --command <command>`.
+On Mac/Linux, enter the Nix devshell before running project commands. It pins Java 8
+because the build and jpf-core bytecode model require it. Use `direnv allow`,
+`nix develop`, or `nix develop --command <command>`.
+
+On native Windows, install Git for Windows (including `sh`), `uv`, Python 3.13,
+and `lefthook` on PATH, then run `lefthook install` from the repository root.
+The Python hooks select the root `.python-version` through native `uv` on Windows.
+On Mac/Linux they enter the devshell through
+`/nix/var/nix/profiles/default/bin/nix`, including when an editor has no toolchain
+on PATH. All hook jobs use `uv run --frozen` with
+`analysis/uv.lock`. Native Python hooks do not replace the Java 8 requirement
+for Java pipeline commands.
 
 Run commands from the repository root.
 

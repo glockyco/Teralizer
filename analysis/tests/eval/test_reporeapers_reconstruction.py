@@ -302,9 +302,9 @@ def test_shipped_output_directory_audit_reconciles_complete_population():
 def test_inventory_hashes_collected_sources_without_copying_contents(tmp_path: Path):
     source = tmp_path / "logs"
     source.mkdir()
-    (source / "project-1.log").write_text("first run\n", encoding="utf-8")
+    (source / "project-1.log").write_bytes(b"first run\n")
     (source / "nested").mkdir()
-    (source / "nested/output.log").write_text("failure\n", encoding="utf-8")
+    (source / "nested/output.log").write_bytes(b"failure\n")
 
     inventory = reconstruction.build_inventory(_inventory_spec(source))
 

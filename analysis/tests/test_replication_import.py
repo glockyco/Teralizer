@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 import subprocess
 
 import pytest
@@ -12,8 +13,31 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _IMPORTER = _REPO_ROOT / "replication/scripts/import-databases.sh"
 
 
+def _importer_command(*arguments: str) -> list[str]:
+    if os.name != "nt":
+        return [str(_IMPORTER), *arguments]
+
+    git = shutil.which("git")
+    candidates = []
+    if git:
+        git_root = Path(git).parent.parent
+        candidates.extend([git_root / "bin/bash.exe", git_root / "usr/bin/bash.exe"])
+    for variable, installation in (
+        ("ProgramFiles", "Git"),
+        ("LOCALAPPDATA", "Programs/Git"),
+    ):
+        if directory := os.environ.get(variable):
+            candidates.append(Path(directory) / installation / "bin/bash.exe")
+    for bash in candidates:
+        if bash.is_file():
+            return [str(bash), _IMPORTER.as_posix(), *arguments]
+    raise FileNotFoundError(
+        "Git for Windows Bash is required for shell integration tests"
+    )
+
+
 def _executable(path: Path, source: str) -> Path:
-    path.write_text(source, encoding="utf-8")
+    path.write_text(source, encoding="utf-8", newline="\n")
     path.chmod(0o755)
     return path
 
@@ -26,6 +50,10 @@ def _fake_commands(tmp_path: Path) -> tuple[Path, Path]:
         commands / "uv",
         r"""#!/usr/bin/env bash
 set -u
+registry_cwd=$PWD
+if command -v cygpath >/dev/null 2>&1; then
+    registry_cwd=$(cygpath -m "$PWD")
+fi
 printf 'uv\t%s\n' "$*" >> "${FAKE_LOG:?}"
 args=$*
 if [[ $args == *"--verify-package"* ]]; then
@@ -34,14 +62,14 @@ if [[ $args == *"--verify-package"* ]]; then
 elif [[ $args == *"--resolve-package-corpus controlled"* ]]; then
     printf 'controlled_db\tcontrolled_db.dump\t2\tcurrent\n'
 elif [[ $args == *"teralizer.corpora prepare-corpus controlled"* ]]; then
-    printf 'registry-cwd\t%s\n' "$PWD" >> "${FAKE_LOG:?}"
+    printf 'registry-cwd\t%s\n' "$registry_cwd" >> "${FAKE_LOG:?}"
     [[ ${FAIL_CORPUS_COMMAND:-} != prepare ]] || exit 9
     printf 'connection\t%s\t%s\t%s\t%s\t%s\n' \
         "${DB_HOST:-}" "${DB_PORT:-}" "${DB_USER:-}" \
         "${REPORT_DB_USER:-}" "${REPORT_DB_PASSWORD:-}" >> "${FAKE_LOG:?}"
     printf 'prepared controlled\n'
 elif [[ $args == *"teralizer.corpora verify-corpus controlled"* ]]; then
-    printf 'registry-cwd\t%s\n' "$PWD" >> "${FAKE_LOG:?}"
+    printf 'registry-cwd\t%s\n' "$registry_cwd" >> "${FAKE_LOG:?}"
     [[ ${FAIL_CORPUS_COMMAND:-} != verify ]] || exit 9
     printf 'verified controlled\n'
 else
@@ -92,13 +120,13 @@ def _run_importer(
     package = tmp_path / "package"
     package.mkdir()
     monkeypatch.setenv("PATH", f"{commands}{os.pathsep}{os.environ['PATH']}")
-    monkeypatch.setenv("FAKE_LOG", str(log))
-    monkeypatch.setenv("FAKE_PACKAGE", str(package))
+    monkeypatch.setenv("FAKE_LOG", log.as_posix())
+    monkeypatch.setenv("FAKE_PACKAGE", package.as_posix())
     monkeypatch.setenv("COMPOSE_PROJECT_NAME", "reviewer-installation")
     for name, value in extra_environment.items():
         monkeypatch.setenv(name, value)
     result = subprocess.run(
-        [str(_IMPORTER), "--force", "--corpus", "controlled", str(package)],
+        _importer_command("--force", "--corpus", "controlled", package.as_posix()),
         capture_output=True,
         text=True,
         check=False,
@@ -129,8 +157,8 @@ def test_importer_verifies_then_restores_prepares_and_preflights(
     )
     assert all("postgres-teralizer" not in line for line in lines)
     assert [line for line in lines if line.startswith("registry-cwd\t")] == [
-        f"registry-cwd\t{_REPO_ROOT}",
-        f"registry-cwd\t{_REPO_ROOT}",
+        f"registry-cwd\t{_REPO_ROOT.as_posix()}",
+        f"registry-cwd\t{_REPO_ROOT.as_posix()}",
     ]
 
 
@@ -145,7 +173,7 @@ def test_force_import_replaces_an_existing_corpus(
 
 def test_importer_requires_package_directory():
     result = subprocess.run(
-        [str(_IMPORTER), "--force"],
+        _importer_command("--force"),
         capture_output=True,
         text=True,
         check=False,
