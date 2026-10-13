@@ -115,8 +115,9 @@ Mac and Linux hooks retain the Nix devshell entrypoint from `flake.nix`.
 
 Git may materialize tracked symlinks as target-name text files on Windows.
 The Docker build excludes `project-configs/fusion-spike/`, so those aliases are
-not part of this image workflow. The root agent-file aliases are not runtime inputs.
-Run fusion-spike profiles from a checkout that supports symlinks.
+not part of this image workflow. The Dockerfile recreates the root agent-file
+aliases as symlinks. Run fusion-spike profiles from a checkout that supports
+symlinks.
 
 ---
 
