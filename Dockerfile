@@ -31,6 +31,9 @@ RUN wget -q https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binar
 WORKDIR /app
 COPY . /app
 
+# Windows Git checkouts can copy agent aliases as target-name text files.
+RUN ln -sf AGENTS.md CLAUDE.md && ln -sf AGENTS.md GEMINI.md
+
 # Create directories
 RUN mkdir -p database data logs
 
