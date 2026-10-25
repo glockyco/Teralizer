@@ -9,8 +9,8 @@ description: Use when running, refreshing, or debugging the Teralizer JARVIS Tab
 
 The JARVIS scoreboard runs Teralizer on pinned Commons-Math (`MATH_3_5`) and
 Commons-Lang (`LANG_3_5`) fixtures and compares generated jqwik tests against the
-JARVIS paper's Table-2 PVC/IC. It runs on a **dedicated scratch DB**
-(`postgres_jarvis_scoreboard`) and scratch data root (`data/jarvis-scoreboard/`).
+JARVIS paper's Table-2 PVC/IC. It uses the dedicated scratch database and data root
+selected by `scripts/run-jarvis-scoreboard.sh`.
 
 **Core trap:** `./gradlew run` exits `0` (`BUILD SUCCESSFUL`) even when a *pipeline*
 task fails — the pipeline catches the error, drops the downstream tasks, and the JVM
@@ -33,9 +33,11 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
 
 ## Runbook
 
-1. **Preflight the DB container.** The run reads `.env` creds (`DB_USER`/`DB_PASSWORD`,
-   default `postgres`/`postgres`) through dotenv. Confirm the project's own container is
-   on 5432 — not another project's:
+1. **Preflight the DB container.** Runtime credentials come from environment variables,
+   then `.env`, then the defaults in `Configuration.java`. Check `DB_USER` and
+   `DB_PASSWORD` overrides before connecting so another shell's credentials do not
+   select the wrong server. Confirm the project's own container is on the configured
+   port, not another project's:
    ```bash
    docker ps --format "{{.Names}} | {{.Status}} | {{.Ports}}" | grep postgres
    # want: postgres-teralizer ... 0.0.0.0:5432->5432/tcp
@@ -51,9 +53,9 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
    ```bash
    bash scripts/run-jarvis-scoreboard.sh --prepare-fixtures --reset-db
    ```
-   DB and data-dir are pinned internally (`postgres_jarvis_scoreboard`,
-   `data/jarvis-scoreboard`); `JARVIS_DB`/`JARVIS_DATA_DIR` override them for scratch
-   experiments. Interruption is safe: the runner kills the whole gradle process group.
+   `scripts/run-jarvis-scoreboard.sh` defines the scratch targets and their environment
+   overrides. Use those overrides rather than `DB_NAME`, which does not select the
+   runtime database. Interruption is safe: the runner kills the whole gradle process group.
 
 3. **Verify the run actually succeeded** (not just the gradle exit — see Core trap):
    ```bash
@@ -96,7 +98,7 @@ its PIT minions.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `password authentication failed for user "postgres"` | Foreign container on 5432 (different creds) | Start `postgres-teralizer`; verify with `docker ps` |
-| Run targets the wrong DB despite the script | `build.gradle`'s `getEnv` is `.env`-first (jOOQ, build-time). The **app** (`Configuration.java`) uses dotenv-java, which is **env-first**, so the script's `DB_NAME` export wins at runtime | Do **not** edit the existing `.env` because it may pin `DB_NAME=postgres_timeout_retry` for other work. |
+| Connection settings differ from `.env` | `build.gradle`'s `getEnv` prefers nonempty environment values. `Configuration.java` uses dotenv-java, which prefers environment values, including empty strings, over `.env`. The runtime database name instead comes from `teralizer.database.name`, not `DB_NAME`. | Check exported connection settings before changing `.env`. For the database target, inspect the runner's `-Dteralizer.database.name` argument, which overrides the run profile. |
 | `CREATE DATABASE` → `template1 has a collation version mismatch` | glibc upgraded under the container | `ALTER DATABASE template1 REFRESH COLLATION VERSION;` then CREATE |
 | Rebuild fails on `_*Generalized*_Test.java` from a prior run | Failed `BUILD_PROJECT_GENERALIZED` dropped the cleanup task | Delete stale generated tests before re-running (step 3) |
 | `BUILD SUCCESSFUL` but no scorecard data | A pipeline task failed and dropped downstream tasks; gradle still exits 0 | Grep the pipeline log for `ERROR`; never trust the gradle exit code |
@@ -105,6 +107,7 @@ its PIT minions.
 
 ## Data boundaries
 
-Scratch only: `postgres_jarvis_scoreboard` + `data/jarvis-scoreboard/`. Never read or
-mutate `postgres_dev`, `postgres_test`, or any `_replication` database. The run script
-preflights `DB_NAME` and refuses those targets.
+Use only the scratch targets selected by `scripts/run-jarvis-scoreboard.sh`.
+Never read or mutate protected corpora during a scoreboard run. The shared
+`scripts/lib/jarvis-run.sh` checks its selected database with the scratch guard
+before starting the pipeline.
