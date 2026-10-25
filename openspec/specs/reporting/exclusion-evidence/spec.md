@@ -395,3 +395,103 @@ values from prose fields.
 - **WHEN** the thesis publishes the aggregate macros
 - **THEN** it does not need the reconstruction summary or outcome table as a document input
 - **AND** report provenance still traces each macro to the committed audit input
+
+### Requirement: Test-type explanations match recorded declarations
+
+The registered RQ6 report SHALL publish provenance-backed counts for each recorded declaration category rejected by `TestType`. The categories SHALL distinguish unsupported execution models from declaration-resolution failures, and their counts SHALL sum to the `TestType` rejection population.
+
+The thesis SHALL NOT describe an inherited JUnit test resolved to an overridden declaration as an unsupported JUnit test type. It SHALL distinguish that declaration-resolution limitation from unsupported JUnit theories and TestNG tests.
+
+#### Scenario: TestType rejects several declaration mechanisms
+
+- **WHEN** `TestType` rejects JUnit theories, inherited tests resolved to overridden declarations, and TestNG tests
+- **THEN** the report publishes a separate count for each category
+- **AND** the category counts sum to the `TestType` rejection count
+- **AND** the thesis describes each mechanism with its recorded semantics
+
+### Requirement: Oracle-recovery directions preserve distinct mechanisms
+
+Reader-facing improvement prose SHALL distinguish assertion recognition, tested-method identification, and assertion-to-MUT mapping. Support for interprocedural assertions or additional assertion libraries SHALL NOT be presented as a repair for tested-method identification or assertion-to-MUT mapping.
+
+The thesis MAY propose an explicit `does not throw` oracle for tests with no explicit assertion because a passing test already requires no unexpected exception. It SHALL present this as an unimplemented extension, preserve framework-declared expected-exception semantics, and SHALL NOT convert the reconstruction estimate into a measured recovery count.
+
+#### Scenario: A test has no explicit assertion
+
+- **WHEN** future-work prose proposes a `does not throw` oracle
+- **THEN** it identifies the proposal as an extension of the current implementation
+- **AND** it requires expected-exception behavior to remain distinct
+- **AND** it does not claim that the extension recovers a measured number of tests
+
+#### Scenario: An assertion becomes recognizable
+
+- **WHEN** interprocedural analysis or assertion-library support exposes an assertion
+- **THEN** the prose still identifies tested-method identification and assertion-to-MUT mapping as separate required improvements
+- **AND** it does not treat assertion recognition as proof that a sound generalization candidate exists
+
+### Requirement: Stage-local conclusions retain their population boundary
+
+A reader-facing Stage 4 conclusion SHALL name the projects or generalization attempts that reach that boundary. It MAY identify widening refusal as the most frequent recorded Stage 4 exclusion mechanism. It SHALL NOT infer that fixing widening would recover the most projects or preserve the same distribution after earlier-stage support changes.
+
+The established project-completion framing remains survivor-based: a project completes a stage when at least one relevant entity crosses its boundary. Failures of other entities in that project do not negate the completed transition.
+
+#### Scenario: Widening dominates recorded Stage 4 exclusions
+
+- **WHEN** widening refusal has the largest recorded count among Stage 4 exclusion mechanisms
+- **THEN** the thesis scopes the statement to the population that enters Stage 4
+- **AND** it does not rank expected project recovery across stages
+
+#### Scenario: A surviving project also has entity failures
+
+- **WHEN** at least one entity crosses every stage boundary while other entities fail
+- **THEN** the project counts as completing all five stages
+- **AND** the thesis does not require every entity or task in that project to succeed
+
+### Requirement: Entity-level RQ6 revisions preserve the established source narrative
+
+The thesis SHALL use the TOSEM source in the thesis `projects/teralizer-paper` submodule as the narrative baseline for the `Test, Assertion, and Generalization Exclusions` results and their later interpretation in the Chapter 5 discussion, Chapter 6 reflections, and Chapter 7 conclusion. A revision SHALL preserve established wording, paragraph order, and narrative progression unless the current corpus, generated values, pipeline semantics, or accepted interpretation requires a change. The RQ6 introduction and `Project-Level Exclusions` results SHALL remain unchanged.
+
+Every restored numerical claim SHALL trace to registered metrics, generated reports, or an existing reconstruction audit for the accepted RQ6 population. When the source narrative requires a quantity that those owners do not publish, the change SHALL register provenance-backed evidence for that population before publishing the claim. It SHALL NOT omit or weaken the claim only to avoid the evidence work.
+
+Within the immediate discussion of the filtering-results table, the thesis SHALL identify an entry by its filter name and SHALL NOT add a generated row reference for that entry. A claim outside that context MAY use a row reference when the filter name and population are not otherwise established. A reference to an unnumbered heading SHALL NOT use a bare `\cref` when the compiled reference resolves to a broader numbered parent. The prose SHALL name the topic and, when a citation is needed, use a useful numbered section or table owner.
+
+#### Scenario: Frozen RQ6 text is encountered
+
+- **WHEN** a revision compares the thesis with the TOSEM source
+- **THEN** it excludes the RQ6 introduction and `Project-Level Exclusions` results from the mutable scope
+- **AND** it does not change their wording, structure, or references
+
+#### Scenario: Existing evidence supplies an updated quantity
+
+- **WHEN** the mutable RQ6 text needs a quantity that already exists in a registered metric, generated table, or reconstruction audit
+- **THEN** the thesis uses that evidence
+- **AND** the implementation does not create a duplicate analysis or sample
+
+#### Scenario: A required quantity is missing
+
+- **WHEN** supported source wording requires a quantity that is absent from the accepted RQ6 evidence
+- **THEN** the reporting system registers provenance-backed evidence for the accepted RQ6 population before publication
+- **AND** the thesis does not avoid the evidence gap by dropping or weakening the claim
+
+#### Scenario: Source wording remains supported
+
+- **WHEN** the TOSEM wording remains accurate for the current population and interpretation within the mutable scope
+- **THEN** the thesis preserves that wording and its narrative position
+- **AND** it does not replace the wording only for stylistic variation
+
+#### Scenario: Current evidence requires a departure
+
+- **WHEN** current populations, values, pipeline semantics, or accepted interpretation contradict the TOSEM wording
+- **THEN** the thesis preserves the evidence-required correction
+- **AND** it does not restore the contradicted source claim
+
+#### Scenario: A filter is discussed beside its result table
+
+- **WHEN** the surrounding RQ6 paragraph establishes the filtering-results table and names the filter
+- **THEN** the filter name uniquely identifies the result
+- **AND** the paragraph does not cite the generated table row
+
+#### Scenario: Later prose names an unnumbered topic
+
+- **WHEN** later interpretation must refer to an unnumbered subsubsection or paragraph
+- **THEN** the prose names the topic directly
+- **AND** any cross-reference identifies a useful numbered section or table rather than the broader parent number alone
