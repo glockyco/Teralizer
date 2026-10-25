@@ -5,7 +5,7 @@ Production corpus data moves through four storage zones. Do not copy production 
 | Zone | Contents | Owner |
 |---|---|---|
 | Source checkout | Corpus declarations, schemas, code, and synthetic fixtures | Git |
-| Author staging | Completed dumps, `manifest.json`, and `checksums.sha256` | Operator-selected external directory |
+| Author staging | Completed dumps, `manifest.json`, and `checksums.sha256` | Selected external directory |
 | Release staging | Verified archive inputs and generated release archives | `prepare-zenodo-package.sh` output directory |
 | Published installation | Immutable archives selected by a version DOI | Zenodo |
 

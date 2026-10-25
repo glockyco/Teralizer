@@ -25,7 +25,7 @@ single-path symbolic analysis. The Python project under `analysis/` builds evalu
 - Keep first-run results. A timeout, exclusion, or stage failure is a measured outcome.
 - Never rerun a project to select a cleaner result. Investigate nondeterminism as a defect.
 - Treat a measurement database and its run root as one record. Never delete one without the other.
-- Do not start a corpus, sentinel, hotspot, or JARVIS run without explicit operator approval.
+- Ask before starting a corpus, sentinel, hotspot, or JARVIS run.
 
 ## Use the pinned environment
 
