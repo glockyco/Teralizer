@@ -96,7 +96,7 @@ its PIT minions.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `password authentication failed for user "postgres"` | Foreign container on 5432 (different creds) | Start `postgres-teralizer`; verify with `docker ps` |
-| Run targets the wrong DB despite the script | `build.gradle`'s `getEnv` is `.env`-first (jOOQ, build-time) — but the **app** (`Configuration.java`) uses dotenv-java, which is **env-first**, so the script's `DB_NAME` export wins at runtime | None needed; do **not** edit the user's `.env` (it may pin `DB_NAME=postgres_timeout_retry` for other work) |
+| Run targets the wrong DB despite the script | `build.gradle`'s `getEnv` is `.env`-first (jOOQ, build-time). The **app** (`Configuration.java`) uses dotenv-java, which is **env-first**, so the script's `DB_NAME` export wins at runtime | Do **not** edit the existing `.env` because it may pin `DB_NAME=postgres_timeout_retry` for other work. |
 | `CREATE DATABASE` → `template1 has a collation version mismatch` | glibc upgraded under the container | `ALTER DATABASE template1 REFRESH COLLATION VERSION;` then CREATE |
 | Rebuild fails on `_*Generalized*_Test.java` from a prior run | Failed `BUILD_PROJECT_GENERALIZED` dropped the cleanup task | Delete stale generated tests before re-running (step 3) |
 | `BUILD SUCCESSFUL` but no scorecard data | A pipeline task failed and dropped downstream tasks; gradle still exits 0 | Grep the pipeline log for `ERROR`; never trust the gradle exit code |

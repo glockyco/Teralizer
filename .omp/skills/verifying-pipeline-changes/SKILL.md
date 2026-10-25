@@ -18,7 +18,7 @@ the golden to match broken output.
 | Iterating on one behavior | `scripts/run-verification-corpus.sh --only <fixture-name>` (resets the scratch database and runs that fixture. Inspect the database with ad hoc SQL because the full golden check expects the whole corpus) | ~45 s |
 | Change is "done" | `scripts/verify-pipeline.sh` (build + full fixture corpus + golden check), ONCE | ~15 min (16 fixtures, ~47 s each) |
 | Change touches real-world seams (surefire versions, report formats, big suites, source levels) | sentinel subset: `REPOREAPERS_SCRATCH_DB=scratch_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db`. Expected census sits in the config header comments. Drop the scratch DB and data dir afterwards | ~10 min |
-| Corpus-level claims for the paper | full spike (`project-configs/fusion-spike/`), coordinated with the operator | ~1 h |
+| Corpus-level claims for the paper | Ask before running the full spike (`project-configs/fusion-spike/`) | ~1 h |
 
 Never verify against kouchat, gedcom4j, xenqtt, uaicriteria (60s-ceiling jitter) or sparkey
 (native mmap flake): run-to-run nondeterminism, evaluation corpus only.

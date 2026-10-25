@@ -1,7 +1,7 @@
 # Packaging and artifact tooling
 
-Maintainer-only scripts for building and validating the Zenodo replication artifact. Nothing
-here is part of the operator evaluation workflow, and no run driver references this directory.
+These scripts build and validate the Zenodo replication artifact. Nothing here is part of
+the artifact evaluation workflow, and no run driver references this directory.
 
 | Script | Job |
 |---|---|
@@ -14,5 +14,5 @@ here is part of the operator evaluation workflow, and no run driver references t
 - `setup-eval-environment.sh` is DESTRUCTIVE to local replication Docker state: it removes
   containers, volumes, and images matching replication names before rebuilding. Never run it
   to "check" anything.
-- None of these scripts are smoke-tested by the fixture gate. Treat them as manual tools that
-  a maintainer runs deliberately around an artifact release.
+- None of these scripts are smoke-tested by the fixture gate. Run them deliberately
+  when preparing an artifact release.
