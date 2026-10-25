@@ -29,9 +29,10 @@ See [REQUIREMENTS.md](REQUIREMENTS.md) for detailed requirements.
 
 ## Quick Start
 
+Run from the repository root:
+
 ```bash
-cd replication
-./quick-start.sh
+./replication/quick-start.sh
 ```
 
 This script:
@@ -48,13 +49,11 @@ imported databases with Adminer.
 ### Checkpoint 1: Services Running
 
 ```bash
-docker compose ps
+docker compose -f replication/docker-compose.yml ps
 ```
 
-**Expected**: Three services with status "Up":
-- postgres-replication
-- adminer-replication
-- analysis-replication
+PostgreSQL and Adminer should be running. The quick-start script starts only
+these services. Run analysis separately at the later checkpoints.
 
 ### Checkpoint 2: Database Populated
 
@@ -99,10 +98,13 @@ Installation is successful when:
 
 ## Stopping Services
 
+Run from the repository root. Select the replication Compose file explicitly
+so these commands do not target the development services:
+
 ```bash
 # Stop containers (preserves data)
-docker compose down
+docker compose -f replication/docker-compose.yml down
 
 # Stop and remove all data
-docker compose down -v
+docker compose -f replication/docker-compose.yml down -v
 ```
