@@ -212,13 +212,13 @@ and SHALL NOT add overlapping rejection counts.
 ### Requirement: Exclusion tables preserve semantic layout
 
 Entity summary tables SHALL center the `Excluded` spanner over `Filtering` and `Failures`.
-Filter-detail tables SHALL render a midrule at each entity-level boundary. A long filter-detail table
-MAY use an explicit local compact density, but it SHALL preserve readable text, semantic rules, and
-the adjacent summary-table source boundary.
+Filter-detail tables SHALL render a midrule at each entity-level boundary. A consuming document MAY
+apply an explicit local compact density in its table wrapper, but it SHALL preserve readable text,
+semantic rules, and the adjacent summary-table source boundary.
 
 #### Scenario: The paired RQ6 exclusion tables are rendered
 - **WHEN** the generated filter-detail table needs compact density to remain with its summary table
-- **THEN** the renderer applies the density through its table-style contract
+- **THEN** the consuming document applies the density through its manuscript-owned table wrapper
 - **AND** it does not use negative spacing, global float changes, or generated-file edits
 
 ### Requirement: Excluded-test explanations match the executable predicate
