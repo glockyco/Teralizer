@@ -22,13 +22,16 @@ The producer SHALL NOT combine the dimensions into one score or select thesis wo
 
 Mutation-score headline metrics SHALL expose the minimum and maximum absolute improvement for each declared evaluation cohort from the same RQ1 result used by the generated figure. The cohorts SHALL distinguish EvoSuite-generated EqBench tests, EvoSuite-generated Apache Commons tests, and developer-written Apache Commons tests.
 
-The range SHALL be computed over the declared generalized variants and evaluated budgets after the report validates the expected project, variant, and baseline rows. The producer SHALL expose the developer-written baseline mutation score separately. It SHALL fail rather than publish a range from a missing, duplicate, or silently narrowed cohort.
-
 #### Scenario: RQ1 headline ranges are published
 - **WHEN** the RQ1 report receives its complete expected result frame
 - **THEN** it emits typed minimum and maximum absolute-improvement metrics for every declared cohort
 - **AND** the metrics share the RQ1 query provenance and identify the cohort selection
 - **AND** aggregate macros expose the same values
+
+### Requirement: Effectiveness ranges require complete cohort rows
+
+The range SHALL be computed over the declared generalized variants and evaluated budgets after the report validates the expected project, variant, and baseline rows. The producer SHALL expose the developer-written baseline mutation score separately. It SHALL fail rather than publish a range from a missing, duplicate, or silently narrowed cohort.
+
 
 #### Scenario: A required RQ1 row is absent
 - **WHEN** a cohort lacks an expected baseline, project, budget, or generalized variant row
@@ -39,12 +42,20 @@ The range SHALL be computed over the declared generalized variants and evaluated
 
 Applicability headline evidence SHALL reuse the existing RQ0 comparison populations and the existing RQ6 end-to-end project population. It SHALL expose the intended JARVIS benchmark project denominator, the project counts for which each approach reports or produces a generalized test, the eligible RepoReapers project denominator, and the projects completing the full pipeline through reduction.
 
-The producer SHALL NOT derive a composite applicability percentage across the JARVIS and RepoReapers evaluations.
-
 #### Scenario: Applicability metrics are published
 - **WHEN** RQ0 and RQ6 complete in one registered report run
 - **THEN** their existing project counts, denominators, shares, corpus inputs, and provenance remain available as aggregate metrics and macros
 - **AND** each rate identifies its own project population
+
+
+### Requirement: Applicability evidence does not combine corpus percentages
+
+The producer SHALL NOT derive a composite applicability percentage across the JARVIS and RepoReapers evaluations.
+
+#### Scenario: Both applicability evaluations are available
+
+- **WHEN** JARVIS and RepoReapers applicability evidence is published
+- **THEN** each retains its project population without a composite applicability percentage
 
 ### Requirement: Real-world output evidence names completed generalized tests
 
@@ -63,14 +74,21 @@ The producer SHALL preserve `final_usable` as the semantic evidence identity. Re
 
 ### Requirement: Mechanism insight remains denominator explicit
 
-The RQ6 report SHALL expose assertion survival into the accepted assertion population and widening refusals among generalization attempts as separate mechanism-level observations. Each count and share SHALL name its entity population and denominator. Widening-refusal share SHALL use all eligible `IMPROVED_200_TRIES` generalization attempts as its denominator; branch shares SHALL continue to use total widening refusals.
-
-The producer SHALL NOT turn these observations into a causal ranking or reader-facing explanation.
+The RQ6 report SHALL expose assertion survival into the accepted assertion population and widening refusals among generalization attempts as separate mechanism-level observations. Each count and share SHALL name its entity population and denominator. Widening-refusal share SHALL use all eligible `IMPROVED_200_TRIES` generalization attempts as its denominator. Branch shares SHALL continue to use total widening refusals.
 
 #### Scenario: Mechanism evidence is published
 - **WHEN** RQ6 completes with a conserved assertion partition and typed widening-refusal rows
 - **THEN** aggregate metrics and macros expose assertion survival count/share and widening-refusal count/share
 - **AND** widening-refusal count plus all other attempt outcomes conserves the generalization-attempt denominator
+
+### Requirement: Mechanism evidence does not prescribe causal interpretation
+
+The producer SHALL NOT turn mechanism-level observations into a causal ranking or reader-facing explanation.
+
+#### Scenario: Mechanism observations are handed downstream
+
+- **WHEN** assertion survival and widening-refusal metrics are published
+- **THEN** the producer does not rank causes or supply a reader-facing explanation
 
 ### Requirement: Headline evidence is provenance bearing
 
@@ -86,13 +104,15 @@ Every headline metric SHALL carry value kind, population, input role, source pro
 
 The producer SHALL NOT publish a controlled-versus-RepoReapers generalization-success comparison as a headline metric. Controlled RQ5 predates the widening license and lacks the telemetry needed to reconstruct a current-policy verdict. Attempt-level and filtering-inclusion rates MAY remain corpus-local diagnostic evidence.
 
-A bounded RQ6 filtering comparison MAY place corpus-local included shares together only when both observations count generalized tests with a filtering result, each share preserves its own denominator and provenance, and the result remains outside the thesis-wide headline key set. The producer SHALL NOT convert that comparison into one cross-condition effect or an overall applicability claim.
-
 #### Scenario: Headline evidence is selected
 - **WHEN** aggregate headline metrics are assembled
 - **THEN** no metric pairs controlled `is_included` with a RepoReapers lifecycle state
 - **AND** no metric presents 83.8%/30.2% or 84.0%/78.5% as a cross-condition effect
 - **AND** the controlled and RepoReapers filtering-inclusion metrics are absent from the thesis-wide headline key set
+
+### Requirement: Bounded filtering comparisons preserve corpus-local meaning
+
+A bounded RQ6 filtering comparison MAY place corpus-local included shares together only when both observations count generalized tests with a filtering result, each share preserves its own denominator and provenance, and the result remains outside the thesis-wide headline key set. The producer SHALL NOT convert that comparison into one cross-condition effect or an overall applicability claim.
 
 #### Scenario: RQ6 receives bounded filtering evidence
 

@@ -14,12 +14,6 @@ A consuming repository SHALL declare the generated artifacts it takes and the pa
 written to. The declaration SHALL cover every kind of generated artifact, and SHALL NOT be limited to
 one kind.
 
-Publishing SHALL NOT derive a consumer's path from the name a generator gave an artifact. Two
-consumers MAY declare different paths for the same artifact.
-
-A declared path SHALL resolve inside the consuming repository. A consumer MAY declare an artifact that
-is not a document input when it intentionally retains that artifact as reviewable evidence. The
-consumer's declaration remains the authority for that choice.
 
 #### Scenario: A repository declares artifacts of several kinds
 
@@ -37,6 +31,15 @@ consumer's declaration remains the authority for that choice.
 - **THEN** the artifact remains in the generator's own build tree
 - **AND** it is not delivered to any consuming repository
 
+
+### Requirement: Consumer paths are explicit and repository-local
+
+Publishing SHALL NOT derive a consumer's path from the name a generator gave an artifact. Two
+consumers MAY declare different paths for the same artifact.
+
+A declared path SHALL resolve inside the consuming repository. A consumer MAY declare an artifact that
+is not a document input when it intentionally retains that artifact as reviewable evidence. The
+consumer's declaration remains the authority for that choice.
 #### Scenario: Two consumers name one artifact differently
 
 - **WHEN** two consuming repositories declare the same artifact under different paths

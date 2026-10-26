@@ -67,13 +67,6 @@ A run SHALL construct its provenance manifest from the selected built reports, t
 snapshots, and the complete staged artifact set. Manifest construction SHALL NOT branch on a report id
 or accept report-supplied input identity.
 
-A full report-set run SHALL reconstruct the complete manifest from the registry and SHALL remove stale
-entries for reports that no longer exist. A partial local run SHALL replace only selected report entries
-in memory and SHALL preserve unselected entries until a later full run verifies the whole set.
-
-#### Scenario: A full run removes a report
-- **WHEN** a previously recorded report is no longer registered
-- **THEN** the reconstructed manifest omits its stale entry
 
 #### Scenario: A multi-input report is rendered
 - **WHEN** one report used several declared inputs
@@ -83,6 +76,22 @@ in memory and SHALL preserve unselected entries until a later full run verifies 
 - **WHEN** report code attempts to add a report-specific top-level provenance shape
 - **THEN** the common result model cannot represent that exception
 
+### Requirement: Manifest replacement follows the selected report scope
+
+A full report-set run SHALL reconstruct the complete manifest from the registry and SHALL remove stale
+entries for reports that no longer exist. A partial local run SHALL replace only selected report entries
+in memory and SHALL preserve unselected entries until a later full run verifies the whole set.
+
+#### Scenario: A full run removes a report
+- **WHEN** a previously recorded report is no longer registered
+- **THEN** the reconstructed manifest omits its stale entry
+
+#### Scenario: A partial local run updates selected reports
+
+- **WHEN** only part of the registry is selected
+- **THEN** only selected entries are replaced in memory
+- **AND** unselected entries remain until a full run verifies the whole set
+
 ### Requirement: Promotion occurs only after complete validation
 
 In ordinary report regeneration, the runner SHALL promote staged generator artifacts only after all
@@ -90,9 +99,6 @@ selected reports, render targets, manifest entries, artifact identities, and pub
 pass. Publication-only consumer delivery SHALL instead use the validated staged set without generator
 promotion.
 
-A partial run SHALL update only paths owned by its selected reports and run-level aggregates. A full
-run SHALL reconcile the complete generator-owned output set. Neither mode SHALL remove or overwrite a
-consumer-maintained file.
 
 #### Scenario: A consumer declaration is incomplete or stale
 - **WHEN** a declared artifact is absent from the staged set or a declared path is unsafe
@@ -106,6 +112,18 @@ consumer-maintained file.
 - **WHEN** no consumer destination is supplied
 - **THEN** the same build, staging, validation, and generator-promotion boundary applies
 - **AND** consumer delivery is skipped
+
+### Requirement: Promotion updates only generator-owned paths in scope
+
+A partial run SHALL update only paths owned by its selected reports and run-level aggregates. A full
+run SHALL reconcile the complete generator-owned output set. Neither mode SHALL remove or overwrite a
+consumer-maintained file.
+
+#### Scenario: A partial run promotes its artifacts
+
+- **WHEN** a selected report set completes promotion
+- **THEN** only paths owned by selected reports and run-level aggregates are updated
+- **AND** consumer-maintained files remain unchanged
 
 ### Requirement: The command interface cannot create an incoherent run
 
@@ -136,9 +154,6 @@ branch keyed to a particular report or research question.
 
 A publication-only report run MUST build, render, and validate every declared consumer artifact in staging. It MUST deliver the validated set without promoting generated reports, aggregate provenance, or other tracked generator outputs into the source worktree.
 
-The run MUST leave tracked source, report, provenance, preserved input, and generated-dataset paths byte-identical to their state before the command. It MUST NOT start a corpus, project, sentinel, hotspot, or benchmark experiment.
-
-Ignored staging or build outputs MAY change. Such outputs MUST NOT be an input selected in place of the run's registered preserved evidence.
 
 #### Scenario: A clean worktree publishes consumer artifacts
 
@@ -159,6 +174,18 @@ Ignored staging or build outputs MAY change. Such outputs MUST NOT be an input s
 - **THEN** no consumer artifact is delivered
 - **THEN** tracked generator outputs remain unchanged
 - **THEN** staged outputs are discarded according to the report-run transaction boundary
+
+### Requirement: Publication-only work preserves tracked inputs and experiment state
+
+The run MUST leave tracked source, report, provenance, preserved input, and generated-dataset paths byte-identical to their state before the command. It MUST NOT start a corpus, project, sentinel, hotspot, or benchmark experiment.
+
+Ignored staging or build outputs MAY change. Such outputs MUST NOT be an input selected in place of the run's registered preserved evidence.
+
+#### Scenario: Publication uses ignored staging output
+
+- **WHEN** a publication-only run changes ignored staging or build outputs
+- **THEN** tracked paths remain byte-identical and no experiment starts
+- **AND** registered preserved evidence is not replaced by ignored output
 
 #### Scenario: The generator worktree is already dirty
 

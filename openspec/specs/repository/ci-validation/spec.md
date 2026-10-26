@@ -49,8 +49,6 @@ A change outside that declared input set SHALL NOT start PostgreSQL merely to ru
 
 The PostgreSQL contract SHALL use an ephemeral supported PostgreSQL service and the tracked synthetic corpus fixture only. It SHALL resolve the corpus by semantic id, apply the canonical base schema, verify the declared project count, prepare the derived schema twice, prove the expected derived-schema revision and views, prove report-role reads, and prove that PostgreSQL refuses a report-role write.
 
-The contract SHALL NOT download, restore, query, mutate, or infer success from any registered production corpus, corpus package, author database, report output, or collection result. A failed checkpoint SHALL fail the contract and identify the operation that did not satisfy the contract.
-
 #### Scenario: The synthetic lifecycle contract passes
 
 - **WHEN** the canonical schema, registry, preparation boundary, connection boundary, and synthetic fixture agree
@@ -62,6 +60,10 @@ The contract SHALL NOT download, restore, query, mutate, or infer success from a
 - **WHEN** the report role successfully changes a synthetic corpus base row
 - **THEN** the PostgreSQL contract fails rather than treating command success as an accepted result
 
+### Requirement: The PostgreSQL contract cannot depend on production state
+
+The contract SHALL NOT download, restore, query, mutate, or infer success from any registered production corpus, corpus package, author database, report output, or collection result. A failed checkpoint SHALL fail the contract and identify the operation that did not satisfy the contract.
+
 #### Scenario: Production corpus state is unavailable
 
 - **WHEN** PostgreSQL contract validation runs in a clean CI environment with no production corpus or package
@@ -71,9 +73,6 @@ The contract SHALL NOT download, restore, query, mutate, or infer success from a
 
 The repository SHALL run the full synthetic verification corpus after a push only when the pushed change intersects the declared verification-corpus input set. That set SHALL cover every tracked source, build input, configuration, fixture, golden, schema, script, and workflow declaration that can change the corpus execution or expected result.
 
-The corpus SHALL remain manually dispatchable and SHALL run on its declared periodic schedule regardless of changed paths. A newer run for the same branch SHALL supersede an in-progress older run. Every corpus job SHALL have a timeout that exceeds the observed successful runtime range and prevents a stalled execution from consuming a runner indefinitely.
-
-Repository validation SHALL prove the trigger boundary against representative included and excluded paths before the workflow change is accepted.
 
 #### Scenario: A corpus owner path changes
 
@@ -85,6 +84,19 @@ Repository validation SHALL prove the trigger boundary against representative in
 - **WHEN** a pushed change modifies only paths outside the declared verification-corpus input set
 - **THEN** the push does not schedule the full verification corpus
 - **AND** ordinary repository validation remains independently runnable
+
+### Requirement: Verification corpus trigger ownership is validated
+
+Repository validation SHALL prove the trigger boundary against representative included and excluded paths before the workflow change is accepted.
+
+#### Scenario: A verification workflow change is accepted
+
+- **WHEN** the declared corpus trigger boundary changes
+- **THEN** repository validation proves representative included and excluded paths before acceptance
+
+### Requirement: Verification corpus runs are scheduled and runtime-bounded
+
+The corpus SHALL remain manually dispatchable and SHALL run on its declared periodic schedule regardless of changed paths. A newer run for the same branch SHALL supersede an in-progress older run. Every corpus job SHALL have a timeout that exceeds the observed successful runtime range and prevents a stalled execution from consuming a runner indefinitely.
 
 #### Scenario: Scheduled drift detection runs
 

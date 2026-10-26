@@ -32,8 +32,6 @@ Every RepoReapers population, numerator, denominator, and entity classification 
 
 The reconstruction SHALL use a versioned manifest that identifies every collected evidence source by logical role and content identity. The manifest SHALL record the version 7 database dump, project logs, project revisions, run roots, configurations, generated artifacts, and producer revisions.
 
-Each file source SHALL have a stable digest. The version 7 database source SHALL have its recorded dump digest and observed project count. Each project source SHALL have its project root and Git revision where available. A machine path MAY locate a source during acquisition, but it SHALL NOT serve as evidence identity.
-
 #### Scenario: An archived source has no digest
 
 - **WHEN** a reconstruction input lacks a stable content identity
@@ -45,6 +43,15 @@ Each file source SHALL have a stable digest. The version 7 database source SHALL
 - **WHEN** the preserved checkout revision does not match the project revision recorded by the selected evidence
 - **THEN** the source is marked incompatible for that entity
 - **AND** its content is not used to support the classification
+
+### Requirement: Evidence sources have stable identities
+
+Each file source SHALL have a stable digest. The version 7 database source SHALL have its recorded dump digest and observed project count. Each project source SHALL have its project root and Git revision where available. A machine path MAY locate a source during acquisition, but it SHALL NOT serve as evidence identity.
+
+#### Scenario: Evidence is acquired through a machine path
+
+- **WHEN** a machine path locates an evidence source
+- **THEN** the manifest identifies the source by its digest and recorded source facts rather than that path
 
 ### Requirement: Reconstruction records entity-level decisions
 
@@ -72,12 +79,15 @@ The reconstruction SHALL attempt to resolve these questions from version 7 evide
 2. Which version 7 assertion-to-MUT resolutions fail because the collected specification evidence is insufficient?
 3. Which version 7 project exclusions result from default output-directory assumptions rather than absent build artifacts?
 
-Each question SHALL declare its population and classification rules before adjudication. A result SHALL preserve unresolved entities and incompatible evidence as separate outcomes.
-
 #### Scenario: A question has complete supporting evidence
 
 - **WHEN** every counted entity has compatible evidence and a resolved classification
 - **THEN** reconstruction emits the count, denominator, decisions, and verification totals
+
+
+### Requirement: Reconstruction preserves unresolved population outcomes
+
+Each question SHALL declare its population and classification rules before adjudication. A result SHALL preserve unresolved entities and incompatible evidence as separate outcomes.
 
 #### Scenario: A question has only partial evidence
 
@@ -99,15 +109,26 @@ An `evidence-gap` SHALL replace an unsupported numeric claim in downstream consu
 
 ### Requirement: Accepted reconstruction results are versioned audit inputs
 
-A supported or partially supported reconstruction SHALL produce a normalized, versioned audit input. The input SHALL contain its manifest identity, population definition, entity decisions, summary totals, unresolved totals, and reconstruction status. A sample estimate used by a downstream report SHALL be stored as structured estimate data with its value, confidence bounds, estimator, and confidence method. A report SHALL NOT recover those values by parsing narrative rationale.
-
-A registered report MAY consume this audit input together with version 7. It SHALL verify the audit schema and reconciliation totals. It SHALL NOT query remote logs or remote project state during report execution.
+A supported or partially supported reconstruction SHALL produce a normalized, versioned audit input. The input SHALL contain its manifest identity, population definition, entity decisions, summary totals, unresolved totals, and reconstruction status.
 
 #### Scenario: A report consumes reconstructed evidence
 
 - **WHEN** a registered report declares the normalized audit input
 - **THEN** provenance records the committed input identity and its validated upstream identities
 - **AND** report totals reconcile with the audit input
+
+### Requirement: Sample estimates are structured audit data
+
+A sample estimate used by a downstream report SHALL be stored as structured estimate data with its value, confidence bounds, estimator, and confidence method. A report SHALL NOT recover those values by parsing narrative rationale.
+
+#### Scenario: A report uses a sample estimate
+
+- **WHEN** a report consumes an estimated reconstruction value
+- **THEN** it reads the value, confidence bounds, estimator, and confidence method from structured audit data
+
+### Requirement: Reports verify reconstruction inputs without remote queries
+
+A registered report MAY consume the normalized audit input together with version 7. It SHALL verify the audit schema and reconciliation totals. It SHALL NOT query remote logs or remote project state during report execution.
 
 #### Scenario: An audit input changes without a schema revision
 
