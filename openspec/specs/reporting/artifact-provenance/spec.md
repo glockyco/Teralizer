@@ -82,13 +82,16 @@ override, so that a recorded commit is never attributed to code that differs fro
 
 Generated report provenance SHALL identify every corpus and repository file declared by the report run. Input records SHALL be organized by semantic role and SHALL use one common schema for every report.
 
-A corpus input record SHALL include its semantic corpus id and the verified registry state used by the run. A present file input SHALL include its repository-relative location and stable content identity. An absent optional input SHALL be recorded as absent. A normalized external-evidence file SHALL also carry its validated upstream identities and reconciliation totals in its own versioned content.
-
 #### Scenario: An artifact is produced from two corpora
 
 - **WHEN** its report declares two corpus roles
 - **THEN** provenance records both roles and both semantic corpus ids
 - **AND** neither identity is reconstructed from a value asserted by the report builder
+
+
+### Requirement: Declared input records preserve their evidence identity
+
+A corpus input record SHALL include its semantic corpus id and the verified registry state used by the run. A present file input SHALL include its repository-relative location and stable content identity. An absent optional input SHALL be recorded as absent. A normalized external-evidence file SHALL also carry its validated upstream identities and reconciliation totals in its own versioned content.
 
 #### Scenario: An artifact uses a versioned audit file
 

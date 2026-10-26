@@ -9,16 +9,7 @@ semantics, so every reader-facing quantity and supported causal claim can be rep
 
 ### Requirement: Exclusion evidence materializes the accepted mechanism accounting
 
-The registered real-world report SHALL emit a citable partition of included entities and every known
-exclusion mechanism at each published entity level. One executable mapping SHALL own mechanism keys and
-the reader-facing collapse. Separate typed relations SHALL preserve the lifecycle, assertion,
-filter-result, and generated-generalization evidence available at their respective levels. They
-SHALL NOT force absent evidence into one universal row shape or hide a mechanism inside an unlabeled
-residual bucket.
-
-Each entity SHALL be counted exactly once within a compatible relation and level. Mechanism counts SHALL
-reconcile to the eligible population and to the report's collapsed reader-facing outcomes wherever the
-required evidence exists.
+The registered real-world report SHALL emit a citable partition of included entities and every known exclusion mechanism at each published entity level. One executable mapping SHALL own mechanism keys and the reader-facing collapse.
 
 #### Scenario: Known mechanisms are present
 
@@ -37,26 +28,33 @@ required evidence exists.
 - **WHEN** a build-quarantine result is stored through the same field used by filter decisions
 - **THEN** producer semantics classify it as quarantine rather than filter rejection
 
+
+### Requirement: Typed exclusion relations preserve level-specific evidence
+
+Separate typed relations SHALL preserve lifecycle, assertion, filter-result, and generated-generalization evidence at their respective levels. They SHALL NOT force absent evidence into one universal row shape or hide a mechanism inside an unlabeled residual bucket. Each entity SHALL be counted exactly once within a compatible relation and level. Mechanism counts SHALL reconcile to eligible populations and collapsed outcomes wherever the required evidence exists.
+
+#### Scenario: Different entity levels have different evidence
+
+- **WHEN** lifecycle and assertion relations carry different evidence shapes
+- **THEN** each relation preserves its available evidence without synthesizing absent fields
+- **AND** compatible mechanism counts reconcile to the eligible population and collapsed outcomes
 ### Requirement: Project exclusion evidence avoids inferred ownership classes
 
 The RQ6 project-level exclusion table SHALL publish each observed exclusion stage, concrete cause
 description, and count. It SHALL use `Cause of Project-level Exclusion` as the cause-column heading.
 It SHALL NOT publish an internal, external, or mixed type for a project-level row.
 
-Removing the type SHALL NOT by itself change the row set, recorded stage, cause description, or
-count. When entity evidence, stage-transition evidence, or task diagnostics contradict a legacy
-fallback, the report SHALL correct the affected cause rows and stage attribution while preserving the
-eligible-project total, final inclusion count, and total project exclusions. An earlier stage
-transition SHALL use evidence recorded at that boundary and SHALL NOT use a final mutable entity
-status that a later stage can change. The table SHALL retain pipeline-stage order and SHALL order
-causes within each stage by descending count, then ascending cause text. Generated metrics, table
-cells, validation, and downstream publication artifacts SHALL use the reduced schema consistently,
-with no compatibility alias for the removed type.
+Removing the project exclusion type SHALL NOT by itself change the row set, recorded stage, cause description, or count.
 
 #### Scenario: Project exclusions are rendered
 - **WHEN** the RQ6 report renders the project-level exclusion table
 - **THEN** each row contains its stage, cause description, and count
 - **AND** neither the table nor its generated metrics contain an internal, external, or mixed type
+
+
+### Requirement: Corrected project causes preserve funnel totals
+
+When entity evidence, stage-transition evidence, or task diagnostics contradict a legacy fallback, the report SHALL correct affected cause rows and stage attribution while preserving the eligible-project total, final inclusion count, and total project exclusions. The table SHALL retain pipeline-stage order and order causes within each stage by descending count, then ascending cause text.
 
 #### Scenario: Taxonomy removal changes evidence
 - **WHEN** the report migrates from the typed table to the reduced table
@@ -65,6 +63,10 @@ with no compatibility alias for the removed type.
   fallback
 - **AND** causes within each stage appear by descending count, then ascending cause text
 - **AND** generation fails if the reduced rows do not reconcile to the project funnel
+
+### Requirement: Project transitions use evidence recorded at their boundary
+
+An earlier stage transition SHALL use evidence recorded at that boundary and SHALL NOT use a final mutable entity status that a later stage can change.
 
 #### Scenario: Later failures change final entity status
 - **WHEN** an assertion survives Stage 1 + 2 filtering and a later processing failure excludes it
@@ -104,6 +106,10 @@ with no compatibility alias for the removed type.
 - **AND** the project table aggregates them as a JUnit report collection failure
 - **AND** the result description MAY state the material diagnostic split
 
+### Requirement: Project exclusion consumers use the reduced schema without aliases
+
+Generated metrics, table cells, validation, and downstream publication artifacts SHALL use the reduced schema consistently, with no compatibility alias for the removed type.
+
 #### Scenario: A consumer expects the removed type
 - **WHEN** report validation or publication encounters a metric, table declaration, or artifact that
   still requires the project exclusion type
@@ -137,12 +143,7 @@ counts MAY still be published when attempt history is incomplete, provided the l
 
 ### Requirement: Every published quantity states identity and denominator
 
-Each registered RQ6 metric SHALL carry a stable semantic key, raw value, value kind, population,
-optional denominator key, and the existing code-provenance reference. A rate SHALL identify its
-denominator. Semantic corpus identity, repository-file input revisions, content identities, and dirty
-state SHALL resolve through the owning report run's input snapshots and provenance manifest; the metric
-SHALL NOT duplicate those run-level input facts. Report generation SHALL fail when a numerator and
-denominator belong to incompatible populations or when a retained thesis-declared metric key is missing.
+Each registered RQ6 metric SHALL carry a stable semantic key, raw value, value kind, population, optional denominator key, and the existing code-provenance reference. A rate SHALL identify its denominator. Report generation SHALL fail when a numerator and denominator belong to incompatible populations or when a retained thesis-declared metric key is missing.
 
 #### Scenario: A rate is published
 
@@ -155,6 +156,15 @@ denominator belong to incompatible populations or when a retained thesis-declare
 - **WHEN** a declared thesis artifact refers to a metric key the finalized report does not emit
 - **THEN** publication fails naming that key
 
+
+### Requirement: Metrics resolve input identity through run provenance
+
+Semantic corpus identity, repository-file input revisions, content identities, and dirty state SHALL resolve through the owning report run's input snapshots and provenance manifest. The metric SHALL NOT duplicate those run-level input facts.
+
+#### Scenario: A metric identifies its input corpus
+
+- **WHEN** a reader follows a metric's input identity
+- **THEN** the owning run snapshots and provenance manifest supply it without duplicated input facts on the metric
 ### Requirement: The retained thesis RQ6 evidence surface is complete
 
 The registered report SHALL materialize each quantity retained by the downstream thesis claim inventory
@@ -163,9 +173,6 @@ partition, supported funnel populations, denominators, and only the comparison o
 needed by the final argument. Existing macros, table cells, and prose literals SHALL be treated as
 candidate consumers, not as a requirement to preserve every historical scalar.
 
-The values SHALL derive from the appropriate typed evidence relation or, when a surviving causal claim
-requires it, an explicitly registered audit input. No retained thesis quantity may exist only as an ad
-hoc query or rendered prose literal.
 
 #### Scenario: The retained consumer inventory is checked
 
@@ -178,6 +185,12 @@ hoc query or rendered prose literal.
 - **WHEN** the thesis claim inventory removes a macro, table cell, or prose quantity
 - **THEN** this capability does not require a replacement metric solely to preserve that old output
 
+
+### Requirement: Retained thesis quantities derive from registered evidence owners
+
+The values SHALL derive from the appropriate typed evidence relation or, when a surviving causal claim
+requires it, an explicitly registered audit input. No retained thesis quantity may exist only as an ad
+hoc query or rendered prose literal.
 #### Scenario: Two outputs report the same fact
 
 - **WHEN** a macro and a table cell represent one retained semantic quantity
@@ -190,14 +203,6 @@ observations with the same entity type and boundary. Each observation SHALL coun
 that have a filtering result. It SHALL partition that count into included and excluded tests and
 publish the included share with the filtering total as its denominator.
 
-The controlled observation SHALL derive its boundary from explicit filtering and generation-task
-evidence rather than from `generalization.is_included` alone. The RepoReapers observation SHALL use
-the accepted real-world generalization relation and its filtering result. For each corpus, included
-plus excluded SHALL equal the filtering total.
-
-The report SHALL preserve separate corpus identities, inputs, numerators, denominators, and
-provenance. It SHALL NOT combine the two observations into one effect size. It SHALL NOT treat either
-filtering denominator as the complete generalization-attempt or project population.
 
 #### Scenario: Both corpus-local filtering observations are complete
 - **WHEN** the controlled and RepoReapers inputs contain supported generalized tests with included
@@ -207,11 +212,21 @@ filtering denominator as the complete generalization-attempt or project populati
 - **AND** each included share names its own corpus-local filtering total as denominator
 - **AND** included plus excluded equals that filtering total
 
+
+### Requirement: Filtering denominators use explicit corpus-specific boundary evidence
+
+The controlled observation SHALL derive its boundary from explicit filtering and generation-task evidence rather than from `generalization.is_included` alone. The RepoReapers observation SHALL use the accepted real-world generalization relation and its filtering result. For each corpus, included plus excluded SHALL equal the filtering total.
+
 #### Scenario: A controlled generated test lacks a filtering result
 - **WHEN** controlled evidence shows that generalized test creation or its task failed before
   filtering produced a result
 - **THEN** that test is excluded from the controlled filtering denominator
 - **AND** it is not inferred to be included or excluded from `generalization.is_included`
+
+
+### Requirement: Filtering comparisons do not merge corpus-local populations
+
+The report SHALL preserve separate corpus identities, inputs, numerators, denominators, and provenance. It SHALL NOT combine the two observations into one effect size. It SHALL NOT treat either filtering denominator as the complete generalization-attempt or project population.
 
 #### Scenario: Corpus-local results are interpreted together
 - **WHEN** downstream RQ6 analysis compares the two included shares
@@ -240,17 +255,20 @@ The claim inventory SHALL first resolve each retained causal explanation through
 focused executable fixtures. If those sources close every retained explanation, the change SHALL record
 that no qualitative audit is required and SHALL NOT create a placeholder audit input.
 
-A retained causal explanation that still requires reviewer interpretation SHALL use one registered audit
-for that bounded question. The audit SHALL record semantic corpus id, source revision, candidate or
-sampling rule, selected entity identities, observations, labels, exclusions, and reviewer rationale.
-The report SHALL distinguish a persisted-mechanism result from a reviewer interpretation. It SHALL NOT
-publish an unidentifiable source sample as current evidence.
 
 #### Scenario: Existing evidence closes the causal claims
 
 - **WHEN** persisted codes and focused fixtures support every retained causal explanation
 - **THEN** no qualitative audit input or summary is required
 
+
+### Requirement: Reviewer-dependent causal explanations use identifiable bounded audits
+
+A retained causal explanation that still requires reviewer interpretation SHALL use one registered audit
+for that bounded question. The audit SHALL record semantic corpus id, source revision, candidate or
+sampling rule, selected entity identities, observations, labels, exclusions, and reviewer rationale.
+The report SHALL distinguish a persisted-mechanism result from a reviewer interpretation. It SHALL NOT
+publish an unidentifiable source sample as current evidence.
 #### Scenario: A reviewer explains a widening refusal
 
 - **WHEN** a retained explanation goes beyond the persisted refusal code and focused fixtures
@@ -372,10 +390,6 @@ structured metric. Aggregate LaTeX rendering SHALL derive its macro from that me
 preserve whether the value is an exact count, a sample estimate, or a confidence bound and SHALL carry
 the reconstruction audit provenance.
 
-The thesis-facing metric surface SHALL include the stratified `NoAssertions` genuine-absence estimate
-and confidence bounds, the reviewed assertion-to-MUT outcome counts, and the complete output-discovery
-outcome counts. The report SHALL NOT require the thesis to include reconstruction audit tables or copy
-values from prose fields.
 
 #### Scenario: The thesis uses the `NoAssertions` estimate
 
@@ -390,6 +404,13 @@ values from prose fields.
 - **THEN** the aggregate macro derives from a structured count metric
 - **AND** the metric identifies its reviewed or complete population boundary
 
+
+### Requirement: Thesis reconstruction metrics cover estimates and reviewed outcomes
+
+The thesis-facing metric surface SHALL include the stratified `NoAssertions` genuine-absence estimate
+and confidence bounds, the reviewed assertion-to-MUT outcome counts, and the complete output-discovery
+outcome counts. The report SHALL NOT require the thesis to include reconstruction audit tables or copy
+values from prose fields.
 #### Scenario: Reconstruction audit tables remain producer-side
 
 - **WHEN** the thesis publishes the aggregate macros
@@ -400,8 +421,6 @@ values from prose fields.
 
 The registered RQ6 report SHALL publish provenance-backed counts for each recorded declaration category rejected by `TestType`. The categories SHALL distinguish unsupported execution models from declaration-resolution failures, and their counts SHALL sum to the `TestType` rejection population.
 
-The thesis SHALL NOT describe an inherited JUnit test resolved to an overridden declaration as an unsupported JUnit test type. It SHALL distinguish that declaration-resolution limitation from unsupported JUnit theories and TestNG tests.
-
 #### Scenario: TestType rejects several declaration mechanisms
 
 - **WHEN** `TestType` rejects JUnit theories, inherited tests resolved to overridden declarations, and TestNG tests
@@ -409,11 +428,30 @@ The thesis SHALL NOT describe an inherited JUnit test resolved to an overridden 
 - **AND** the category counts sum to the `TestType` rejection count
 - **AND** the thesis describes each mechanism with its recorded semantics
 
+### Requirement: Test-type prose distinguishes declaration-resolution limitations
+
+The thesis SHALL NOT describe an inherited JUnit test resolved to an overridden declaration as an unsupported JUnit test type. It SHALL distinguish that declaration-resolution limitation from unsupported JUnit theories and TestNG tests.
+
+#### Scenario: An inherited JUnit test resolves to an overridden declaration
+
+- **WHEN** the thesis explains that `TestType` rejection
+- **THEN** it identifies a declaration-resolution limitation rather than an unsupported JUnit execution model
+
+
 ### Requirement: Oracle-recovery directions preserve distinct mechanisms
 
 Reader-facing improvement prose SHALL distinguish assertion recognition, tested-method identification, and assertion-to-MUT mapping. Support for interprocedural assertions or additional assertion libraries SHALL NOT be presented as a repair for tested-method identification or assertion-to-MUT mapping.
 
+#### Scenario: An assertion becomes recognizable
+
+- **WHEN** interprocedural analysis or assertion-library support exposes an assertion
+- **THEN** the prose still identifies tested-method identification and assertion-to-MUT mapping as separate required improvements
+- **AND** it does not treat assertion recognition as proof that a sound generalization candidate exists
+
+### Requirement: A proposed does-not-throw oracle remains an unmeasured extension
+
 The thesis MAY propose an explicit `does not throw` oracle for tests with no explicit assertion because a passing test already requires no unexpected exception. It SHALL present this as an unimplemented extension, preserve framework-declared expected-exception semantics, and SHALL NOT convert the reconstruction estimate into a measured recovery count.
+
 
 #### Scenario: A test has no explicit assertion
 
@@ -422,23 +460,19 @@ The thesis MAY propose an explicit `does not throw` oracle for tests with no exp
 - **AND** it requires expected-exception behavior to remain distinct
 - **AND** it does not claim that the extension recovers a measured number of tests
 
-#### Scenario: An assertion becomes recognizable
-
-- **WHEN** interprocedural analysis or assertion-library support exposes an assertion
-- **THEN** the prose still identifies tested-method identification and assertion-to-MUT mapping as separate required improvements
-- **AND** it does not treat assertion recognition as proof that a sound generalization candidate exists
-
 ### Requirement: Stage-local conclusions retain their population boundary
 
 A reader-facing Stage 4 conclusion SHALL name the projects or generalization attempts that reach that boundary. It MAY identify widening refusal as the most frequent recorded Stage 4 exclusion mechanism. It SHALL NOT infer that fixing widening would recover the most projects or preserve the same distribution after earlier-stage support changes.
-
-The established project-completion framing remains survivor-based: a project completes a stage when at least one relevant entity crosses its boundary. Failures of other entities in that project do not negate the completed transition.
 
 #### Scenario: Widening dominates recorded Stage 4 exclusions
 
 - **WHEN** widening refusal has the largest recorded count among Stage 4 exclusion mechanisms
 - **THEN** the thesis scopes the statement to the population that enters Stage 4
 - **AND** it does not rank expected project recovery across stages
+
+### Requirement: Project completion remains survivor-based
+
+The established project-completion framing SHALL remain survivor-based: a project completes a stage when at least one relevant entity crosses its boundary. Failures of other entities in that project SHALL NOT negate the completed transition.
 
 #### Scenario: A surviving project also has entity failures
 
@@ -448,17 +482,17 @@ The established project-completion framing remains survivor-based: a project com
 
 ### Requirement: Entity-level RQ6 revisions preserve the established source narrative
 
-The thesis SHALL use the TOSEM source in the thesis `projects/teralizer-paper` submodule as the narrative baseline for the `Test, Assertion, and Generalization Exclusions` results and their later interpretation in the Chapter 5 discussion, Chapter 6 reflections, and Chapter 7 conclusion. A revision SHALL preserve established wording, paragraph order, and narrative progression unless the current corpus, generated values, pipeline semantics, or accepted interpretation requires a change. The RQ6 introduction and `Project-Level Exclusions` results SHALL remain unchanged.
-
-Every restored numerical claim SHALL trace to registered metrics, generated reports, or an existing reconstruction audit for the accepted RQ6 population. When the source narrative requires a quantity that those owners do not publish, the change SHALL register provenance-backed evidence for that population before publishing the claim. It SHALL NOT omit or weaken the claim only to avoid the evidence work.
-
-Within the immediate discussion of the filtering-results table, the thesis SHALL identify an entry by its filter name and SHALL NOT add a generated row reference for that entry. A claim outside that context MAY use a row reference when the filter name and population are not otherwise established. A reference to an unnumbered heading SHALL NOT use a bare `\cref` when the compiled reference resolves to a broader numbered parent. The prose SHALL name the topic and, when a citation is needed, use a useful numbered section or table owner.
+The thesis SHALL use the TOSEM source in its `projects/teralizer-paper` submodule as the narrative baseline for `Test, Assertion, and Generalization Exclusions` results and their later interpretation in the Chapter 5 discussion, Chapter 6 reflections, and Chapter 7 conclusion. The RQ6 introduction and `Project-Level Exclusions` results SHALL remain unchanged.
 
 #### Scenario: Frozen RQ6 text is encountered
 
 - **WHEN** a revision compares the thesis with the TOSEM source
 - **THEN** it excludes the RQ6 introduction and `Project-Level Exclusions` results from the mutable scope
 - **AND** it does not change their wording, structure, or references
+
+### Requirement: Restored RQ6 numbers trace to accepted evidence
+
+Every restored numerical claim SHALL trace to registered metrics, generated reports, or an existing reconstruction audit for the accepted RQ6 population. When the source narrative needs a quantity those owners do not publish, the change SHALL register provenance-backed evidence for that population before publishing the claim. It SHALL NOT omit or weaken the claim only to avoid the evidence work.
 
 #### Scenario: Existing evidence supplies an updated quantity
 
@@ -472,6 +506,10 @@ Within the immediate discussion of the filtering-results table, the thesis SHALL
 - **THEN** the reporting system registers provenance-backed evidence for the accepted RQ6 population before publication
 - **AND** the thesis does not avoid the evidence gap by dropping or weakening the claim
 
+### Requirement: Supported RQ6 wording preserves the source narrative progression
+
+A revision SHALL preserve established wording, paragraph order, and narrative progression unless the current corpus, generated values, pipeline semantics, or accepted interpretation requires a change.
+
 #### Scenario: Source wording remains supported
 
 - **WHEN** the TOSEM wording remains accurate for the current population and interpretation within the mutable scope
@@ -484,11 +522,19 @@ Within the immediate discussion of the filtering-results table, the thesis SHALL
 - **THEN** the thesis preserves the evidence-required correction
 - **AND** it does not restore the contradicted source claim
 
+### Requirement: Immediate filtering-table discussion identifies filters by name
+
+Within immediate discussion of the filtering-results table, the thesis SHALL identify an entry by its filter name and SHALL NOT add a generated row reference for it. A claim outside that context MAY use a row reference when the filter name and population are not otherwise established.
+
 #### Scenario: A filter is discussed beside its result table
 
 - **WHEN** the surrounding RQ6 paragraph establishes the filtering-results table and names the filter
 - **THEN** the filter name uniquely identifies the result
 - **AND** the paragraph does not cite the generated table row
+
+### Requirement: Unnumbered topics are not referenced through broader numbered parents
+
+A reference to an unnumbered heading SHALL NOT use a bare `\cref` when the compiled reference resolves to a broader numbered parent. The prose SHALL name the topic and, when a citation is needed, use a useful numbered section or table owner.
 
 #### Scenario: Later prose names an unnumbered topic
 

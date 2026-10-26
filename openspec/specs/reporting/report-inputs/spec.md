@@ -82,9 +82,6 @@ set of run-data files from database values. A focused extractor SHALL reduce eac
 the minimal normalized facts the report consumes. The resulting versioned repository file SHALL
 record its upstream corpus or repository identities, selection counts, and reconciliation totals.
 
-An extractor SHALL validate its output schema and reconciliation identities before replacing the
-repository file atomically. The registered report SHALL declare that file as required and SHALL NOT
-retain a raw-tree or stale-output fallback.
 
 #### Scenario: Two reports use project source measurements
 - **WHEN** the dataset and RQ1 reports need facts derived from the same project checkouts
@@ -96,6 +93,12 @@ retain a raw-tree or stale-output fallback.
 - **THEN** a JARVIS-specific extractor unions and validates the consumed facts before the report run
 - **AND** the report declares the compact evidence file rather than the raw log tree
 
+
+### Requirement: Normalized evidence replacement requires validated identities
+
+An extractor SHALL validate its output schema and reconciliation identities before replacing the
+repository file atomically. The registered report SHALL declare that file as required and SHALL NOT
+retain a raw-tree or stale-output fallback.
 #### Scenario: An upstream identity changes
 - **WHEN** a corpus manifest or selected repository revision differs from the identity recorded by an
   evidence file

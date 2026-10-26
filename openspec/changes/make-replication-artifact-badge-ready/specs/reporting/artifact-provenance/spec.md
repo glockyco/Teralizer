@@ -6,8 +6,6 @@ An artifact's recorded commit SHALL be the last commit that changed the source f
 
 A recorded source reference SHALL resolve to the producing lines as they stood in the recorded commit.
 
-A verified replication release that does not contain Git metadata SHALL embed the per-source revisions needed to preserve this attribution. Report generation from that release SHALL resolve source revisions from the embedded release provenance and SHALL fail when the embedded record is absent, does not cover a producing source, or does not match the packaged source bytes. It SHALL NOT invent a checkout position, mark every source uncertain, or require the replicator to obtain the repository history.
-
 #### Scenario: The producing source has not changed recently
 
 - **WHEN** an artifact is generated from a source file whose last change predates the checkout position
@@ -19,11 +17,21 @@ A verified replication release that does not contain Git metadata SHALL embed th
 - **WHEN** a commit changes files unrelated to a report, and the report is regenerated
 - **THEN** the artifact's recorded commit is unchanged
 
+## ADDED Requirements
+
+### Requirement: Packaged report attribution uses verified embedded source revisions
+
+A verified replication release without Git metadata SHALL embed per-source revisions preserving producing-code attribution. Report generation SHALL resolve source revisions from embedded release provenance. It SHALL NOT invent a checkout position, mark every source uncertain, or require the replicator to obtain repository history.
+
 #### Scenario: A packaged release has no Git directory
 
 - **WHEN** a replicator regenerates reports from a verified release whose embedded provenance covers every producing source
 - **THEN** each artifact records the same per-source revision as generation from the corresponding source checkout
 - **AND** no Git repository is required
+
+### Requirement: Packaged source attribution requires complete matching provenance
+
+Report generation from a verified replication release SHALL fail when embedded provenance is absent, does not cover a producing source, or does not match the packaged source bytes.
 
 #### Scenario: Packaged source differs from embedded provenance
 

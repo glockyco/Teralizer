@@ -10,9 +10,7 @@ for another.
 
 ### Requirement: A table model holds values, never presentation
 
-A table column MUST declare the kind of value it holds. Supported kinds SHALL be count, share, percentage point, percentage-point delta, decimal, delta, runtime, identifier, text, and entity. A cell MUST hold the value itself, and MUST NOT hold a rendered string, a markup fragment, or a macro.
-
-A percentage-point, percentage-point delta, decimal, or delta value SHALL retain its significant precision in the numeric value. Renderer metadata SHALL NOT define this precision. A percentage-point value stores the displayed magnitude before its `%` suffix, so `47` represents `47%` without target-side scaling. A percentage-point delta also stores this magnitude, but its human-readable form uses both an explicit sign and the `%` suffix. A delta uses an explicit sign without the suffix. Their CSV forms remain bare numbers.
+A table column SHALL declare the kind of value it holds. Supported kinds SHALL be count, share, percentage point, percentage-point delta, decimal, delta, runtime, identifier, text, and entity. A cell SHALL hold the value itself, and SHALL NOT hold a rendered string, a markup fragment, or a macro.
 
 #### Scenario: A column is declared
 
@@ -30,6 +28,25 @@ A percentage-point, percentage-point delta, decimal, or delta value SHALL retain
 - **WHEN** the same table is rendered to LaTeX, markdown, and CSV
 - **THEN** every target derives its own text from the same stored value
 - **AND** no target needs a second column to recover the value
+
+### Requirement: Numeric values retain their significant precision
+
+A percentage-point, percentage-point delta, decimal, or delta value SHALL retain its significant precision in the numeric value. Renderer metadata SHALL NOT define this precision.
+
+#### Scenario: A precise numeric value is stored
+
+- **WHEN** a table stores a percentage-point, percentage-point delta, decimal, or delta value
+- **THEN** the numeric value retains its significant precision without renderer metadata defining it
+
+### Requirement: Percentage and delta values retain their stored magnitude
+
+A percentage-point value SHALL store the displayed magnitude before its `%` suffix, so `47` represents `47%` without target-side scaling. A percentage-point delta SHALL also store this magnitude, but its human-readable form SHALL use both an explicit sign and the `%` suffix. A delta SHALL use an explicit sign without the suffix. Their CSV forms SHALL remain bare numbers.
+
+#### Scenario: Percentage and delta values reach human and machine targets
+
+- **WHEN** percentage-point, percentage-point delta, and delta values are rendered
+- **THEN** human-readable forms use the declared signs and suffixes without rescaling
+- **AND** CSV forms remain bare numbers
 
 ### Requirement: A named entity is stored as a reference and rendered per target
 
@@ -251,11 +268,7 @@ ordinal. LaTeX labels MUST derive from the table key and row key, not from the r
 
 ### Requirement: A LaTeX table artifact is a reusable body fragment
 
-A generated LaTeX table artifact MUST contain the complete tabular body needed to present its report data. It MUST preserve generated columns, headers, cells, grouping, rules, composite-cell layout, stable row anchors, and visible row ordinals.
-
-The artifact MUST NOT open or close a float environment. It MUST NOT emit a caption, short caption, float label, placement option, manuscript-local spacing, font size, rotation, or page-level sizing command.
-
-Width-sensitive constructs inside the fragment MUST use `\linewidth` rather than `\textwidth`. This requirement applies to full-width tabular layouts and table-spanning rows.
+A generated LaTeX table artifact SHALL contain the complete tabular body needed to present its report data. It SHALL preserve generated columns, headers, cells, grouping, rules, composite-cell layout, stable row anchors, and visible row ordinals. The artifact SHALL NOT open or close a float environment or emit a caption, short caption, float label, placement option, manuscript-local spacing, font size, rotation, or page-level sizing command.
 
 #### Scenario: A LaTeX table is rendered
 
@@ -264,6 +277,10 @@ Width-sensitive constructs inside the fragment MUST use `\linewidth` rather than
 - **THEN** it contains no `table`, `table*`, `sidewaystable`, or other float environment
 - **THEN** it contains no float caption, short caption, float label, or placement option
 
+
+### Requirement: Table fragments use the available container width
+
+Width-sensitive constructs inside the fragment SHALL use `\linewidth` rather than `\textwidth`. This requirement SHALL apply to full-width tabular layouts and table-spanning rows.
 #### Scenario: A body uses the available container width
 
 - **WHEN** a generated body stretches or measures content against its container
