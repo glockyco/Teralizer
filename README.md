@@ -8,6 +8,34 @@ The pipeline extracts specifications from implementations through single-path sy
 
 You can read the rendered [analysis reports](analysis/reports) without running the tool. Use the published replication package if you want the accompanying data or want to reproduce the results.
 
+## Try it on an example
+
+You need Bash, Git LFS and Docker. In a source checkout, build the image and run the example:
+
+```sh
+git lfs pull
+git submodule update --init --recursive jpf-symbc
+docker build -t teralizer .
+scripts/try-example.sh
+```
+
+The script runs the pipeline on a copy of [projects/example-loan](projects/example-loan), a method with three JUnit tests, and prints:
+
+- the outcome of each assertion: two become properties, and one is refused with a code that says why,
+- the PIT mutants that the original tests and the generalized tests kill,
+- the paths of the generalized test classes under `build/try-example`,
+- the test results after `FULL` in `LoanPolicy` is lowered from 60 to 50: the original tests pass, and one generalized test fails and reports the violating input.
+
+The run starts its own PostgreSQL container and leaves it running, so that you can query the results. `scripts/try-example.sh --clean` removes everything the script created.
+
+To run a project of your own, pass its directory:
+
+```sh
+scripts/try-example.sh path/to/project
+```
+
+The project has to build with Java 8 and use Maven or Gradle with JUnit 3, 4 or 5. The script works on a copy under `build/try-example` and never changes your project. It uses [project-configs/example-loan.conf](project-configs/example-loan.conf) with the path of your project, and it prints the same outcome, mutant and path lists.
+
 ## Package contents
 
 Choose the archives for the work you want to do:

@@ -1,0 +1,9 @@
+target/
+.jqwik-database
+
+# Written by a Teralizer run inside this directory.
+data/
+pom.teralizer.xml
+pom.teralizer.generalized.xml
+**/_*_Driver_*.java
+**/_*_Generalized_*.java

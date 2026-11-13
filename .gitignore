@@ -379,6 +379,7 @@ tools/**/dependency-reduced-pom.xml
 !/projects/EqBench
 !/projects/example-gradle-junit4
 !/projects/example-gradle-junit5
+!/projects/example-loan
 !/projects/example-maven-junit4
 !/projects/example-maven-junit5
 
