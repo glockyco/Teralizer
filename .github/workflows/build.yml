@@ -39,6 +39,11 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
 
+      # uv stops looking for .python-version at analysis/, the project root, and then
+      # takes the runner's system Python, for which locked packages may have no wheel.
+      - name: Select the pinned Python
+        run: echo "UV_PYTHON=$(cat .python-version)" >> "$GITHUB_ENV"
+
       - name: Setup Nix
         uses: DeterminateSystems/determinate-nix-action@v3.21.9
 
