@@ -4,8 +4,9 @@
 # project is projects/example-loan. The copy, the run data and the logs go to build/try-example,
 # so neither the checkout nor the project changes.
 #
-# For the example, the script afterwards runs the generalized tests against a variant in which
-# FULL is lowered from 60 to 50, a regression that the original tests do not detect.
+# For the example, the script afterwards runs all tests against a refactored variant of the method
+# that tests score > 80 where the method tests score >= 80, a regression that the original tests
+# do not detect.
 #
 # Needs Docker and the `teralizer` image, built with `docker build -t teralizer .`. The run
 # uses its own PostgreSQL container and network, so it never touches another Teralizer database.
@@ -113,12 +114,25 @@ echo "==> Generalized tests"
 (cd "$WORK" && find "$NAME" -name '_*_Generalized_*_Test.java' | sed 's|^|build/try-example/|')
 
 if [[ "$RUNS_EXAMPLE" == true ]]; then
-  echo "==> Running all tests against the example with FULL lowered from 60 to 50"
-  cp -r "$WORK/$NAME" "$WORK/$NAME-regression"
-  sed 's/FULL = 60/FULL = 50/' "$WORK/$NAME/src/main/java/bank/LoanPolicy.java" \
-    > "$WORK/$NAME-regression/src/main/java/bank/LoanPolicy.java"
+  echo "==> Running all tests against the refactored example"
+  cp -r "$WORK/$NAME" "$WORK/$NAME-refactored"
+  # The refactoring merges the two calls of Math.min. By a slip it tests score > 80 where the
+  # method tests score >= 80, so a score of 80 gets at most PARTIAL instead of FULL.
+  cat > "$WORK/$NAME-refactored/src/main/java/bank/LoanPolicy.java" <<'JAVA'
+package bank;
+
+public class LoanPolicy {
+  static final int FULL = 60, PARTIAL = 5;
+
+  public static int approvedAmount(int score, int amount) {
+    if (amount <= 0) throw new IllegalArgumentException();
+    int limit = score > 80 ? FULL : score >= 50 ? PARTIAL : 0;
+    return Math.min(amount, limit);
+  }
+}
+JAVA
   docker run --rm \
-    -v "$WORK/$NAME-regression:/app/projects/$NAME" \
+    -v "$WORK/$NAME-refactored:/app/projects/$NAME" \
     -v "$MAVEN_CACHE:/root/.m2" \
     -w "/app/projects/$NAME" \
     "$IMAGE" mvn --batch-mode --file pom.teralizer.generalized.xml -Djacoco.skip=true test \

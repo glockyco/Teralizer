@@ -24,7 +24,7 @@ The script runs the pipeline on a copy of [projects/example-loan](projects/examp
 - the outcome of each assertion: two become properties, and one is refused with a code that says why,
 - the PIT mutants that the original tests and the generalized tests kill,
 - the paths of the generalized test classes under `build/try-example`,
-- the test results after `FULL` in `LoanPolicy` is lowered from 60 to 50: the original tests pass, and one generalized test fails and reports the violating input.
+- the test results after a refactoring of `approvedAmount` that tests `score > 80` where the method tests `score >= 80`: the original tests pass, and one generalized test fails and reports the violating input.
 
 The run starts its own PostgreSQL container and leaves it running, so that you can query the results. `scripts/try-example.sh --clean` removes everything the script created.
 
