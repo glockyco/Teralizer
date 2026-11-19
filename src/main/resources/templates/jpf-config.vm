@@ -35,6 +35,9 @@ symbolic.optimizechoices = false
 # when it is on together with symbolic.collect_constraints, which this analysis requires.
 # symbolic.lazy was measured to change nothing here, because there is no aliasing choice to make
 # along a single concrete path. Neither recovers a value read from the heap.
+# Do not enable it anyway: the lazy-heap paths of ALOAD, GETFIELD and GETSTATIC and the null
+# checks of IFNULL and IFNONNULL have no constraint-collection branch, so a run could follow
+# another reference than the one the program held.
 symbolic.strings=${symbolicStrings}
 symbolic.dp=${symbolicDp}
 symbolic.fp=${symbolicFp}

@@ -34,7 +34,7 @@ To run a project of your own, pass its directory:
 scripts/try-example.sh path/to/project
 ```
 
-The project has to build with Java 8 and use Maven or Gradle with JUnit 3, 4 or 5. The script works on a copy under `build/try-example` and never changes your project. It uses [project-configs/example-loan.conf](project-configs/example-loan.conf) with the path of your project, and it prints the same outcome, mutant and path lists.
+The project has to build with Java 8, use Maven or Gradle with a `build.gradle` file, and test with JUnit 3, 4 or 5. The script works on a copy under `build/try-example` and never changes your project. It uses [project-configs/example-loan.conf](project-configs/example-loan.conf) with the path of your project, and it prints the same outcome, mutant and path lists.
 
 ## Package contents
 

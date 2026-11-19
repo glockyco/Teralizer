@@ -30,6 +30,9 @@
 # funnel rows stay. The July baseline shows the cap only fires on zero-yield outliers, but capped
 # projects are identifiable by exit code for pairwise exclusion in baseline deltas.
 #
+# Project tests run with the repository root as their working directory, so files that they write
+# to relative paths land there. Report generation refuses the dirty tree until they are removed.
+#
 # The corpus runner itself requires Java 8 because its bundled JPF revision imports JDK 8 internals.
 # Override auto-detection with REPOREAPERS_JAVA_HOME.
 #

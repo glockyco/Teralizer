@@ -71,8 +71,9 @@ public class JpfExecutionTask extends AbstractTask {
         try {
             jpf.run();
         } catch (JPFNativePeerException e) {
-            // Exception that is (likely) due to JPFs incorrect handling of shadowing.
-            // See https://github.com/glockyco/test-generalization/issues/37 for further details
+            // JPF resolves a field in the class of the object before the class that declares the
+            // running method (ClassInfo.getInstanceField), so a subclass field that shadows a
+            // private field breaks native peers such as the one of AtomicInteger.compareAndSet.
             throw new RuntimeException("Failed JPF execution due to exception in native peers.", e);
         } catch (JPFListenerException e) {
             // JPF wraps a listener's throw; surface the typed extraction abort so the task is

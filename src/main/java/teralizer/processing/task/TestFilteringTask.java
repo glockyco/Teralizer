@@ -231,6 +231,8 @@ public class TestFilteringTask extends AbstractTask {
         create.batchInsert(records).execute();
 
         if (this.stage == ProcessingStage.FILTER_GENERALIZATIONS && this.generalizationRecord != null) {
+            // Of several rejecting filters, the lifecycle records the first in filter order.
+            // filter_result keeps all of them.
             FilterResultRecord rejection = records.stream()
                 .filter(r -> r.getDecision() == FilterDecision.REJECT)
                 .findFirst()
