@@ -8,6 +8,8 @@ uv run --directory analysis python -m teralizer.release jarvis-logs --staged DIR
 uv run --directory analysis python -m teralizer.release declaration [--production]
 uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--component ID ...] [--production]
 uv run --directory analysis python -m teralizer.release preflight WORKFLOW --workspace DIR [--release-manifest FILE]
+uv run --directory analysis python -m teralizer.release reference-outputs --analysis DIR --out FILE
+uv run --directory analysis python -m teralizer.release verify-outputs --analysis DIR --reference FILE [--json FILE]
 """
 
 from __future__ import annotations
@@ -220,6 +222,34 @@ def _preflight(workflow: str, workspace: Path, release_manifest: Path | None) ->
     return 0
 
 
+def _reference_outputs(analysis: Path, out: Path) -> int:
+    from teralizer.release import outputs
+
+    document = outputs.reference(analysis)
+    out.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
+    print(f"reference of {len(document['artifacts'])} artifacts written to {out}")
+    return 0
+
+
+def _verify_outputs(analysis: Path, reference: Path, output: Path | None) -> int:
+    from teralizer.release import outputs
+
+    summary = outputs.summary(
+        outputs.compare(json.loads(reference.read_text()), analysis)
+    )
+    if output is not None:
+        output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    for target, counts in summary["targets"].items():
+        print(
+            f"{target}: "
+            + ", ".join(f"{n} {status}" for status, n in sorted(counts.items()))
+        )
+    for failure in summary["failures"]:
+        print(f"{failure['status']}: {failure['artifact']}", file=sys.stderr)
+    print("all outputs match the reference" if summary["passed"] else "outputs differ")
+    return 0 if summary["passed"] else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -284,11 +314,26 @@ def main(argv: list[str] | None = None) -> int:
     preflight_command.add_argument("workflow")
     preflight_command.add_argument("--workspace", type=Path, required=True)
     preflight_command.add_argument("--release-manifest", type=Path)
+    reference_command = commands.add_parser(
+        "reference-outputs", help="record the reference manifest of a report run"
+    )
+    reference_command.add_argument("--analysis", type=Path, required=True)
+    reference_command.add_argument("--out", type=Path, required=True)
+    verify_command = commands.add_parser(
+        "verify-outputs", help="compare a report run with the reference manifest"
+    )
+    verify_command.add_argument("--analysis", type=Path, required=True)
+    verify_command.add_argument("--reference", type=Path, required=True)
+    verify_command.add_argument("--json", type=Path, dest="summary")
     args = parser.parse_args(argv)
 
+    # Reviewer workspaces have no inventory to load, only release documents.
     if args.command == "preflight":
-        # A reviewer workspace has no inventory to load, only release documents.
         return _preflight(args.workflow, args.workspace, args.release_manifest)
+    if args.command == "reference-outputs":
+        return _reference_outputs(args.analysis, args.out)
+    if args.command == "verify-outputs":
+        return _verify_outputs(args.analysis, args.reference, args.summary)
     try:
         declared = inventory.load(args.inventory)
     except inventory.InventoryError as error:
