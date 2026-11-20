@@ -45,6 +45,12 @@ from teralizer.eval.reports._diagnostics import (
     jpf_exception_table,
     mut_choice_table,
 )
+from teralizer.eval.reports._mutation_gain import (
+    GENERALIZED_ONLY_KILL_METRIC_KEYS,
+    GENERALIZED_ONLY_KILLS_SQL,
+    fetch_generalized_only_kills,
+    generalized_only_kill_metrics,
+)
 from teralizer.eval.reports._widening import (
     WIDENING_REFUSALS,
     WIDENING_REFUSAL_SQL,
@@ -591,6 +597,7 @@ RETAINED_METRIC_KEYS = frozenset(
     | FILTER_DETAIL_METRIC_KEYS
     | TEST_FILTERING_FLOW_METRIC_KEYS
     | filter_details.TEST_TYPE_CATEGORY_METRIC_KEYS
+    | GENERALIZED_ONLY_KILL_METRIC_KEYS
     | {
         f"rq6.reconstruction.{claim.replace('-', '_')}.{partition}"
         for claim in RECONSTRUCTION_CLAIMS
@@ -1271,6 +1278,15 @@ def build(context: ReportContext) -> RQReport:
     widening_provenance = capture(fetch_widening_refusals, query=WIDENING_REFUSAL_SQL)
     widening_table = widening_refusal_table(widening_data, widening_provenance)
     metrics.extend(widening_refusal_metrics(widening_data, widening_provenance))
+    mutation_provenance = capture(
+        fetch_generalized_only_kills, query=GENERALIZED_ONLY_KILLS_SQL
+    )
+    metrics.extend(
+        generalized_only_kill_metrics(
+            fetch_generalized_only_kills(conn, variant, applicable_project_ids),
+            mutation_provenance,
+        )
+    )
     metrics.extend(
         _reconstruction_metrics(
             reconstruction_claims,
@@ -1336,10 +1352,26 @@ def build(context: ReportContext) -> RQReport:
             reconstruction_outcomes,
         ],
     )
+    mutation_section = Section(
+        title="Mutation detection of the generalized tests",
+        blocks=[
+            Prose(
+                "PIT ran the Initial test suites alone and together with the "
+                "generalized tests for the {realworld.applicability_projects} "
+                "projects that yield a usable generalized test. The generalized "
+                "tests kill {realworld.mutation.generalized_only_kills} mutants "
+                "in {realworld.mutation.generalized_only_kill_projects} projects "
+                "that the Initial test suites do not detect. This is "
+                "{realworld.mutation.generalized_only_kills_pp} percentage points "
+                "of the {realworld.mutation.covered_mutants} mutants that the "
+                "Initial test suites cover."
+            ),
+        ],
+    )
     report = RQReport(
         rq="rq6",
         title="RQ6 - Causes of Unsuccessful Generalization (Real-World)",
-        sections=[section],
+        sections=[section, mutation_section],
         metrics=metrics,
     )
     validate_retained_consumers(report)
