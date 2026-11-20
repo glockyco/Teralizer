@@ -1,0 +1,14 @@
+row_key,level,mechanism_label,reader_outcome,entity_count,share,level_total
+test.included,Test,Included,included,44875,0.5256653546996532658607440727,85368
+test.filter_rejection,Test,Filter rejection,filtering,37363,0.4376698528722706400524786805,85368
+test.inherited_test_inlining_limit,Test,Inherited-test inlining limit,filtering,2835,0.03320916502670789991565926342,85368
+test.task_exception,Test,Processing failure,failures,295,0.003455627401368194171117983319,85368
+assertion.included,Assertion,Included,included,6905,0.03824467731572767352726144848,180548
+assertion.filter_rejection,Assertion,Filter rejection,filtering,166602,0.9227573830781841947847663779,180548
+assertion.build_quarantine,Assertion,Compilation failure,failures,182,0.001008042182688260185656999801,180548
+assertion.task_exception,Assertion,Processing failure,failures,6859,0.03798989742339987150231517380,180548
+generalization.included,Generalization,Included,included,1615,0.3015309932785660941000746826,5356
+generalization.filter_rejection,Generalization,Filter rejection,filtering,420,0.07841672890216579536967886482,5356
+generalization.generation_gate,Generalization,Generation-time gate,filtering,3299,0.6159447348767737117251680358,5356
+generalization.build_quarantine,Generalization,Compilation failure,failures,5,0.0009335324869305451829723674384,5356
+generalization.task_exception,Generalization,Processing failure,failures,17,0.003174010455563853622106049291,5356

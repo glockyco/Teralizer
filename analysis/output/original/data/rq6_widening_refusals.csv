@@ -1,7 +1,7 @@
-cause,refusals,refusals_pct,attempts_pct
-"Null output model, and the returned value is not a bytecode literal","2,552",77.4%,47.6%
-"Null output model, and a native call received a symbolic argument",488,14.8%,9.1%
-"Null output model, and no generated parameter reaches the path condition",206,6.2%,3.8%
-"Null output model, and the path condition does not pin every generated parameter",38,1.2%,0.7%
-"Exception oracle, concretized with a risk of divergence",13,0.4%,0.2%
-"Exception oracle, and the path condition does not pin every generated parameter",1,0.0%,0.0%
+code,cause,refusals,refusal_total,refusals_pct,attempts,attempts_pct
+NULL_CONCRETE_OUTPUT_NOT_LITERAL,"Null output model, and the returned value is not a bytecode literal",2552,3298,0.7738023044269254093389933293,5356,0.4764749813293502613890963406
+NULL_CONCRETE_CONCRETIZATION_EVENTS,"Null output model, and a native call received a symbolic argument",488,3298,0.1479684657368101879927228623,5356,0.09111277072442120985810306199
+NULL_CONCRETE_PARAMETERS_EMPTY,"Null output model, and no generated parameter reaches the path condition",206,3298,0.06246209824135839902971497878,5356,0.03846153846153846153846153846
+NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS,"Null output model, and the path condition does not pin every generated parameter",38,3298,0.01152213462704669496664645240,5356,0.007094846900672143390589992532
+EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK,"Exception oracle, concretized with a risk of divergence",13,3298,0.003941782898726500909642207398,5356,0.002427184466019417475728155340
+EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS,"Exception oracle, and the path condition does not pin every generated parameter",1,3298,0.0003032140691328077622801697999,5356,0.0001867064973861090365944734877

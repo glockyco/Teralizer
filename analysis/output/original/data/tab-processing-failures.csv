@@ -1,15 +1,15 @@
-number,type,cause,count
-1,External,JUnit execution error during test execution,13
-2,External,Spoon execution error during test analysis,8
-3,Internal,JUnit reports not found,5
-4,Internal,timeout exceeded (300 seconds per original test suite),26
-5,Mixed,all assertions excluded due to filter rejections,151
-6,Mixed,all assertions excluded due to filter rejections and failures,105
-7,Mixed,all tests excluded due to filter rejections and failures,94
-8,External,Spoon execution error during test instrumentation,5
-9,Mixed,all assertions excluded due to earlier filter rejections and new failures,1
-10,Internal,all generalizations excluded due to filter rejections and failures,78
-11,External,PIT execution error during mutation testing,2
-12,Internal,JaCoCo outputs not found,1
-13,Internal,timeout exceeded (3600 seconds during PIT mutation testing),4
-14,Mixed,unmutated test suite has failing tests,6
+row_key,cause,count
+1 + 2:all tests or assertions excluded due to filter rejections,all tests or assertions excluded due to filter rejections,228
+1 + 2:JUnit execution of the original test suite exceeds 300 seconds,JUnit execution of the ORIGINAL test suite exceeds 300 seconds,26
+1 + 2:JUnit test execution or Spoon test analysis fails,JUnit test execution or Spoon test analysis fails,21
+1 + 2:no test or assertion records collected,no test or assertion records collected,11
+1 + 2:JUnit report collection fails,JUnit report collection fails,5
+3:processing failures prevent specification extraction,processing failures prevent specification extraction,112
+3:no generalization attempt recorded despite retained assertions,no generalization attempt recorded despite retained assertions,2
+4:widening refusals contribute to exclusion of all generalization attempts,widening refusals contribute to exclusion of all generalization attempts,74
+4:filter rejections alone exclude all generalization attempts,filter rejections alone exclude all generalization attempts,4
+4:processing failures alone exclude all generalization attempts,processing failures alone exclude all generalization attempts,3
+"5:PIT mutation testing of the initial test suite exceeds 3,600 seconds","PIT mutation testing of the INITIAL test suite exceeds 3,600 seconds",4
+5:generalized test suite has failing tests before mutation,IMPROVED_200_TRIES test suite has failing tests before mutation,3
+5:initial test suite has failing tests before mutation,INITIAL test suite has failing tests before mutation,3
+5:required PIT reports or JaCoCo outputs unavailable for the initial test suite,required PIT reports or JaCoCo outputs unavailable for the INITIAL test suite,3

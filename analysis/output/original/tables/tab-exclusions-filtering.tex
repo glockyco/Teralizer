@@ -1,20 +1,17 @@
-\begin{table}
-  \caption[Filtering decisions by level and filter]{Filtering results for tests and assertions in the \DatasetsCommons{} and \DatasetsEqBenchEs{} projects.}%
-  \label{tab:exclusions-filtering}
-  \tabstyle
-  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}llrrrr}
+  \renewcommand{\theHreporttablerow}{tab-exclusions-filtering.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular*}{\linewidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}llrrrr}
   \toprule
-  Level & Filter Name & Total & \multicolumn{1}{c}{Accept} & \multicolumn{1}{c}{Defer} & \multicolumn{1}{c}{Reject} \\
+  Level & Filter Name & Evaluated & \multicolumn{1}{c}{Accept} & \multicolumn{1}{c}{Defer} & \multicolumn{1}{c}{Reject} \\
   \midrule
-  Test & NonPassingTest & 23,246 & 21,719\; (93.4\%) & -- & 1,527\; (\phantom{0}6.6\%) \\
-  Test & TestType & 23,246 & 23,066\; (99.2\%) & -- & 180\; (\phantom{0}0.8\%) \\
-  Test & NoAssertions & 21,532 & 19,306\; (89.7\%) & -- & 2,226\; (10.3\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Test@3ANonPassingTest}Test & NonPassingTest & 23,246 & 21,719\; (93.4\%) & -- & 1,527\; (\phantom{0}6.6\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Test@3ATestType}Test & TestType & 23,246 & 23,066\; (99.2\%) & -- & 180\; (\phantom{0}0.8\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Test@3ANoAssertions}Test & NoAssertions & 21,532 & 19,306\; (89.7\%) & -- & 2,226\; (10.3\%) \\
   \midrule
-  Assertion & AssertionType & 28,923 & 28,180\; (97.4\%) & -- & 743\; (\phantom{0}2.6\%) \\
-  Assertion & ExcludedTest & 28,923 & 27,326\; (94.5\%) & -- & 1,597\; (\phantom{0}5.5\%) \\
-  Assertion & MissingValue & 28,923 & 21,766\; (75.3\%) & -- & 7,157\; (24.7\%) \\
-  Assertion & ParameterType & 28,923 & 17,835\; (61.7\%) & 6,630\; (22.9\%) & 4,458\; (15.4\%) \\
-  Assertion & VoidReturnType & 28,923 & 21,763\; (75.2\%) & 7,157\; (24.7\%) & 3\; (\phantom{0}0.0\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Assertion@3AMissingValue}Assertion & MissingValue & 28,923 & 21,766\; (75.3\%) & -- & 7,157\; (24.7\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Assertion@3AParameterType}Assertion & ParameterType & 28,923 & 17,835\; (61.7\%) & 6,630\; (22.9\%) & 4,458\; (15.4\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Assertion@3AExcludedTest}Assertion & ExcludedTest & 28,923 & 27,326\; (94.5\%) & -- & 1,597\; (\phantom{0}5.5\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Assertion@3AAssertionType}Assertion & AssertionType & 28,923 & 28,180\; (97.4\%) & -- & 743\; (\phantom{0}2.6\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-filtering:Assertion@3AVoidReturnType}Assertion & VoidReturnType & 28,923 & 21,763\; (75.2\%) & 7,157\; (24.7\%) & 3\; (\phantom{0}0.0\%) \\
   \bottomrule
   \end{tabular*}
-\end{table}

@@ -1,15 +1,12 @@
-\begin{table}
-  \caption{Retrospective classification of generic JPF uncaught-exception diagnostics from retained detail.}
-  \label{tab:jpf-exception-causes}
-  \centering
+  \renewcommand{\theHreporttablerow}{rq6_jpf_exception_causes.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
   \begin{tabular}{lrr}
   \toprule
   Recovered cause & Diagnostics & Share \\
   \midrule
-  Application exception & 1,378 & 76.8\% \\
-  JPF native-peer gap & 255 & 14.2\% \\
-  JPF model/field gap & 118 & 6.6\% \\
-  Unparsed & 43 & 2.4\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_jpf_exception_causes:Application@20exception}Application exception & 1,378 & 76.8\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_jpf_exception_causes:JPF@20native-peer@20gap}JPF native-peer gap & 255 & 14.2\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_jpf_exception_causes:JPF@20model@2Ffield@20gap}JPF model/field gap & 118 & 6.6\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_jpf_exception_causes:Unparsed}Unparsed & 43 & 2.4\% \\
   \bottomrule
   \end{tabular}
-\end{table}

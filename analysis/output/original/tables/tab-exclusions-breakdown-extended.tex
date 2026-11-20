@@ -1,16 +1,13 @@
-\begin{table}
-  \caption[\VariantImprovedC{} inclusion, filtering, and failure counts in RepoReapers]{Exclusion results for \VariantImprovedC{} in the RepoReapers projects.}%
-  \label{tab:exclusions-breakdown-extended}
-  \tabstyle
-  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lrrrr}
+  \renewcommand{\theHreporttablerow}{tab-exclusions-breakdown-extended.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular*}{\linewidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lrrrr}
   \toprule
    &  &  & \multicolumn{2}{c}{Excluded} \\
   \cmidrule(lr){4-5}
   Level & Total & \multicolumn{1}{c}{Included} & \multicolumn{1}{c}{Filtering} & \multicolumn{1}{c}{Failures} \\
   \midrule
-  Test & 85,368 & 44,875\; (52.6\%) & 40,198\; (47.1\%) & 295\; (0.3\%) \\
-  Assertion & 180,548 & 6,905\; (\phantom{0}3.8\%) & 166,602\; (92.3\%) & 7,041\; (3.9\%) \\
-  Generalization & 5,356 & 1,615\; (30.2\%) & 3,719\; (69.4\%) & 22\; (0.4\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-breakdown-extended:Test}Test & 85,368 & 44,875\; (52.6\%) & 40,198\; (47.1\%) & 295\; (0.3\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-breakdown-extended:Assertion}Assertion & 180,548 & 6,905\; (\phantom{0}3.8\%) & 166,602\; (92.3\%) & 7,041\; (3.9\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-breakdown-extended:Generalization}Generalization & 5,356 & 1,615\; (30.2\%) & 3,719\; (69.4\%) & 22\; (0.4\%) \\
   \bottomrule
   \end{tabular*}
-\end{table}

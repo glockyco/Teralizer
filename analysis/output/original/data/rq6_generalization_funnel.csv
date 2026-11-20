@@ -1,0 +1,8 @@
+population_key,population,count,entering,excluded,attempt_known_exclusions,attempt_unknown_exclusions
+attempted,Attempted,5356,5356,0,0,0
+emitted,Emitted,2057,5356,3299,3299,0
+filter_result_recorded,Filter result recorded,2035,2057,22,22,0
+filter_passed,Filter passed,1615,2035,420,420,0
+validated,Validated,1615,1615,0,0,0
+reduced,Reduced,1435,1615,180,32,148
+final_usable,Final usable,1435,1435,0,0,0

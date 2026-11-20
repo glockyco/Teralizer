@@ -1,0 +1,11 @@
+  \renewcommand{\theHreporttablerow}{rq6_reconstruction_summary.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular}{lllllllll}
+  \toprule
+  Claim & Status & Resolved & Unresolved & Unreviewed & Incompatible & Total & Method & Finding \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_reconstruction_summary:no-assertions}no-assertions & partially-supported & 100 & 24,166 & 24,166 & 0 & 24,266 & Deterministic stratified simple random sample without replacement: n=100; project-burden strata N=(35,261,1286,22684), n=(4,4,8,84); seed reporeapers-v7-no-assertions-review. & The reviewed sample contradicts the filter interpretation: weighted estimate 10.53\% genuine absences (95\% normal CI 4.38\%-16.69\%) and 89.47\% false positives with reachable or unsupported oracles (95\% CI 83.31\%-95.62\%). The other 24,166 population members remain unreviewed. \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_reconstruction_summary:assertion-to-mut}assertion-to-mut & partially-supported & 70 & 180,478 & 180,448 & 0 & 180,548 & Deterministic stratified source review with n=100. The review selects 20 observations from each risk stratum. The strata are T3\_SINGLE\_WEAK, T4\_GUESS, NO\_VISIBLE\_CALL, UNRESOLVED\_SOURCE\_DECLARATION, and ambiguous T1 or T2. The seed is reporeapers-v7-assertion-to-mut-review. & Of 100 targeted observations, 36 support the persisted mapping and 34 contradict it. Another 30 observations lack sufficient specification evidence. The design targets five risk strata with 37,669 observations. It does not estimate accuracy for the other 142,879 observations. \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_reconstruction_summary:output-directories}output-directories & partially-supported & 40 & 0 & 0 & 3 & 43 & Complete classification of the frozen project population from preserved command records, project checkouts, and task failures. & Forty projects have a classified output-discovery cause. Three preserved command outputs are incompatible with the UTF-8 evidence reader and remain incompatible evidence. \\
+  \bottomrule
+  \end{tabular}

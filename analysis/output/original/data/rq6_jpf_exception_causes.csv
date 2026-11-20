@@ -1,5 +1,5 @@
 category,count,share
-Application exception,"1,378",76.8%
-JPF native-peer gap,255,14.2%
-JPF model/field gap,118,6.6%
-Unparsed,43,2.4%
+Application exception,1378,0.7681159420289855072463768116
+JPF native-peer gap,255,0.1421404682274247491638795987
+JPF model/field gap,118,0.06577480490523968784838350056
+Unparsed,43,0.02396878483835005574136008919

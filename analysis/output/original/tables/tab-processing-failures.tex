@@ -1,38 +1,35 @@
-\begin{table}[tbp]
-  \caption[RepoReapers exclusions by stage and cause]{Project-level exclusions by stage and cause for the \VariantImprovedC{} generalization strategy in RepoReapers projects. Internal causes are due to configured resource limits or current limitations of \ToolTeralizer{}. External causes are due to \ToolTeralizer{}'s dependencies (i.e., JUnit, Spoon, \ToolJPF{} / \ToolSPF{}, \ToolJacoco{}, and \ToolPit{}). Mixed causes are influenced by both internal and external factors.}%
-  \label{tab:processing-failures}
-  \tabstyle
-  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}rllr}
+  \renewcommand{\theHreporttablerow}{tab-processing-failures.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular*}{\linewidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}rlr}
   \toprule
-  \# & Type & Cause of Project-level Exclusion & Count \\
+  \# & Cause of Project-level Exclusion & Count \\
   \midrule
-  \multicolumn{4}{l}{\textit{\makebox[13.25em][l]{Stage 1 + 2 - Project Analysis:} 584 projects\enspace{}182 inclusions\enspace{}402 exclusions\enspace{}31.2\% inclusion rate}} \\
+  \multicolumn{3}{@{}l@{}}{\textit{\makebox[\linewidth][l]{\makebox[13.25em][l]{Stage 1 + 2 - Project Analysis:}\hfill{}584 projects\hfill{}293 inclusions\hfill{}291 exclusions\hfill{}50.2\% inclusion rate}}} \\
   \midrule
-  1 & External & JUnit execution error during test execution & 13 \\
-  2 & External & Spoon execution error during test analysis & 8 \\
-  3 & Internal & JUnit reports not found & 5 \\
-  4 & Internal & timeout exceeded (300 seconds per \VariantOriginal{} test suite) & 26 \\
-  5 & Mixed & all assertions excluded due to filter rejections & 151 \\
-  6 & Mixed & all assertions excluded due to filter rejections and failures & 105 \\
-  7 & Mixed & all tests excluded due to filter rejections and failures & 94 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:1@20@2B@202@3Aall@20tests@20or@20assertions@20excluded@20due@20to@20filter@20rejections}\thereporttablerow & all tests or assertions excluded due to filter rejections & 228 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:1@20@2B@202@3AJUnit@20execution@20of@20the@20original@20test@20suite@20exceeds@20300@20seconds}\thereporttablerow & JUnit execution of the \VariantOriginal{} test suite exceeds 300 seconds & 26 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:1@20@2B@202@3AJUnit@20test@20execution@20or@20Spoon@20test@20analysis@20fails}\thereporttablerow & JUnit test execution or Spoon test analysis fails & 21 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:1@20@2B@202@3Ano@20test@20or@20assertion@20records@20collected}\thereporttablerow & no test or assertion records collected & 11 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:1@20@2B@202@3AJUnit@20report@20collection@20fails}\thereporttablerow & JUnit report collection fails & 5 \\
   \midrule
-  \multicolumn{4}{l}{\textit{\makebox[13.25em][l]{Stage 3 - Spec. Extraction:} 182 projects\enspace{}176 inclusions\enspace{}\phantom{00}6 exclusions\enspace{}96.7\% inclusion rate}} \\
+  \multicolumn{3}{@{}l@{}}{\textit{\makebox[\linewidth][l]{\makebox[13.25em][l]{Stage 3 - Spec. Extraction:}\hfill{}293 projects\hfill{}179 inclusions\hfill{}114 exclusions\hfill{}61.1\% inclusion rate}}} \\
   \midrule
-  8 & External & Spoon execution error during test instrumentation & 5 \\
-  9 & Mixed & all assertions excluded due to earlier filter rejections and new failures & 1 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:3@3Aprocessing@20failures@20prevent@20specification@20extraction}\thereporttablerow & processing failures prevent specification extraction & 112 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:3@3Ano@20generalization@20attempt@20recorded@20despite@20retained@20assertions}\thereporttablerow & no generalization attempt recorded despite retained assertions & 2 \\
   \midrule
-  \multicolumn{4}{l}{\textit{\makebox[13.25em][l]{Stage 4 - Gen. Test Creation:} 176 projects\enspace{}\phantom{0}98 inclusions\enspace{}\phantom{0}78 exclusions\enspace{}55.7\% inclusion rate}} \\
+  \multicolumn{3}{@{}l@{}}{\textit{\makebox[\linewidth][l]{\makebox[13.25em][l]{Stage 4 - Gen. Test Creation:}\hfill{}179 projects\hfill{}\phantom{0}98 inclusions\hfill{}\phantom{0}81 exclusions\hfill{}54.7\% inclusion rate}}} \\
   \midrule
-  10 & Internal & all generalizations excluded due to filter rejections and failures & 78 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:4@3Awidening@20refusals@20contribute@20to@20exclusion@20of@20all@20generalization@20attempts}\thereporttablerow & widening refusals contribute to exclusion of all generalization attempts & 74 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:4@3Afilter@20rejections@20alone@20exclude@20all@20generalization@20attempts}\thereporttablerow & filter rejections alone exclude all generalization attempts & 4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:4@3Aprocessing@20failures@20alone@20exclude@20all@20generalization@20attempts}\thereporttablerow & processing failures alone exclude all generalization attempts & 3 \\
   \midrule
-  \multicolumn{4}{l}{\textit{\makebox[13.25em][l]{Stage 5 - Test Suite Reduction:} \phantom{0}98 projects\enspace{}\phantom{0}85 inclusions\enspace{}\phantom{0}13 exclusions\enspace{}86.7\% inclusion rate}} \\
+  \multicolumn{3}{@{}l@{}}{\textit{\makebox[\linewidth][l]{\makebox[13.25em][l]{Stage 5 - Test Suite Reduction:}\hfill{}\phantom{0}98 projects\hfill{}\phantom{0}85 inclusions\hfill{}\phantom{0}13 exclusions\hfill{}86.7\% inclusion rate}}} \\
   \midrule
-  11 & External & \ToolPit{} execution error during mutation testing & 2 \\
-  12 & Internal & JaCoCo outputs not found & 1 \\
-  13 & Internal & timeout exceeded (3600 seconds during PIT mutation testing) & 4 \\
-  14 & Mixed & unmutated test suite has failing tests & 6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:5@3APIT@20mutation@20testing@20of@20the@20initial@20test@20suite@20exceeds@203@2C600@20seconds}\thereporttablerow & PIT mutation testing of the \VariantInitial{} test suite exceeds 3,600 seconds & 4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:5@3Ageneralized@20test@20suite@20has@20failing@20tests@20before@20mutation}\thereporttablerow & \VariantImprovedC{} test suite has failing tests before mutation & 3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:5@3Ainitial@20test@20suite@20has@20failing@20tests@20before@20mutation}\thereporttablerow & \VariantInitial{} test suite has failing tests before mutation & 3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-processing-failures:5@3Arequired@20PIT@20reports@20or@20JaCoCo@20outputs@20unavailable@20for@20the@20initial@20test@20suite}\thereporttablerow & required PIT reports or JaCoCo outputs unavailable for the \VariantInitial{} test suite & 3 \\
   \midrule
-  \multicolumn{4}{l}{\textit{\makebox[13.25em][l]{Overall:} 584 projects\enspace{}\phantom{0}85 inclusions\enspace{}499 exclusions\enspace{}14.6\% inclusion rate}} \\
+  \multicolumn{3}{@{}l@{}}{\textit{\makebox[\linewidth][l]{\makebox[13.25em][l]{Overall:}\hfill{}584 projects\hfill{}\phantom{0}85 inclusions\hfill{}499 exclusions\hfill{}14.6\% inclusion rate}}} \\
   \bottomrule
   \end{tabular*}
-\end{table}

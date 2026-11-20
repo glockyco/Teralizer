@@ -1,0 +1,11 @@
+result,failure_type,tests
+SKIPPED,skipped,892
+ERROR,java.lang.NoClassDefFoundError,889
+FAILED,java.lang.AssertionError,442
+ERROR,redis.clients.jedis.exceptions.JedisConnectionException,378
+ERROR,java.lang.IllegalStateException,350
+ERROR,java.lang.RuntimeException,186
+ERROR,java.lang.NullPointerException,159
+ERROR,com.mongodb.MongoException$Network,146
+FAILED,junit.framework.ComparisonFailure,117
+FAILED,org.junit.ComparisonFailure,116

@@ -1,17 +1,14 @@
-\begin{table}
-  \caption{Causes for generalization attempts that produce no generalized test in the real-world dataset.}
-  \label{tab:widening-refusals}
-  \centering
-  \begin{tabular}{lrrr}
+  \renewcommand{\theHreporttablerow}{rq6_widening_refusals.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular}{lrrrrr}
   \toprule
-  Refusal cause & Generalizations & Refusals & Attempts \\
+  Refusal cause & Generalizations & All refusals & Refusals & All attempts & Attempts \\
   \midrule
-  Null output model, and the returned value is not a bytecode literal & 2,552 & 77.4\% & 47.6\% \\
-  Null output model, and a native call received a symbolic argument & 488 & 14.8\% & 9.1\% \\
-  Null output model, and no generated parameter reaches the path condition & 206 & 6.2\% & 3.8\% \\
-  Null output model, and the path condition does not pin every generated parameter & 38 & 1.2\% & 0.7\% \\
-  Exception oracle, concretized with a risk of divergence & 13 & 0.4\% & 0.2\% \\
-  Exception oracle, and the path condition does not pin every generated parameter & 1 & 0.0\% & 0.0\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_widening_refusals:NULL_CONCRETE_OUTPUT_NOT_LITERAL}Null output model, and the returned value is not a bytecode literal & 2,552 & 3,298 & 77.4\% & 5,356 & 47.6\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_widening_refusals:NULL_CONCRETE_CONCRETIZATION_EVENTS}Null output model, and a native call received a symbolic argument & 488 & 3,298 & 14.8\% & 5,356 & 9.1\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_widening_refusals:NULL_CONCRETE_PARAMETERS_EMPTY}Null output model, and no generated parameter reaches the path condition & 206 & 3,298 & 6.2\% & 5,356 & 3.8\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_widening_refusals:NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS}Null output model, and the path condition does not pin every generated parameter & 38 & 3,298 & 1.2\% & 5,356 & 0.7\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_widening_refusals:EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK}Exception oracle, concretized with a risk of divergence & 13 & 3,298 & 0.4\% & 5,356 & 0.2\% \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_widening_refusals:EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS}Exception oracle, and the path condition does not pin every generated parameter & 1 & 3,298 & 0.0\% & 5,356 & 0.0\% \\
   \bottomrule
   \end{tabular}
-\end{table}

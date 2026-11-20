@@ -1,0 +1,11 @@
+row_key,claim,status,outcome,reviewed_count
+assertion-to-mut:resolved:contradicted-mapping,assertion-to-mut,resolved,contradicted-mapping,34
+assertion-to-mut:resolved:supported-mapping,assertion-to-mut,resolved,supported-mapping,36
+assertion-to-mut:unresolved:insufficient-specification-evidence,assertion-to-mut,unresolved,insufficient-specification-evidence,30
+no-assertions:resolved:genuine-absence,no-assertions,resolved,genuine-absence,12
+no-assertions:resolved:reachable-helper-assertion,no-assertions,resolved,reachable-helper-assertion,34
+no-assertions:resolved:unsupported-oracle,no-assertions,resolved,unsupported-oracle,54
+output-directories:incompatible:incompatible-evidence,output-directories,incompatible,incompatible-evidence,3
+output-directories:resolved:absent-artifact,output-directories,resolved,absent-artifact,32
+output-directories:resolved:default-directory-mismatch,output-directories,resolved,default-directory-mismatch,1
+output-directories:resolved:earlier-build-failure,output-directories,resolved,earlier-build-failure,7

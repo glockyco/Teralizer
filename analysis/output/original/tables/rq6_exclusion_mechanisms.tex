@@ -1,0 +1,23 @@
+  \renewcommand{\theHreporttablerow}{rq6_exclusion_mechanisms.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular*}{\linewidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lllrr}
+  \toprule
+  Level & Mechanism & Outcome & \multicolumn{1}{c}{Entities} & Level total \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:test.included}Test & Included & included & 44,875\; (52.6\%) & 85,368 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:test.filter_rejection}Test & Filter rejection & filtering & 37,363\; (43.8\%) & 85,368 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:test.inherited_test_inlining_limit}Test & Inherited-test inlining limit & filtering & 2,835\; (\phantom{0}3.3\%) & 85,368 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:test.task_exception}Test & Processing failure & failures & 295\; (\phantom{0}0.3\%) & 85,368 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:assertion.included}Assertion & Included & included & 6,905\; (\phantom{0}3.8\%) & 180,548 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:assertion.filter_rejection}Assertion & Filter rejection & filtering & 166,602\; (92.3\%) & 180,548 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:assertion.build_quarantine}Assertion & Compilation failure & failures & 182\; (\phantom{0}0.1\%) & 180,548 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:assertion.task_exception}Assertion & Processing failure & failures & 6,859\; (\phantom{0}3.8\%) & 180,548 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:generalization.included}Generalization & Included & included & 1,615\; (30.2\%) & 5,356 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:generalization.filter_rejection}Generalization & Filter rejection & filtering & 420\; (\phantom{0}7.8\%) & 5,356 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:generalization.generation_gate}Generalization & Generation-time gate & filtering & 3,299\; (61.6\%) & 5,356 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:generalization.build_quarantine}Generalization & Compilation failure & failures & 5\; (\phantom{0}0.1\%) & 5,356 \\
+  \refstepcounter{reporttablerow}\label{tabrow:rq6_exclusion_mechanisms:generalization.task_exception}Generalization & Processing failure & failures & 17\; (\phantom{0}0.3\%) & 5,356 \\
+  \bottomrule
+  \end{tabular*}
