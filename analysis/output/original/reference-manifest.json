@@ -1,0 +1,790 @@
+{
+  "artifacts": [
+    {
+      "digest": "131ad08dfb06caed2d47927f506e360415dfb9095628175c089fb5717dc80d70",
+      "key": "tab-dataset-statistics",
+      "path": "build/dataset/tab-dataset-statistics.csv",
+      "report": "dataset",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "48fa0a9e1ceaa73c19308ffe66a740b2f600b8786b56db0f4d3d0ea86d51b63f",
+      "key": "macros/dataset",
+      "path": "build/macros/dataset.tex",
+      "report": "dataset",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "b953bd2448813aa58238e636d0ea352c1c45f0dbcb02edb5f6eb08eae3e2806b",
+      "key": "tab-dataset-statistics",
+      "path": "build/tab-dataset-statistics.tex",
+      "report": "dataset",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "90e6a118c060888c3a390347f11c1a8b1d07f83c22d057d424069d81bd4c37b3",
+      "key": "dataset",
+      "path": "reports/dataset.md",
+      "report": "dataset",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "20cec111b285a70755be83d0e0df3a98e560882bd2b161d3243f5791cfa3ed97",
+      "key": "rq0-breadth-summary",
+      "path": "build/rq0/rq0-breadth-summary.csv",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "e03ab0f5416daac099648775f0c9c7d0c9ac5a7f2e4f83067580fcb250e34f50",
+      "key": "rq0-pvc-budget",
+      "path": "build/rq0/rq0-pvc-budget.csv",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "1cdc3dcf663f652260740ce0690868611fdc8c04f71f094426b3b7df7fead356",
+      "key": "rq0-table2-comparison",
+      "path": "build/rq0/rq0-table2-comparison.csv",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "91c5d6d4f2bf5d007d4d99e9f427eefac46f3c25880614b19b92b8d0b9b06fd6",
+      "key": "macros/rq0",
+      "path": "build/macros/rq0.tex",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "a5a224398e19775c5dc3c9a2235c699719b5110395f7efcaef5de40b6ffe2d1a",
+      "key": "rq0-breadth-summary",
+      "path": "build/rq0-breadth-summary.tex",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "2722148eb9f33bea4a72ad4f929e4d91c4fbd41474b9a9a6c96960bc919b5cfa",
+      "key": "rq0-pvc-budget",
+      "path": "build/rq0-pvc-budget.tex",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "1a1cf4a87bc882820c779633d2f6cee32978aa79e607c094d74734df5ab2a9a5",
+      "key": "rq0-table2-comparison",
+      "path": "build/rq0-table2-comparison.tex",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "93f184c71be2b7021a09e757ff3fdef508ba728faae82b93e0a49d594e56483d",
+      "key": "rq0",
+      "path": "reports/rq0.md",
+      "report": "rq0",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "37a4a60d9ce5835f57d92da79ce8bfa84e2286a030e3c1ef50d98a33f3b2621f",
+      "key": "tab-detections-per-mutator",
+      "path": "build/rq1/tab-detections-per-mutator.csv",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "f05be415396c5d979a7f1efaca882b5aec1ea2201b30d11951fc772230709065",
+      "key": "tab-mutants-per-project",
+      "path": "build/rq1/tab-mutants-per-project.csv",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "image",
+      "key": "mutation_detection_comparison",
+      "path": "build/figures/rq1/mutation_detection_comparison.pdf",
+      "report": "rq1",
+      "rule": "image",
+      "target": "figures"
+    },
+    {
+      "digest": "f721e793cee15af218ae81782baed3b8335f9fca7ceb4389083eac9c4d87b584",
+      "key": "mutation_detection_comparison.source",
+      "path": "build/figures/rq1/mutation_detection_comparison.source.json",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "figures"
+    },
+    {
+      "digest": "bf0b23fc8374a6c64102cd73f1c5b0bc9fece3364c01af36b1ca369147e2c21f",
+      "key": "macros/rq1",
+      "path": "build/macros/rq1.tex",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "6b134d69035f9ac8e1223cac06e1f6d5fd08cecf5c8b268822fd92b949b18e1c",
+      "key": "tab-detections-per-mutator",
+      "path": "build/tab-detections-per-mutator.tex",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "190db2f7588852534544901eb122a08af5584f9953f903a63315357d75311bcb",
+      "key": "tab-mutants-per-project",
+      "path": "build/tab-mutants-per-project.tex",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "image",
+      "key": "mutation_detection_comparison",
+      "path": "reports/figures/rq1/mutation_detection_comparison.png",
+      "report": "rq1",
+      "rule": "image",
+      "target": "md"
+    },
+    {
+      "digest": "ae9f0bb246946c51859526dffbb8176d92866378e44f8719cf58a9755e057fc8",
+      "key": "rq1",
+      "path": "reports/rq1.md",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "510880d5386d9a9dc65c7830e8c356e6ac5f2f247eac2fdc1d47d2b792a2bfa0",
+      "key": "tab-mutation-detection-comparison",
+      "path": "build/rq2/tab-mutation-detection-comparison.csv",
+      "report": "rq2",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "71dfd639156922a7c4a93055da0283fe632926d957664a598f81ea738344ae24",
+      "key": "macros/rq2",
+      "path": "build/macros/rq2.tex",
+      "report": "rq2",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "44d9d742fe478a4d0d0539233084186fcedbd81d0b4e300f280fe7b47aab2f41",
+      "key": "tab-mutation-detection-comparison",
+      "path": "build/tab-mutation-detection-comparison.tex",
+      "report": "rq2",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "54206edd62da26b0d7ebc27d776111e41e740a998f0dc6e19e3c24185f636fd2",
+      "key": "rq2",
+      "path": "reports/rq2.md",
+      "report": "rq2",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "f16e0c76805dcac882de77186511da609825459011709022974ee75a1337de3a",
+      "key": "tab-lines-per-project",
+      "path": "build/rq3/tab-lines-per-project.csv",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "69fa2dedb9f9dd2846a850ccad0fe1de51deff88a61461bd0348fae875eb0656",
+      "key": "tab-runtime-per-project",
+      "path": "build/rq3/tab-runtime-per-project.csv",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "4a290632e5250ea67be8cde5e8771a75703d23d01464920536a0320324bd1850",
+      "key": "tab-tests-per-project",
+      "path": "build/rq3/tab-tests-per-project.csv",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "d8c6ce71c659c4d5f80b8f07b7b401fe32c8155138686aa27e78f8b970bcdc39",
+      "key": "test_runtime_differences",
+      "path": "build/rq3/test_runtime_differences.csv",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "image",
+      "key": "test_runtime_differences",
+      "path": "build/figures/rq3/test_runtime_differences.pdf",
+      "report": "rq3",
+      "rule": "image",
+      "target": "figures"
+    },
+    {
+      "digest": "3d3ebd2d13739c9f6f5a0df24067c796362c8ed9e46d76091622533409108abb",
+      "key": "test_runtime_differences.source",
+      "path": "build/figures/rq3/test_runtime_differences.source.json",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "figures"
+    },
+    {
+      "digest": "9108eaf687f9e0b86af77f512ffec799bf62b99d9a44740b567e5d03f5d70939",
+      "key": "macros/rq3",
+      "path": "build/macros/rq3.tex",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "3c7284742c7ba3e3073522339ab1da3884c616c5c7f3047960e9423b7fcfabef",
+      "key": "tab-lines-per-project",
+      "path": "build/tab-lines-per-project.tex",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "5d4790cba6f21ca6688b47babf4b5619174dd197d2092cad49c9cbb06f315ff6",
+      "key": "tab-runtime-per-project",
+      "path": "build/tab-runtime-per-project.tex",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "6c15f868755c65f8ca5d5aef8a5ff2ba46dc211ae10c98236cd61f33dd25d8e7",
+      "key": "tab-tests-per-project",
+      "path": "build/tab-tests-per-project.tex",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "bad6d3be1de378af23a36dbecce137bea7664b579bb2dc1fe4d786486712e40f",
+      "key": "test_runtime_differences",
+      "path": "build/test_runtime_differences.tex",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "8b1f478ceba20687a866f55a02fb40962d7d30bc08711c7ca9991ad6d570ad97",
+      "key": "rq3",
+      "path": "reports/rq3.md",
+      "report": "rq3",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "image",
+      "key": "test_runtime_differences",
+      "path": "reports/figures/rq3/test_runtime_differences.png",
+      "report": "rq3",
+      "rule": "image",
+      "target": "md"
+    },
+    {
+      "digest": "414ff714cedf84ebd91d88c268d9c989e96aa37135d4a7683ae26f037789e416",
+      "key": "evosuite_runtime_analysis",
+      "path": "build/rq4/evosuite_runtime_analysis.csv",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "bad0a48ea9cf28b3191ed3eb50c4261de915009f6867519087bd28e0b795a6f6",
+      "key": "tab-pareto-commons",
+      "path": "build/rq4/tab-pareto-commons.csv",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "a354b8a0c33646317adf7c6c7404ee261666bcc0602df8253ba46654743c22d4",
+      "key": "tab-pareto-eqbench",
+      "path": "build/rq4/tab-pareto-eqbench.csv",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "image",
+      "key": "evosuite_runtime_phases",
+      "path": "build/figures/rq4/evosuite_runtime_phases.pdf",
+      "report": "rq4",
+      "rule": "image",
+      "target": "figures"
+    },
+    {
+      "digest": "1a1468b548b64372fa45c4d8ef941692b48657faf718be4a788920fea2e0a064",
+      "key": "evosuite_runtime_phases.source",
+      "path": "build/figures/rq4/evosuite_runtime_phases.source.json",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "figures"
+    },
+    {
+      "digest": "image",
+      "key": "teralizer_efficiency",
+      "path": "build/figures/rq4/teralizer_efficiency.pdf",
+      "report": "rq4",
+      "rule": "image",
+      "target": "figures"
+    },
+    {
+      "digest": "28310fbffd46e726453fc70684b07308eff54261676d8005b521c96a9b645686",
+      "key": "teralizer_efficiency.source",
+      "path": "build/figures/rq4/teralizer_efficiency.source.json",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "figures"
+    },
+    {
+      "digest": "image",
+      "key": "teralizer_runtimes",
+      "path": "build/figures/rq4/teralizer_runtimes.pdf",
+      "report": "rq4",
+      "rule": "image",
+      "target": "figures"
+    },
+    {
+      "digest": "c949ab929f56d893f1fd7e1886577881e2a43dfc36e42acb13050b9ec0c9ad0f",
+      "key": "teralizer_runtimes.source",
+      "path": "build/figures/rq4/teralizer_runtimes.source.json",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "figures"
+    },
+    {
+      "digest": "15672c79588df1f4b32fc220182e335776d21aef8197984709db8a3a1b9bf7f1",
+      "key": "evosuite_runtime_analysis",
+      "path": "build/evosuite_runtime_analysis.tex",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "db3c320926dc52f729187369e787969ee67cb6f578905a1331b6358b8be0ebc8",
+      "key": "macros/rq4",
+      "path": "build/macros/rq4.tex",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "2ecc4033b7cd2dcf56e28e8ca82c4080a3a210f20ad8d9efc3428aa9aac0a450",
+      "key": "tab-pareto-commons",
+      "path": "build/tab-pareto-commons.tex",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "88f977bfc1bc179de65742e71059cffa0c6245bb011290aa7a97a00045889618",
+      "key": "tab-pareto-eqbench",
+      "path": "build/tab-pareto-eqbench.tex",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "image",
+      "key": "evosuite_runtime_phases",
+      "path": "reports/figures/rq4/evosuite_runtime_phases.png",
+      "report": "rq4",
+      "rule": "image",
+      "target": "md"
+    },
+    {
+      "digest": "cf2675ac820a41c286a93d39874b7414a3ed95f879844ff03fd2bbc029e14871",
+      "key": "rq4",
+      "path": "reports/rq4.md",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "image",
+      "key": "teralizer_efficiency",
+      "path": "reports/figures/rq4/teralizer_efficiency.png",
+      "report": "rq4",
+      "rule": "image",
+      "target": "md"
+    },
+    {
+      "digest": "image",
+      "key": "teralizer_runtimes",
+      "path": "reports/figures/rq4/teralizer_runtimes.png",
+      "report": "rq4",
+      "rule": "image",
+      "target": "md"
+    },
+    {
+      "digest": "25a19e9a628a339aa43fcd5d0e566a85b9db5a0ca86ff9bd60ea2d2df782c30d",
+      "key": "tab-exclusions-breakdown",
+      "path": "build/rq5/tab-exclusions-breakdown.csv",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "0fc70054aff763f988e1d1bca5f347a3e0613791db8851aa25c2c876e196af09",
+      "key": "tab-exclusions-filtering",
+      "path": "build/rq5/tab-exclusions-filtering.csv",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "c276e4e3b7154bfce8af218ac40b686c1dd95c21b2191df25c59f13e8e51996b",
+      "key": "macros/rq5",
+      "path": "build/macros/rq5.tex",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "7c1ac397a054c294a3549e0be55a05c4dbf2ebc86fa4c99f99796b958c7f7a42",
+      "key": "tab-exclusions-breakdown",
+      "path": "build/tab-exclusions-breakdown.tex",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "1e0ef1d8ab6971aa63feb3b8a689a0293b26b1f2285a7fad0470059059d61c12",
+      "key": "tab-exclusions-filtering",
+      "path": "build/tab-exclusions-filtering.tex",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "8a03e7e3a4916151f5e61f2600a949bf01d3a0089625551964b287e7cde51839",
+      "key": "rq5",
+      "path": "reports/rq5.md",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "bfc3d8fbfff92ccdb148f821761eb5fc6c790d030b797c3c60562cd0c481a15c",
+      "key": "rq6_assertion_type_rejections",
+      "path": "build/rq6/rq6_assertion_type_rejections.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "d9503da2b2c7ef6d0bce6f57daaadb14072779dc57dab49640881ba886754d26",
+      "key": "rq6_exclusion_mechanisms",
+      "path": "build/rq6/rq6_exclusion_mechanisms.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "b155845c832c337b17c8b073c24617bf0c2e1618038b99ba1ea09607d536934b",
+      "key": "rq6_filtering_comparison",
+      "path": "build/rq6/rq6_filtering_comparison.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "aefc793d5ce99bcead3a1ce356cd428a0dce7509c6339e520ade00cb6a075962",
+      "key": "rq6_generalization_funnel",
+      "path": "build/rq6/rq6_generalization_funnel.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "13c04910bd99d3fc0edfc3bea971b9ca3765d0604eca1a8411cf5672eed7f35c",
+      "key": "rq6_jpf_exception_causes",
+      "path": "build/rq6/rq6_jpf_exception_causes.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "d69f2119d7a8bc341eadec2c9446c87d52ca147454cd1434673442118bc429ea",
+      "key": "rq6_missing_value_causes",
+      "path": "build/rq6/rq6_missing_value_causes.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "9927fc63dd1f103c4ae51ffe0ceb62681021b9780b1b1526d4e89c8c0d0b20bc",
+      "key": "rq6_mut_choice_sensitivity",
+      "path": "build/rq6/rq6_mut_choice_sensitivity.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "19b40611e37dd82125684f133f76212dcc9dd3526b80c20e66f1c4d1ae4fb494",
+      "key": "rq6_non_passing_failure_types",
+      "path": "build/rq6/rq6_non_passing_failure_types.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "0b83f04e841db1897c7d301746f18a92003563e3a652d97470b92688222a60fc",
+      "key": "rq6_non_passing_outcomes",
+      "path": "build/rq6/rq6_non_passing_outcomes.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "4213ac291e6cc773685f654100ac29f949c71761611dac853f508b2c4037796b",
+      "key": "rq6_parameter_type_rejections",
+      "path": "build/rq6/rq6_parameter_type_rejections.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "b5b4d0d938ddf099bed911ee1483fcfc78ccabe67b01fb99c7271fb4482cb2f6",
+      "key": "rq6_reconstruction_outcomes",
+      "path": "build/rq6/rq6_reconstruction_outcomes.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "4497a48c3964ef1abcae9fe186765e2adbd9a762b5a4d8a4526426e336d31779",
+      "key": "rq6_reconstruction_summary",
+      "path": "build/rq6/rq6_reconstruction_summary.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "bb1a10b16e06d2211a408a8554f08bbe02e67de4cb05eda400dd90b003ee6c07",
+      "key": "rq6_return_type_rejections",
+      "path": "build/rq6/rq6_return_type_rejections.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "7e44adcf4928f166aaaa73b5ebc00bf089a5634a96b50e2be47d135aae9316b4",
+      "key": "rq6_widening_refusals",
+      "path": "build/rq6/rq6_widening_refusals.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "07901d6ae007a635dbb6125909551734978de8b2f1a9a7246d43c9d89ba9aed9",
+      "key": "tab-exclusions-breakdown-extended",
+      "path": "build/rq6/tab-exclusions-breakdown-extended.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "3e53bb4b496799df3c7bbf64ce0b4b898c0b811de31e549cde110956f0aa4494",
+      "key": "tab-exclusions-filtering-extended",
+      "path": "build/rq6/tab-exclusions-filtering-extended.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "5d93c6b82212102ccbe066e32fb168d0602e23fb56f399c4680048a2e4c18002",
+      "key": "tab-processing-failures",
+      "path": "build/rq6/tab-processing-failures.csv",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "5f31646945b09474c43aa46e571051119246688266ac715fe0ca651819fc8390",
+      "key": "macros/rq6",
+      "path": "build/macros/rq6.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "77e46376a49a0d6f88c996fe7d47e6568e1f5dd4fa45dde59b546e738704dd71",
+      "key": "rq6_assertion_type_rejections",
+      "path": "build/rq6_assertion_type_rejections.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "a306b4d849629061bcb5ce181444175775f2cf4969575b8a400a362851c935b5",
+      "key": "rq6_exclusion_mechanisms",
+      "path": "build/rq6_exclusion_mechanisms.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "964a74d8c63ff45954b15a1fa16bf5d1f4b887facdbc66bfad56bc14ab90eed2",
+      "key": "rq6_filtering_comparison",
+      "path": "build/rq6_filtering_comparison.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "00366f5dce66e6800256a552cfaa2cf4822707b22c6d447623ce83c12fcc3c4b",
+      "key": "rq6_generalization_funnel",
+      "path": "build/rq6_generalization_funnel.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "2352ae453033a11d62ce5dda0c42ee403d22e8135b3601265b8aa6cd21b61dd2",
+      "key": "rq6_jpf_exception_causes",
+      "path": "build/rq6_jpf_exception_causes.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "5185c81c991c981a98a58357075840bc2ff9865fd641657e9470e95d320506a8",
+      "key": "rq6_missing_value_causes",
+      "path": "build/rq6_missing_value_causes.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "3a1aa6cc13e2685c735a0eb8612cd84764a68c951eb7637e8a27008a3f4e3d7a",
+      "key": "rq6_mut_choice_sensitivity",
+      "path": "build/rq6_mut_choice_sensitivity.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "a97684e164062974743b302d33b22a7f233485e1aebd6c2775fa5adda3a14678",
+      "key": "rq6_non_passing_failure_types",
+      "path": "build/rq6_non_passing_failure_types.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "f86a43d921cc0993139ca252a93099cba5cb64c5bdeae150c95d42502bf63b0c",
+      "key": "rq6_non_passing_outcomes",
+      "path": "build/rq6_non_passing_outcomes.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "b8cc07d659c228163906cbffd34084e247025462c55dddaf595f3a1a8a32061a",
+      "key": "rq6_parameter_type_rejections",
+      "path": "build/rq6_parameter_type_rejections.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "23f4dfbeda8251116286a0bc696266bcc8fd3b744dbaff4cba236dd487e0e5b1",
+      "key": "rq6_reconstruction_outcomes",
+      "path": "build/rq6_reconstruction_outcomes.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "2c51c78ef3702cb2b64495638cefcb4945b21d3d5e50fb04853757ef4bda42fb",
+      "key": "rq6_reconstruction_summary",
+      "path": "build/rq6_reconstruction_summary.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "173d2333867679db5f4d7500802ed9e36fd91831032fa7ad7235136ccf9566b9",
+      "key": "rq6_return_type_rejections",
+      "path": "build/rq6_return_type_rejections.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "9f2108294fdea76c32aeaf72c9a97f5f2704da903cdbb28843aa54162a00d664",
+      "key": "rq6_widening_refusals",
+      "path": "build/rq6_widening_refusals.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "b5338e289c40be145f82a2cd7882bd52b636c28942c3e76158e0fd3f875eaf0a",
+      "key": "tab-exclusions-breakdown-extended",
+      "path": "build/tab-exclusions-breakdown-extended.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "49a41004744194b775aeda44751619206b92f060321f06fe56d11e29d3f294ad",
+      "key": "tab-exclusions-filtering-extended",
+      "path": "build/tab-exclusions-filtering-extended.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "a9101b11f05b7864d92348eb3b31d97fe9333f5d19255fed2f219c52b60d93f1",
+      "key": "tab-processing-failures",
+      "path": "build/tab-processing-failures.tex",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "c3b446775c7d3829b824b00a78098686682f7141f32f736b623112e58ecfdad7",
+      "key": "rq6",
+      "path": "reports/rq6.md",
+      "report": "rq6",
+      "rule": "bytes",
+      "target": "md"
+    },
+    {
+      "digest": "e9c0ce9dc7f026372c0a12635b0bf61fa87b32c75702b4c5a8289a8cf884db3b",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "run",
+      "rule": "run-manifest",
+      "target": "manifest"
+    }
+  ],
+  "format": "teralizer-reference-outputs",
+  "format_version": 1
+}
