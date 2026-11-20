@@ -2,18 +2,18 @@
 # Build the registered analysis reports with teralizer.eval.
 #
 # USAGE:
-#   ./run-analysis.sh [verify|replicate] [--db NAME]
+#   ./run-analysis.sh [verify|replicate]
 #
-# The selected variant is written below analysis/output/<variant>/ using the
-# same tables/, data/, and figures/ layout as the published reference output.
-# The optional database override is passed to teralizer.eval for single-corpus
-# debugging. The default path keeps each report's registered database.
+# The run rewrites the rendered reports under analysis/reports/ and collects
+# the publication outputs below analysis/output/<variant>/ in the tables/,
+# data/, and figures/ layout of the published reference output.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ANALYSIS_DIR="$REPO_ROOT/analysis"
+BUILD_DIR="$ANALYSIS_DIR/build"
 OUTPUT_ROOT="$ANALYSIS_DIR/output"
 
 RED='\033[0;31m'
@@ -21,25 +21,16 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 usage() {
-    sed -n '1,13p' "$0"
+    sed -n '2,9p' "$0"
     exit 0
 }
 
 VARIANT="verify"
-DB_OVERRIDE=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         verify|replicate)
             VARIANT="$1"
             shift
-            ;;
-        --db)
-            if [[ $# -lt 2 ]]; then
-                echo -e "${RED}Error: --db requires a database name${NC}" >&2
-                exit 2
-            fi
-            DB_OVERRIDE="$2"
-            shift 2
             ;;
         --help|-h)
             usage
@@ -52,28 +43,33 @@ while [[ $# -gt 0 ]]; do
 done
 
 OUTPUT_DIR="$OUTPUT_ROOT/$VARIANT"
-FIGURES_DIR="$OUTPUT_DIR/figures"
-
-mkdir -p "$OUTPUT_DIR"
-rm -rf "$OUTPUT_DIR/tables" "$OUTPUT_DIR/data" "$FIGURES_DIR"
 
 printf 'Running teralizer.eval for %s\n' "$VARIANT"
 
-EVAL_ARGS=(all --targets md,figures,latex,csv --paper-out "$OUTPUT_DIR")
-if [[ -n "$DB_OVERRIDE" ]]; then
-    EVAL_ARGS+=(--db "$DB_OVERRIDE")
-fi
-DATASET_VARIANT="$VARIANT" uv run --directory "$ANALYSIS_DIR" \
-    python -m teralizer.eval "${EVAL_ARGS[@]}"
+uv run --frozen --directory "$ANALYSIS_DIR" \
+    python -m teralizer.eval all --targets md,figures,latex,csv
 
-# teralizer.eval keeps rendered figures in the repository reports tree so they
-# can be consumed by the markdown renderer. Copy them into the variant output
-# alongside tables and CSV files for reviewer-facing comparisons.
-mkdir -p "$FIGURES_DIR"
-if [[ -d "$ANALYSIS_DIR/reports/figures" ]]; then
-    while IFS= read -r -d '' figure; do
-        cp "$figure" "$FIGURES_DIR/"
-    done < <(find "$ANALYSIS_DIR/reports/figures" -type f -print0)
-fi
+# Copy every file that find prints into one flat directory. Two reports that
+# emit the same file name would silently hide one of them, so that is an error.
+collect() {
+    local target="$1"
+    shift
+    mkdir -p "$target"
+    local file
+    while IFS= read -r -d '' file; do
+        if [[ -e "$target/$(basename "$file")" ]]; then
+            echo -e "${RED}Error: two outputs are named $(basename "$file")${NC}" >&2
+            exit 1
+        fi
+        cp "$file" "$target/"
+    done < <(find "$@" -type f -print0)
+}
+
+# teralizer.eval writes tables and CSV files to analysis/build/ and figures to
+# analysis/build/figures/ (PDF) and analysis/reports/figures/ (PNG).
+rm -rf "$OUTPUT_DIR"
+collect "$OUTPUT_DIR/tables" "$BUILD_DIR" -maxdepth 1 -name '*.tex'
+collect "$OUTPUT_DIR/data" "$BUILD_DIR" -mindepth 2 -name '*.csv'
+collect "$OUTPUT_DIR/figures" "$BUILD_DIR/figures" "$ANALYSIS_DIR/reports/figures"
 
 printf '%bAnalysis output written to %s%b\n' "$GREEN" "$OUTPUT_DIR" "$NC"
