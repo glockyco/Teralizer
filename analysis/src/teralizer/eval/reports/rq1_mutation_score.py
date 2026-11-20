@@ -13,7 +13,7 @@ from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required, read_sql
 from teralizer.eval.evidence import project_sources
-from teralizer.eval.entities import ref_for_csv
+from teralizer.eval.entities import ref_for_csv, variant_ref
 from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
@@ -28,6 +28,7 @@ from teralizer.eval.model import (
     share_value,
 )
 from teralizer.eval.provenance import Provenance, capture
+from teralizer.eval.reports._causes_common import variant_sort_key
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.exports import (
     get_project_type,
@@ -261,6 +262,62 @@ def _mutator_table(df: pd.DataFrame) -> Table:
         group_header_align="c",
         merge_equal_headers=True,
         provenance=capture(compute_mutator_statistics),
+    )
+
+
+def _improvement_table(detection: pd.DataFrame) -> Table:
+    """Mutation score of every project and strategy, with its gain over the
+    initial suite in percentage points and relative to the initial score."""
+    rows = detection.loc[
+        :,
+        [
+            "project_name",
+            "variant",
+            "detected_of_covered_pct",
+            "absolute_improvement",
+            "relative_improvement",
+        ],
+    ].copy()
+    within_type = get_project_within_type_order()
+    rows.loc[:, "_project"] = rows["project_name"].map(within_type)
+    rows.loc[:, "_group"] = rows["project_name"].map(
+        lambda project: get_table_group_order(project, "INITIAL")
+    )
+    rows.loc[:, "_variant"] = rows["variant"].map(variant_sort_key)
+    rows = rows.sort_values(["_group", "_project", "_variant"]).reset_index(drop=True)
+    rows.loc[:, "row_key"] = rows["project_name"] + ":" + rows["variant"]
+    rows.loc[:, "project_group"] = rows["project_name"].map(get_project_type)
+    for column in (
+        "detected_of_covered_pct",
+        "absolute_improvement",
+        "relative_improvement",
+    ):
+        rows = rows.assign(**{column: rows[column].map(lambda v: decimal_value(v, 2))})
+    rows.loc[:, "project"] = rows["project_name"].map(
+        lambda value: ref_for_csv("dataset", value)
+    )
+    rows.loc[:, "strategy"] = rows["variant"].map(variant_ref)
+    return Table(
+        "tab-mutation-score-improvements",
+        rows.drop(
+            columns=["_project", "_group", "_variant", "project_name", "variant"]
+        ),
+        [
+            ColumnSpec("Project", "project", ValueKind.ENTITY),
+            ColumnSpec("Strategy", "strategy", ValueKind.ENTITY),
+            ColumnSpec(
+                "Detected of covered", "detected_of_covered_pct", ValueKind.PERCENT, "r"
+            ),
+            ColumnSpec("Gain (pp)", "absolute_improvement", ValueKind.DECIMAL, "r"),
+            ColumnSpec(
+                "Relative gain", "relative_improvement", ValueKind.PERCENT_DELTA, "r"
+            ),
+        ],
+        "Detected share of covered mutants per project and strategy, with the gain "
+        "over the initial test suite.",
+        group_by="project_group",
+        row_key="row_key",
+        provenance=capture(compute_detection_improvements),
     )
 
 
@@ -544,6 +601,7 @@ def build(context: ReportContext) -> RQReport:
         [
             tables[0],
             _figure(detection),
+            _improvement_table(detection),
             tables[1],
         ],
     )

@@ -15,6 +15,7 @@ from teralizer.eval.reports.rq1_mutation_score import (
     _effectiveness_metrics,
     _figure,
     _headline_effectiveness_values,
+    _improvement_table,
     _mutator_table,
 )
 
@@ -86,6 +87,28 @@ def test_rq1_headline_metrics_are_typed_provenance_bearing_macros():
     tex = render_macros(report)
     assert "\\TzEffectivenessEqbenchEvosuiteMutationImprovementMinPp}{1.20}" in tex
     assert "\\TzEffectivenessCommonsDeveloperBaselineMutationScorePct}{80.35\\%}" in tex
+
+
+def test_rq1_improvement_table_orders_projects_and_keeps_relative_gains():
+    frame = _effectiveness_frame()
+    baseline = frame.groupby("project_name")["detected_of_covered_pct"].transform("min")
+    frame = frame.assign(
+        relative_improvement=frame["absolute_improvement"] / baseline * 100
+    ).sample(frac=1, random_state=0)
+
+    table = _improvement_table(frame)
+
+    keys = table.df["row_key"].tolist()
+    assert keys[:2] == [
+        "eqbench-es-default-1s:INITIAL",
+        "eqbench-es-default-1s:NAIVE_10_TRIES",
+    ]
+    assert keys[-1] == "commons-utils:IMPROVED_200_TRIES"
+    rows = table.df.set_index("row_key")
+    assert rows.loc["eqbench-es-default-1s:NAIVE_50_TRIES", "relative_improvement"] == (
+        Decimal("7.80")
+    )
+    assert len(rows) == 49
 
 
 def test_rq1_coverage_table_calculates_inclusion_percentages():
