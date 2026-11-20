@@ -4,10 +4,17 @@ Captured at build time, never hand-maintained. Publishable artifacts require a
 clean working tree. For local iteration only, set
 ``TERALIZER_ALLOW_DIRTY_PROVENANCE=1`` to opt out of that check. The resulting
 provenance records ``dirty=True`` so it remains self-describing.
+
+Provenance has two exclusive modes. In a Git checkout it asks Git. In an
+extracted release, which has no Git metadata, it reads the per-file revisions
+that the release build embedded in the core component manifest, after checking
+the file bytes against that manifest. A directory that is neither fails, so a
+missing ``.git`` alone never switches modes.
 """
 
 from __future__ import annotations
 
+import hashlib
 import inspect
 import json
 import os
@@ -16,12 +23,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import cast
 
 from teralizer.eval.inputs import FileInputSnapshot, InputSnapshot
 
 # analysis/src/teralizer/eval/provenance.py -> repo root is parents[4]
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_ARCHIVE_PROVENANCE_PATH = ".teralizer-source.json"
+_COMPONENT_MANIFEST = "component-manifest.json"
 
 
 @dataclass(frozen=True)
@@ -41,25 +49,61 @@ class Provenance:
 DIRTY_PROVENANCE_ENV = "TERALIZER_ALLOW_DIRTY_PROVENANCE"
 
 
-def _archive_snapshot() -> tuple[str, bool]:
-    """Return the immutable source identity embedded in a release archive."""
-    path = _REPO_ROOT / _ARCHIVE_PROVENANCE_PATH
+@dataclass(frozen=True)
+class _Release:
+    source_revision: str
+    checksums: dict[str, str]
+    revisions: dict[str, str]
+
+
+@lru_cache(maxsize=1)
+def _release() -> _Release:
+    """The verified per-file provenance of an extracted release."""
+    from teralizer.release.documents import DocumentError, validate_component_manifest
+
+    path = _REPO_ROOT / _COMPONENT_MANIFEST
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
-        commit = document["source_commit"]
-    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError) as error:
+        manifest = validate_component_manifest(document)
+    except (FileNotFoundError, json.JSONDecodeError, DocumentError) as error:
         raise RuntimeError(
-            "source provenance is unavailable: expected a Git checkout or "
-            f"a valid {_ARCHIVE_PROVENANCE_PATH}"
+            "source provenance is unavailable: expected a Git checkout or a "
+            f"release with a valid {_COMPONENT_MANIFEST}"
         ) from error
-    if document.get("schema_version") != 1:
-        raise RuntimeError(f"unsupported source provenance schema in {path}")
-    if (
-        not isinstance(commit, str)
-        or len(commit) != 40
-        or any(character not in "0123456789abcdef" for character in commit)
-    ):
-        raise RuntimeError(f"invalid source commit in {path}")
+    if manifest["component"] != "core":
+        raise RuntimeError(f"{path} describes {manifest['component']}, not core")
+    prefix = f"{manifest['root']}/"
+    payload = cast(list[dict[str, object]], manifest["payload"])
+    checksums = {
+        str(entry["path"]).removeprefix(prefix): str(entry["sha256"])
+        for entry in payload
+    }
+    files = cast(dict[str, object], manifest["provenance"]).get("files")
+    if not isinstance(files, dict):
+        raise RuntimeError(f"{path} records no per-file provenance")
+    revisions = {
+        str(name): str(cast(dict[str, object], record)["commit"])
+        for name, record in files.items()
+    }
+    release = cast(dict[str, object], manifest["release"])
+    return _Release(
+        source_revision=str(release["source_revision"]),
+        checksums=checksums,
+        revisions=revisions,
+    )
+
+
+def _release_file_snapshot(path: str) -> tuple[str, bool]:
+    release = _release()
+    expected = release.checksums.get(path)
+    if expected is None:
+        raise RuntimeError(f"{path} is not part of the verified release")
+    actual = hashlib.sha256((_REPO_ROOT / path).read_bytes()).hexdigest()
+    if actual != expected:
+        raise RuntimeError(f"{path} differs from the verified release")
+    commit = release.revisions.get(path)
+    if commit is None:
+        raise RuntimeError(f"{path} has no recorded producing revision")
     return commit, False
 
 
@@ -67,7 +111,7 @@ def _archive_snapshot() -> tuple[str, bool]:
 def _git_snapshot() -> tuple[str, bool]:
     """Where the source tree stands and whether it has uncommitted changes."""
     if not (_REPO_ROOT / ".git").exists():
-        return _archive_snapshot()
+        return _release().source_revision, False
     return _git(["rev-parse", "HEAD"]), bool(_git(["status", "--porcelain"]))
 
 
@@ -94,13 +138,18 @@ def _file_snapshot(path: str) -> tuple[str, bool]:
     and made every regeneration rewrite every artifact.
     """
     if not (_REPO_ROOT / ".git").exists():
-        return _archive_snapshot()
+        return _release_file_snapshot(path)
     commit = _git(["log", "-1", "--format=%H", "--", path])
     if not commit:
         # Never committed. A blank commit would render a broken permalink, so
         # record the checkout position and say the value is uncertain.
         return _git_snapshot()[0], True
     return commit, bool(_git(["status", "--porcelain", "--", path]))
+
+
+def file_snapshot(path: str) -> tuple[str, bool]:
+    """The producing revision of a repository-relative file and its dirty state."""
+    return _file_snapshot(path)
 
 
 def _git(args: list[str]) -> str:

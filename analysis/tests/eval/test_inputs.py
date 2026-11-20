@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from contextlib import contextmanager
 from dataclasses import FrozenInstanceError
 from pathlib import Path
@@ -236,29 +235,6 @@ def test_file_snapshot_records_content_commit_and_dirty_state(
             dirty=True,
         )
     )
-
-
-def test_archive_file_snapshot_uses_embedded_source_identity(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-):
-    from teralizer.eval import provenance
-
-    path = tmp_path / "facts.json"
-    path.write_text("evidence", encoding="utf-8")
-    commit = "d" * 40
-    (tmp_path / ".teralizer-source.json").write_text(
-        json.dumps({"schema_version": 1, "source_commit": commit}), encoding="utf-8"
-    )
-    monkeypatch.setattr(provenance, "_REPO_ROOT", tmp_path)
-    provenance._git_snapshot.cache_clear()
-
-    snapshot = inputs._snapshot_file(
-        inputs.FileInputSpec("facts", "facts.json"), tmp_path
-    )
-
-    assert snapshot.commit == commit
-    assert snapshot.dirty is False
-    provenance._git_snapshot.cache_clear()
 
 
 def test_untracked_file_has_no_fabricated_commit(monkeypatch, tmp_path: Path):

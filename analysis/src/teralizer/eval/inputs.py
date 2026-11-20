@@ -163,9 +163,9 @@ def _snapshot_file(declaration: FileInputSpec, repo_root: Path) -> FileInputSnap
         )
         dirty = bool(_git(repo_root, ["status", "--porcelain", "--", relative]))
     else:
-        from teralizer.eval.provenance import checkout_snapshot
+        from teralizer.eval.provenance import file_snapshot
 
-        commit, dirty = checkout_snapshot()
+        commit, dirty = file_snapshot(relative)
     if not commit and not declaration.content_addressed:
         commit = None
         dirty = True

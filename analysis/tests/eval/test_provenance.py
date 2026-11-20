@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -56,22 +57,91 @@ def test_provenance_of_a_function_outside_this_repository():
     assert p.dirty is True
 
 
-def test_release_archive_uses_embedded_source_identity(
+_RELEASE_REVISION = "c" * 40
+
+
+@pytest.fixture
+def release_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """An extracted core component with two producing files from different commits."""
+    files = {
+        "analysis/src/a.py": ("print('a')\n", "a" * 40),
+        "analysis/src/b.py": ("print('b')\n", "b" * 40),
+    }
+    payload = []
+    for path, (content, _) in files.items():
+        (tmp_path / path).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / path).write_text(content)
+        payload.append(
+            {
+                "path": f"teralizer/{path}",
+                "sha256": hashlib.sha256(content.encode()).hexdigest(),
+                "bytes": len(content),
+                "executable": False,
+            }
+        )
+    manifest = {
+        "format": "teralizer-component-manifest",
+        "format_version": 1,
+        "component": "core",
+        "release": {
+            "name": "teralizer-replication",
+            "version": "2.0.0",
+            "version_doi": "10.5281/zenodo.1",
+            "concept_doi": "10.5281/zenodo.0",
+            "source_revision": _RELEASE_REVISION,
+        },
+        "root": "teralizer",
+        "purpose": "Core.",
+        "requires": [],
+        "incompatible_with": [],
+        "licenses": [],
+        "provenance": {
+            "files": {
+                path: {"commit": commit, "repository": "https://example.org/repo"}
+                for path, (_, commit) in files.items()
+            }
+        },
+        "payload": payload,
+    }
+    (tmp_path / "component-manifest.json").write_text(json.dumps(manifest))
+    monkeypatch.setattr(provenance, "_REPO_ROOT", tmp_path)
+    provenance._release.cache_clear()
+    provenance._git_snapshot.cache_clear()
+    provenance._file_snapshot.cache_clear()
+    yield tmp_path
+    provenance._release.cache_clear()
+    provenance._git_snapshot.cache_clear()
+    provenance._file_snapshot.cache_clear()
+
+
+def test_release_uses_each_file_revision_not_one_common_commit(release_root: Path):
+    assert provenance.checkout_snapshot() == (_RELEASE_REVISION, False)
+    assert provenance.file_snapshot("analysis/src/a.py") == ("a" * 40, False)
+    assert provenance.file_snapshot("analysis/src/b.py") == ("b" * 40, False)
+
+
+def test_release_rejects_changed_and_foreign_files(release_root: Path):
+    (release_root / "analysis/src/a.py").write_text("print('changed')\n")
+    (release_root / "analysis/src/extra.py").write_text("print('extra')\n")
+
+    with pytest.raises(RuntimeError, match="differs from the verified release"):
+        provenance.file_snapshot("analysis/src/a.py")
+    with pytest.raises(RuntimeError, match="not part of the verified release"):
+        provenance.file_snapshot("analysis/src/extra.py")
+
+
+def test_directory_without_git_or_release_manifest_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    commit = "c" * 40
-    (tmp_path / ".teralizer-source.json").write_text(
-        json.dumps({"schema_version": 1, "source_commit": commit}), encoding="utf-8"
-    )
     monkeypatch.setattr(provenance, "_REPO_ROOT", tmp_path)
+    provenance._release.cache_clear()
     provenance._git_snapshot.cache_clear()
     provenance._file_snapshot.cache_clear()
 
-    assert provenance.checkout_snapshot() == (commit, False)
-    assert provenance._file_snapshot("analysis/src/example.py") == (commit, False)
-
+    with pytest.raises(RuntimeError, match="expected a Git checkout or a release"):
+        provenance.checkout_snapshot()
+    provenance._release.cache_clear()
     provenance._git_snapshot.cache_clear()
-    provenance._file_snapshot.cache_clear()
 
 
 def test_file_snapshot_is_memoised_per_path():
