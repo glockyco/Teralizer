@@ -197,6 +197,15 @@ reconstruction_source = "version-seven-project-logs"
 reason = "Per-project pipeline logs of the version-seven run. RQ6 cause reconstruction reads them."
 
 [[input]]
+id = "reporeapers-done-markers"
+location = "evaluation-host"
+path = "test-generalization-dev/data/reporeapers-rerun-v7/done"
+disposition = "payload"
+component = "core"
+release_path = "data/reporeapers-rerun-v7/done"
+reason = "One completion marker per real-world project. Report runs check them against the configurations, the run status and the corpus before they read the real-world corpus."
+
+[[input]]
 id = "reporeapers-configurations"
 location = "git-tree"
 path = "project-configs/replication/extended"
