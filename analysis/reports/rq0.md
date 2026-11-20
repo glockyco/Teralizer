@@ -55,7 +55,7 @@ _A dash in the JARVIS columns marks a project that the publication reports no ca
 
 source: [`census_project_frame`](https://github.com/glockyco/Teralizer/blob/5edcc9cf661f9d8013ee3a9d2b45dd88f3ab0275/analysis/src/teralizer/eval/evidence/jarvis_values.py#L223)
 
-Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker present.
+Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows.
 
 ## PVC and mutation score
 
@@ -71,4 +71,4 @@ A larger sampling budget can raise PVC by exercising more distinct values. In th
 
 _The same mutant sets are covered and killed at every budget._
 
-source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268)
+source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/9b45ea90b7420726bd5157d05e14d952649336af/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L266)
