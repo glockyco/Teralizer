@@ -117,9 +117,9 @@ if [[ -z "$CORPUS_PACKAGE_DIR" ]]; then
     log_error "--corpus-package or CORPUS_PACKAGE_DIR is required"
     exit 2
 fi
-if [[ ! -d "$REPO_ROOT/analysis/output/original" ]]; then
-    log_error "Original outputs not found at $REPO_ROOT/analysis/output/original"
-    log_error "Run ./replication/scripts/run-analysis.sh verify first to generate outputs."
+if ! git -C "$REPO_ROOT" cat-file -e HEAD:analysis/output/original 2>/dev/null; then
+    log_error "No reference outputs are committed at analysis/output/original"
+    log_error "Run ./replication/scripts/run-analysis.sh verify, copy its output there, and commit it."
     exit 1
 fi
 
@@ -181,10 +181,10 @@ RESULTS_DIR="$STAGING_DIR/$RESULTS_NAME"
 if [[ "$DRY_RUN" == "false" ]]; then
     mkdir -p "$RESULTS_DIR"
 
-    # Copy tables, figures, data
-    cp -r "$REPO_ROOT/analysis/output/original/tables" "$RESULTS_DIR/"
-    cp -r "$REPO_ROOT/analysis/output/original/figures" "$RESULTS_DIR/"
-    cp -r "$REPO_ROOT/analysis/output/original/data" "$RESULTS_DIR/"
+    # Take the committed reference outputs, so that untracked files in the
+    # working tree cannot end up in the archive.
+    git -C "$REPO_ROOT" archive HEAD analysis/output/original \
+        | tar -x -C "$RESULTS_DIR" --strip-components=3
 
     # Create archive
     (cd "$STAGING_DIR" && zip -rq "$OUTPUT_DIR/${RESULTS_NAME}.zip" "$RESULTS_NAME")
@@ -236,12 +236,6 @@ if [[ "$DRY_RUN" == "false" ]]; then
     rm -rf "$VERIFIED_CORPUS_ROOT"
     rm -rf "$CORE_DIR/.idea" 2>/dev/null || true
     rm -f "$CORE_DIR/.env" 2>/dev/null || true
-
-    # Ensure output/original exists with reference outputs
-    mkdir -p "$CORE_DIR/analysis/output/original"
-    cp -r "$REPO_ROOT/analysis/output/original/tables" "$CORE_DIR/analysis/output/original/"
-    cp -r "$REPO_ROOT/analysis/output/original/figures" "$CORE_DIR/analysis/output/original/"
-    cp -r "$REPO_ROOT/analysis/output/original/data" "$CORE_DIR/analysis/output/original/"
 
     # Create archive
     (cd "$STAGING_DIR" && zip -rq "$OUTPUT_DIR/${CORE_NAME}.zip" "$CORE_NAME")

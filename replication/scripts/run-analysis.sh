@@ -70,6 +70,7 @@ collect() {
 rm -rf "$OUTPUT_DIR"
 collect "$OUTPUT_DIR/tables" "$BUILD_DIR" -maxdepth 1 -name '*.tex'
 collect "$OUTPUT_DIR/data" "$BUILD_DIR" -mindepth 2 -name '*.csv'
-collect "$OUTPUT_DIR/figures" "$BUILD_DIR/figures" "$ANALYSIS_DIR/reports/figures"
+collect "$OUTPUT_DIR/figures" "$BUILD_DIR/figures" "$ANALYSIS_DIR/reports/figures" \
+    \( -name '*.pdf' -o -name '*.png' \)
 
 printf '%bAnalysis output written to %s%b\n' "$GREEN" "$OUTPUT_DIR" "$NC"

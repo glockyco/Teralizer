@@ -82,12 +82,13 @@ compare_subdir() {
     local base_count=0
     local target_count=0
 
+    # File managers leave hidden files such as .DS_Store behind. They are no outputs.
     if [[ -d "$base_path" ]]; then
-        base_count=$(find "$base_path" -name "$pattern" -type f 2>/dev/null | wc -l | tr -d ' ')
+        base_count=$(find "$base_path" -name "$pattern" -not -name '.*' -type f 2>/dev/null | wc -l | tr -d ' ')
     fi
 
     if [[ -d "$target_path" ]]; then
-        target_count=$(find "$target_path" -name "$pattern" -type f 2>/dev/null | wc -l | tr -d ' ')
+        target_count=$(find "$target_path" -name "$pattern" -not -name '.*' -type f 2>/dev/null | wc -l | tr -d ' ')
     fi
 
     if [[ "$base_count" -eq "$target_count" ]]; then
