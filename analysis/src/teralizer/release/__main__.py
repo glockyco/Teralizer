@@ -7,6 +7,7 @@ uv run --directory analysis python -m teralizer.release source --out DIR
 uv run --directory analysis python -m teralizer.release jarvis-logs --staged DIR [--copy]
 uv run --directory analysis python -m teralizer.release declaration [--production]
 uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--component ID ...] [--production]
+uv run --directory analysis python -m teralizer.release preflight WORKFLOW --workspace DIR [--release-manifest FILE]
 """
 
 from __future__ import annotations
@@ -207,6 +208,18 @@ def _build(
     return 0
 
 
+def _preflight(workflow: str, workspace: Path, release_manifest: Path | None) -> int:
+    from teralizer.release import preflight
+
+    result = preflight.run(
+        workspace, release_manifest or workspace / "release-manifest.json", workflow
+    )
+    if not result.passed:
+        return _report_problems(list(result.problems), "preflight")
+    print(f"preflight passed for {workflow}: {', '.join(result.components)}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -265,8 +278,17 @@ def main(argv: list[str] | None = None) -> int:
         help="build only these components, for development",
     )
     build_command.add_argument("--production", action="store_true")
+    preflight_command = commands.add_parser(
+        "preflight", help="verify the extracted components that a workflow needs"
+    )
+    preflight_command.add_argument("workflow")
+    preflight_command.add_argument("--workspace", type=Path, required=True)
+    preflight_command.add_argument("--release-manifest", type=Path)
     args = parser.parse_args(argv)
 
+    if args.command == "preflight":
+        # A reviewer workspace has no inventory to load, only release documents.
+        return _preflight(args.workflow, args.workspace, args.release_manifest)
     try:
         declared = inventory.load(args.inventory)
     except inventory.InventoryError as error:
