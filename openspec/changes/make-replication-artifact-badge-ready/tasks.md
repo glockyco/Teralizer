@@ -41,7 +41,7 @@
 
 ## 4. Preserve provenance and verify paper evidence
 
-- [ ] 4.1 Generate embedded release provenance in a clean checkout with repository-relative producing-source paths, source hashes, last-changing commits, repository identity, and resolvable source URLs. Fail on dirty or unattributed producing sources.
+- [x] 4.1 Generate embedded release provenance in a clean checkout with repository-relative producing-source paths, source hashes, last-changing commits, repository identity, and resolvable source URLs. Fail on dirty or unattributed producing sources. The builder records commit, repository and repository-relative path for every core file from the source tree and its nested sources in the core component manifest, next to the payload checksums. All 98 report artifacts regenerated from an extracted development core without Git match the reference manifest.
 - [x] 4.2 Extend report provenance resolution with verified release mode that activates only from validated package metadata, checks producing-source bytes, and returns embedded per-file revisions without Git.
 - [x] 4.3 Test checkout and Git-free attribution equivalence. Reject absent records, mismatched source bytes, unrelated checkout commits, a fabricated common release commit, and an unverified Git-less directory.
 - [ ] 4.4 Define the claims-to-evidence matrix for every represented RQ0-RQ6 claim. Include semantic and file inputs, exact command, artifact ids, expected values or invariants, tolerance, runtime, inspection-versus-regeneration status, and evidence class.
