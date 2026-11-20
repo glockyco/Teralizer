@@ -70,7 +70,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2186,7 +2186,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2272,12 +2272,12 @@
     ],
     "figures": {
       "mutation_detection_comparison": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
         "qualname": "compute_detection_improvements",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L408",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L275",
         "value": "Mutation detection rates and improvements across projects and variants.",
         "version": "0.1.0"
       }
@@ -2303,7 +2303,7 @@
     },
     "metrics": {
       "effectiveness.commons_developer.baseline_mutation_score_pct": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2315,13 +2315,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 80.35,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "effectiveness.commons_developer.mutation_improvement_max_pp": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2333,13 +2333,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 0.07,
         "value_kind": "percent_delta",
         "version": "0.1.0"
       },
       "effectiveness.commons_developer.mutation_improvement_min_pp": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2351,13 +2351,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 0.05,
         "value_kind": "percent_delta",
         "version": "0.1.0"
       },
       "effectiveness.commons_evosuite.mutation_improvement_max_pp": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2369,13 +2369,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 1.33,
         "value_kind": "percent_delta",
         "version": "0.1.0"
       },
       "effectiveness.commons_evosuite.mutation_improvement_min_pp": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2387,13 +2387,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 0.82,
         "value_kind": "percent_delta",
         "version": "0.1.0"
       },
       "effectiveness.eqbench_evosuite.mutation_improvement_max_pp": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2405,13 +2405,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 3.93,
         "value_kind": "percent_delta",
         "version": "0.1.0"
       },
       "effectiveness.eqbench_evosuite.mutation_improvement_min_pp": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2423,13 +2423,13 @@
         },
         "qualname": "get_mutation_results_by_project_variant",
         "query": "\nSELECT mr.project_id, mr.project_name, mr.variant,\n       mr.total, mr.covered, mr.uncovered,\n       mr.covered_pct, mr.uncovered_pct,\n       mr.survived_of_covered_pct, mr.detected_of_covered_pct,\n       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,\n       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,\n       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,\n       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,\n       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff\nFROM mv_mutation_results_by_project_variant mr\nJOIN v_projects_successes ps ON ps.project_id = mr.project_id\nWHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L50",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L37",
         "value": 1.22,
         "value_kind": "percent_delta",
         "version": "0.1.0"
       },
       "rq1.mutation_rows": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2437,13 +2437,13 @@
         "population": null,
         "qualname": "compute_detection_improvements",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L408",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L275",
         "value": 49,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq1.projects": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2451,7 +2451,7 @@
         "population": null,
         "qualname": "compute_project_mutation_coverage",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L386",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L253",
         "value": 7,
         "value_kind": null,
         "version": "0.1.0"
@@ -2460,30 +2460,30 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "tab-detections-per-mutator": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
         "qualname": "compute_mutator_statistics",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L308",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L175",
         "value": "Number of mutants and percentage of detections per mutator in {entity.dataset.eqbench_es} and {entity.dataset.commons} projects.",
         "version": "0.1.0"
       },
       "tab-mutants-per-project": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
         "qualname": "compute_project_mutation_coverage",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L386",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L253",
         "value": "Number of total, covered, and uncovered mutants in included classes per project.",
         "version": "0.1.0"
       }
@@ -2526,7 +2526,7 @@
     },
     "metrics": {
       "rq2.mutant_groups": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
@@ -2534,7 +2534,7 @@
         "population": null,
         "qualname": "compute_mutation_model_complexity",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L459",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L326",
         "value": 14,
         "value_kind": null,
         "version": "0.1.0"
@@ -2543,18 +2543,18 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
-        "commit": "b04623b632b0539dc516c39839662b43bc0c80ea",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq1_mutation_detection",
         "qualname": "compute_mutation_model_complexity",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L459",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L326",
         "value": "Model properties of mutants that are (not) detected by the {entity.variant.improved_c} variant.",
         "version": "0.1.0"
       }
@@ -2665,7 +2665,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2793,32 +2793,32 @@
     ],
     "figures": {
       "evosuite_runtime_phases": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
         "qualname": "compute_evosuite_phase_statistics",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L398",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L310",
         "value": "Mean EvoSuite runtime by phase and search budget.",
         "version": "0.1.0"
       },
       "teralizer_efficiency": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
         "qualname": "compute_pareto_efficiency_analysis",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L250",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L162",
         "value": "Pareto fronts for EvoSuite and Teralizer variants across projects.",
         "version": "0.1.0"
       },
       "teralizer_runtimes": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
         "qualname": "compute_stage_runtime_breakdown",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L196",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L108",
         "value": "Teralizer runtime by pipeline stage and variant.",
         "version": "0.1.0"
       }
@@ -2836,7 +2836,7 @@
     },
     "metrics": {
       "rq4.pareto_points": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
@@ -2844,7 +2844,7 @@
         "population": null,
         "qualname": "compute_pareto_efficiency_analysis",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L250",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L162",
         "value": 42,
         "value_kind": null,
         "version": "0.1.0"
@@ -2853,42 +2853,42 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "evosuite_runtime_analysis": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
         "qualname": "compute_evosuite_phase_statistics",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L398",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L310",
         "value": "Mean EvoSuite runtime per phase, by project and search budget.",
         "version": "0.1.0"
       },
       "tab-pareto-commons": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
         "qualname": "compute_pareto_efficiency_analysis",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L250",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L162",
         "value": "Pareto points for commons-utils.",
         "version": "0.1.0"
       },
       "tab-pareto-eqbench": {
-        "commit": "64ea009d9f9b630bd9301dfb2b2349a0074f23dd",
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
         "dirty": false,
         "module": "teralizer.rq3_runtime_requirements",
         "qualname": "compute_pareto_efficiency_analysis",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/rq3_runtime_requirements.py#L250",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L162",
         "value": "Pareto points for eqbench.",
         "version": "0.1.0"
       }
@@ -2943,7 +2943,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "tab-exclusions-breakdown": {
@@ -6022,7 +6022,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "9b45ea90b7420726bd5157d05e14d952649336af"
+      "source_commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad"
     },
     "tables": {
       "rq6_assertion_type_rejections": {
