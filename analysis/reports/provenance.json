@@ -70,7 +70,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -177,7 +177,7 @@
     },
     "metrics": {
       "rq0.breadth.jarvis_total_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -185,13 +185,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": 9,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.breadth.jarvis_total_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -199,13 +199,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": 1708,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.breadth.published_projects": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -217,13 +217,13 @@
         },
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": 2,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq0.breadth.teralizer_total_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -231,13 +231,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "43,177",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.breadth.teralizer_total_sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -245,13 +245,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "337",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_1000_tries.covered_mutants": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -259,13 +259,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 80,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_1000_tries.covered_mutation_score": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -273,13 +273,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 0.6375,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_1000_tries.killed_mutants": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -287,13 +287,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 51,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_1000_tries.probes": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -301,13 +301,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 10,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_100_tries.covered_mutants": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -315,13 +315,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 80,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_100_tries.covered_mutation_score": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -329,13 +329,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 0.6375,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_100_tries.killed_mutants": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -343,13 +343,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 51,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_100_tries.probes": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -357,13 +357,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 10,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_200_tries.covered_mutants": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -371,13 +371,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 80,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_200_tries.covered_mutation_score": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -385,13 +385,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 0.6375,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_200_tries.killed_mutants": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -399,13 +399,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 51,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.budget.improved_200_tries.probes": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -413,13 +413,13 @@
         "population": null,
         "qualname": "_build_budget_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": 10,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.completed_projects": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -427,13 +427,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 7,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.completion_marker": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -441,13 +441,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "present",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.failed_projects": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -455,13 +455,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 3,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -469,13 +469,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 1324,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.intended_projects": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -487,13 +487,13 @@
         },
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 12,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq0.census.not_reached_projects": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -501,7 +501,7 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 2,
         "value_kind": null,
         "version": "0.1.0"
@@ -525,7 +525,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -533,13 +533,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -547,13 +547,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -561,13 +561,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -575,13 +575,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -589,13 +589,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "2",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -603,13 +603,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_cli_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -617,7 +617,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "217",
         "value_kind": null,
         "version": "0.1.0"
@@ -637,7 +637,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -645,13 +645,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -659,13 +659,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -673,13 +673,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -687,13 +687,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -701,13 +701,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "6",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -715,13 +715,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_codec_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -729,7 +729,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "983",
         "value_kind": null,
         "version": "0.1.0"
@@ -749,7 +749,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -757,13 +757,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 1314,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -771,13 +771,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "COLLECT_JUNIT_REPORTS_ORIGINAL",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -785,13 +785,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -799,13 +799,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -813,13 +813,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "2",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -827,13 +827,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "failed",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_collections_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -841,7 +841,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "102",
         "value_kind": null,
         "version": "0.1.0"
@@ -861,7 +861,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -869,13 +869,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -883,13 +883,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -897,13 +897,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -911,13 +911,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -925,13 +925,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "9",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -939,13 +939,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_configuration_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -953,7 +953,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "1,403",
         "value_kind": null,
         "version": "0.1.0"
@@ -973,7 +973,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -981,13 +981,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -995,13 +995,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1009,13 +1009,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1023,13 +1023,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1037,13 +1037,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "1",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1051,13 +1051,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_csv_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1065,7 +1065,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "4",
         "value_kind": null,
         "version": "0.1.0"
@@ -1085,7 +1085,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1093,13 +1093,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1107,13 +1107,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1121,13 +1121,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1135,13 +1135,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1149,13 +1149,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1163,13 +1163,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "not_reached",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_email_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1177,7 +1177,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
@@ -1197,7 +1197,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1205,13 +1205,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1219,13 +1219,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1233,13 +1233,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1247,13 +1247,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1261,13 +1261,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "7",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1275,13 +1275,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_io_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1289,7 +1289,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "774",
         "value_kind": null,
         "version": "0.1.0"
@@ -1309,7 +1309,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1317,13 +1317,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1331,13 +1331,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1345,13 +1345,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1359,13 +1359,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1373,13 +1373,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1387,13 +1387,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "not_reached",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_jexl_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1401,7 +1401,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
@@ -1421,7 +1421,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1429,13 +1429,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1443,13 +1443,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1457,13 +1457,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "2",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1471,13 +1471,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "104",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1485,13 +1485,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "208",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1499,13 +1499,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_lang_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1513,7 +1513,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "26,079",
         "value_kind": null,
         "version": "0.1.0"
@@ -1533,7 +1533,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1541,13 +1541,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 9,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1555,13 +1555,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "GENERALIZE_TESTS",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1569,13 +1569,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "7",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1583,13 +1583,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "1,604",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1597,13 +1597,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "90",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1611,13 +1611,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "failed",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_math_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1625,7 +1625,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "12,471",
         "value_kind": null,
         "version": "0.1.0"
@@ -1645,7 +1645,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1653,13 +1653,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 1,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1667,13 +1667,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "EXECUTE_TESTS_ORIGINAL",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1681,13 +1681,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1695,13 +1695,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1709,13 +1709,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1723,13 +1723,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "failed",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_pool_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1737,7 +1737,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
@@ -1757,7 +1757,7 @@
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.failed_task_count": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1765,13 +1765,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": 0,
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.first_failed_stage": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1779,13 +1779,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.jarvis_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1793,13 +1793,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.jarvis_pbt_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1807,13 +1807,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "unavailable",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.sound_muts": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1821,13 +1821,13 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "12",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1835,13 +1835,13 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "complete",
         "value_kind": null,
         "version": "0.1.0"
       },
       "rq0.census.project.commons_text_2017_02_01_census.teralizer_pvc": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1849,7 +1849,7 @@
         "population": null,
         "qualname": "_build_breadth_table",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L193",
         "value": "1,144",
         "value_kind": null,
         "version": "0.1.0"
@@ -1911,7 +1911,7 @@
         "version": "0.1.0"
       },
       "rq0.census.status": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
@@ -1919,7 +1919,7 @@
         "population": null,
         "qualname": "_census_status_ledger",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L128",
         "value": "partial",
         "value_kind": null,
         "version": "0.1.0"
@@ -2208,7 +2208,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2224,14 +2224,14 @@
         "version": "0.1.0"
       },
       "rq0-pvc-budget": {
-        "commit": "6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq0_jarvis",
         "qualname": "_build_budget_table",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268",
         "value": "PVC and mutation testing results for the same 10 generalized tests at 3 sampling budgets. Only the sampling budget changes between the rows. PVC sums the distinct input values that the tests exercise, and Score is the killed mutants divided by the covered mutants.",
         "version": "0.1.0"
       },
@@ -2482,7 +2482,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2565,7 +2565,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2647,12 +2647,12 @@
     ],
     "figures": {
       "test_runtime_differences": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq3_suite_size_runtime",
         "qualname": "_runtime_overhead",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L100",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L100",
         "value": "Runtime comparison between original and generalized tests.",
         "version": "0.1.0"
       }
@@ -2670,7 +2670,7 @@
     },
     "metrics": {
       "rq3.project_variant_rows": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq3_suite_size_runtime",
@@ -2678,7 +2678,7 @@
         "population": null,
         "qualname": "_effects",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
         "value": 14,
         "value_kind": null,
         "version": "0.1.0"
@@ -2687,54 +2687,54 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "tab-lines-per-project": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq3_suite_size_runtime",
         "qualname": "_effects",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
         "value": "Number of test lines before and after generalization, with changes, per project.",
         "version": "0.1.0"
       },
       "tab-runtime-per-project": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq3_suite_size_runtime",
         "qualname": "_effects",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
         "value": "Test suite runtime before and after generalization, with changes, per project.",
         "version": "0.1.0"
       },
       "tab-tests-per-project": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq3_suite_size_runtime",
         "qualname": "_effects",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L65",
         "value": "Number of tests before and after generalization, with changes, per project.",
         "version": "0.1.0"
       },
       "test_runtime_differences": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq3_suite_size_runtime",
         "qualname": "_runtime_overhead",
         "query": null,
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L100",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L100",
         "value": "Runtime overhead of generalized tests per test and per try.",
         "version": "0.1.0"
       }
@@ -2875,7 +2875,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -2965,23 +2965,23 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8ff980d5c5e92af8d7d3fbf918c65bd02d4c14ff"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "tab-exclusions-breakdown": {
-        "commit": "2aabc2dad7d53adeb7dfcb279fb89533f315e216",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq5_causes",
         "qualname": "_fetch_breakdown",
         "query": "\nWITH\n    test_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Test' AS level,\n            CASE\n                WHEN t.is_included THEN 'included'\n                WHEN t.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.test_id = t.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM test t\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    assertion_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Assertion' AS level,\n            CASE\n                WHEN a.is_included THEN 'included'\n                WHEN a.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.assertion_id = a.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM assertion a\n        JOIN test t ON a.test_id = t.id\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    generalization_counts AS (\n        SELECT\n            g.variant AS strategy,\n            'Generalization' AS level,\n            CASE\n                WHEN g.is_included THEN 'included'\n                WHEN g.exclusion_info LIKE '%%TestFilteringTask%%' THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY g.variant, bucket\n    ),\n    combined AS (\n        SELECT strategy, level, bucket, item_count FROM test_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM assertion_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM generalization_counts\n    ),\n    report_rows AS (\n        SELECT 'All' AS strategy, 'Test' AS level\n        UNION ALL\n        SELECT 'All' AS strategy, 'Assertion' AS level\n        UNION ALL\n        SELECT DISTINCT g.variant AS strategy, 'Generalization' AS level\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n    )\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtering'), 0)::bigint AS filtering,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failures'), 0)::bigint AS failures\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/rq5_causes.py#L216",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq5_causes.py#L216",
         "value": "Exclusion results for tests, assertions, and generalizations in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects.",
         "version": "0.1.0"
       },
       "tab-exclusions-filtering": {
-        "commit": "2aabc2dad7d53adeb7dfcb279fb89533f315e216",
+        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
         "dirty": false,
         "module": "teralizer.eval.reports.rq5_causes",
         "qualname": "_fetch_filtering",
@@ -2997,7 +2997,7 @@
           "Assertion:AssertionType",
           "Assertion:VoidReturnType"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/rq5_causes.py#L206",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq5_causes.py#L206",
         "value": "Filtering results for tests and assertions in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects.",
         "version": "0.1.0"
       }
@@ -6044,7 +6044,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "8325a292c1d2424373259a111185e590e7ae8b64"
+      "source_commit": "792ad0b49e10b7905aeb32036e5c656e248ba057"
     },
     "tables": {
       "rq6_assertion_type_rejections": {
