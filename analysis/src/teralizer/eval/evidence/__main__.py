@@ -8,7 +8,12 @@ from pathlib import Path
 
 from teralizer import corpora
 from teralizer.dataset_characteristics import get_projects_path
-from teralizer.eval.evidence import jarvis_values, project_sources
+from teralizer.eval.evidence import (
+    jarvis_values,
+    project_sources,
+    reporeapers_populations,
+    write_atomic,
+)
 from teralizer.eval.reports.rq0_jarvis import CENSUS_VARIANT
 from teralizer.jarvis_scoreboard import SWEEP_VARIANTS
 
@@ -41,10 +46,25 @@ def _refresh_jarvis_values(output_dir: Path) -> None:
         )
 
 
+def _refresh_output_directory_population(output_dir: Path) -> None:
+    document = reporeapers_populations.extract_registered_populations(
+        queries=(reporeapers_populations.OUTPUT_DIRECTORIES,)
+    )
+    write_atomic(
+        output_dir / "reporeapers-output-directories-population.json", document
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m teralizer.eval.evidence")
     parser.add_argument(
-        "extractor", choices=("project-sources", "jarvis-values", "all")
+        "extractor",
+        choices=(
+            "project-sources",
+            "jarvis-values",
+            "reporeapers-output-directories",
+            "all",
+        ),
     )
     parser.add_argument("--projects-root", type=Path)
     parser.add_argument("--output-dir", type=Path, default=_DEFAULT_OUTPUT_DIR)
@@ -60,6 +80,9 @@ def main(argv: list[str] | None = None) -> None:
     if args.extractor in {"jarvis-values", "all"}:
         _refresh_jarvis_values(args.output_dir.resolve())
         print(args.output_dir / "jarvis-value-facts.json")
+    if args.extractor in {"reporeapers-output-directories", "all"}:
+        _refresh_output_directory_population(args.output_dir.resolve())
+        print(args.output_dir / "reporeapers-output-directories-population.json")
 
 
 if __name__ == "__main__":
