@@ -125,9 +125,7 @@ def _fetch_task_rows(conn: Any) -> pd.DataFrame:
     return pd.read_sql_query(query, conn)
 
 
-def _census_status_ledger(
-    conn: Any, *, marker_present: bool
-) -> tuple[pd.DataFrame, str, bool]:
+def _census_status_ledger(conn: Any) -> tuple[pd.DataFrame, str]:
     """Build an all-project task ledger and aggregate census status."""
     task_rows = _fetch_task_rows(conn)
     records: list[dict[str, object]] = []
@@ -177,10 +175,10 @@ def _census_status_ledger(
     ledger = pd.DataFrame(records)
     census_status = (
         "complete"
-        if marker_present and (ledger["generalization_status"] == "complete").all()
+        if (ledger["generalization_status"] == "complete").all()
         else "partial"
     )
-    return ledger, census_status, marker_present
+    return ledger, census_status
 
 
 def _table2_mut_counts(comparison: pd.DataFrame) -> tuple[int, int]:
@@ -370,10 +368,7 @@ def build(context: ReportContext) -> RQReport:
     project_pvc = cast(
         pd.DataFrame, project_pvc.loc[project_pvc["variant"].eq(CENSUS_VARIANT)]
     )
-    ledger, census_status, marker_present = _census_status_ledger(
-        census_conn,
-        marker_present=context.file("completion-marker") is not None,
-    )
+    ledger, census_status = _census_status_ledger(census_conn)
 
     breadth = _build_breadth_table(ledger, project_pvc)
     sound_rows, sound_muts = _table2_mut_counts(comparison)
@@ -503,12 +498,6 @@ def build(context: ReportContext) -> RQReport:
             _census_status_ledger,
         ),
         _metric("rq0.census.status", census_status, "str", _census_status_ledger),
-        _metric(
-            "rq0.census.completion_marker",
-            "present" if marker_present else "absent",
-            "str",
-            _census_status_ledger,
-        ),
         _metric(
             "rq0.census.sound_properties",
             int(project_pvc["sound_properties"].sum()) if not project_pvc.empty else 0,
@@ -829,7 +818,7 @@ def build(context: ReportContext) -> RQReport:
                     "{rq0.census.failed_projects} failed, and the run did not reach "
                     "{rq0.census.not_reached_projects}. "
                     "{rq0.census.populated_projects} projects carry persisted PVC "
-                    "rows. Completion marker {rq0.census.completion_marker}."
+                    "rows."
                 ),
             ],
         ),
@@ -872,12 +861,6 @@ register(
             FileInputSpec(
                 "cut-values",
                 "analysis/data/jarvis-cut-values/cut_values.tsv",
-            ),
-            FileInputSpec(
-                "completion-marker",
-                "data/detached/census-gen.complete",
-                required=False,
-                content_addressed=True,
             ),
         ),
     ),

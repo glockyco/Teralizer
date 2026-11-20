@@ -142,11 +142,8 @@ def test_census_status_ledger_keeps_failed_and_unreached_projects():
             [(stage,) for stage in required[:2]],
         )
         conn.commit()
-        ledger, status, marker_present = _census_status_ledger(
-            conn, marker_present=True
-        )
+        ledger, status = _census_status_ledger(conn)
         by_project = ledger.set_index("project")
-        assert marker_present is True
         assert status == "partial"
         assert by_project.loc[TABLE1_PROJECTS[0], "generalization_status"] == "complete"
         assert by_project.loc[TABLE1_PROJECTS[1], "generalization_status"] == "failed"
