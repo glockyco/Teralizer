@@ -32,7 +32,7 @@ Real-world exclusions separate project-level failures from filtering and downstr
 
 _Eligible projects: 584. Stage 1 + 2: 584 entering, 293 included (50.2%), 291 excluded. Stage 3: 293 entering, 179 included (61.1%), 114 excluded. Stage 4: 179 entering, 98 included (54.7%), 81 excluded. Stage 5: 98 entering, 85 included (86.7%), 13 excluded. Overall: 85 of 584 included (14.6%)._
 
-source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_funnel.py#L533)
+source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_funnel.py#L533)
 
 Filtering results use generalized tests that reach filtering as each dataset's denominator. They do not measure overall success or project applicability.
 
@@ -45,7 +45,7 @@ Filtering results use generalized tests that reach filtering as each dataset's d
 
 _Each share uses the generalized tests with a filtering result in that dataset as its denominator._
 
-source: [`build_filtering_comparison_table`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227)
+source: [`build_filtering_comparison_table`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227)
 
 Generalization attempts are reported separately from emitted, filter-result-recorded, validated, reduced, and final-usable tests. A missing independent task record remains unknown.
 
@@ -63,7 +63,7 @@ Generalization attempts are reported separately from emitted, filter-result-reco
 
 _A lifecycle failure stage without a matching task record remains unknown; later failure labels are not treated as attempt evidence._
 
-source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L276)
+source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L275)
 
 Generic JPF uncaught-exception diagnostics are reclassified from their retained detail into application exceptions and JPF environment gaps.
 
@@ -78,7 +78,7 @@ Generic JPF uncaught-exception diagnostics are reclassified from their retained 
 
 _This recovery changes cause attribution only; it does not change project eligibility or funnel outcomes._
 
-source: [`fetch_jpf_exception_causes`](https://github.com/glockyco/Teralizer/blob/2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a/analysis/src/teralizer/eval/reports/_diagnostics.py#L95)
+source: [`fetch_jpf_exception_causes`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_diagnostics.py#L95)
 
 ParameterType choice sensitivity is reported conservatively: only a rejection with an observed argument-taking alternative is choice-dependent.
 
@@ -92,7 +92,7 @@ ParameterType choice sensitivity is reported conservatively: only a rejection wi
 
 _Choice-dependent rows divided by all ParameterType rejections are a lower bound; rows without candidate detail remain unscored._
 
-source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/blob/2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a/analysis/src/teralizer/eval/reports/_diagnostics.py#L180)
+source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_diagnostics.py#L179)
 
 **Included entities and exclusion mechanisms for Improved (200 tries), with shares of each entity-level population.**
 
@@ -158,7 +158,7 @@ source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/2a
 
 _Each test appears once. When repeated executions disagree, the table uses error, failed, skipped, then passed precedence._
 
-source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L351)
+source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filter_details.py#L351)
 
 **Most frequent failure types among NonPassingTest rejections.**
 
@@ -177,7 +177,7 @@ source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blo
 
 _Rows count distinct tests. A test can appear under more than one type when repeated executions recorded different failures._
 
-source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L366)
+source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filter_details.py#L366)
 
 **Assertion names rejected by AssertionType.**
 
@@ -194,7 +194,7 @@ source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralize
 | getName | 4 | 0.0% |
 | assertIterableEquals | 2 | 0.0% |
 
-source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L373)
+source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filter_details.py#L373)
 
 **Recorded resolver causes for MissingValue rejections.**
 
@@ -208,7 +208,7 @@ source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralize
 
 _The resolver reason is the primary cause. detail_json can record additional missing fields for the same assertion._
 
-source: [`fetch_missing_value_causes`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L387)
+source: [`fetch_missing_value_causes`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filter_details.py#L387)
 
 **Selected-MUT evidence for ParameterType rejections.**
 
@@ -219,7 +219,7 @@ source: [`fetch_missing_value_causes`](https://github.com/glockyco/Teralizer/blo
 | missing_declaration | 4,977 | 7.6% |
 | derivation_gap | 7 | 0.0% |
 
-source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L398)
+source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filter_details.py#L398)
 
 **Most frequent encoded types rejected by ReturnType.**
 
@@ -238,7 +238,7 @@ source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralize
 
 _The table shows the ten most frequent of all recorded rejected types._
 
-source: [`fetch_return_type_rejections`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L424)
+source: [`fetch_return_type_rejections`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_filter_details.py#L424)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 
@@ -255,7 +255,7 @@ The reader-facing filtering column combines filter decisions, generation-gate re
 
 _Refusals are decided before a generalized test is written, so they carry no filter decision and no lifecycle record._
 
-source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/_widening.py#L98)
+source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/_widening.py#L98)
 
 Reconstructed evidence distinguishes resolved findings from unresolved and incompatible records. Exact rates are omitted because none of the three claims has a complete compatible classification. Sample estimates retain their method and confidence interval.
 
@@ -269,7 +269,7 @@ Reconstructed evidence distinguishes resolved findings from unresolved and incom
 
 _Resolved, unresolved, and incompatible are audit partitions. Sample findings are estimates with the stated method and confidence interval. They are not exact population rates._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/8325a292c1d2424373259a111185e590e7ae8b64/analysis/src/teralizer/eval/reports/rq6_causes.py#L277)
 
 **Reviewed outcomes in the reconstructed RepoReapers evidence.**
 
@@ -288,4 +288,8 @@ source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blo
 
 _Counts describe reviewed records. For sampled claims, these counts do not describe the full population._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/8325a292c1d2424373259a111185e590e7ae8b64/analysis/src/teralizer/eval/reports/rq6_causes.py#L277)
+
+## Mutation detection of the generalized tests
+
+PIT ran the Initial test suites alone and together with the generalized tests for the 85 projects that yield a usable generalized test. The generalized tests kill 24 mutants in 13 projects that the Initial test suites do not detect. This is 0.04 percentage points of the 67,914 mutants that the Initial test suites cover.
