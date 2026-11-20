@@ -122,7 +122,7 @@ def fixture_files(root: Path) -> Iterator[Path]:
         yield path
 
 
-def _corpus_entry(corpus_package: Path, corpus_id: str) -> dict[str, object]:
+def corpus_entry(corpus_package: Path, corpus_id: str) -> dict[str, object]:
     manifest = json.loads((corpus_package / "manifest.json").read_text())
     for entry in manifest["corpora"]:
         if entry["corpus_id"] == corpus_id:
@@ -160,7 +160,7 @@ def build(
     for component in declaration.components:
         if component.corpus is None:
             continue
-        entry = _corpus_entry(sources.corpus_package, component.corpus)
+        entry = corpus_entry(sources.corpus_package, component.corpus)
         dump = entry["dump"]
         assert isinstance(dump, dict)
         plans[component.id].add(

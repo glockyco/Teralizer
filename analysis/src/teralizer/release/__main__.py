@@ -6,6 +6,7 @@ uv run --directory analysis python -m teralizer.release lineage [--staged DIR]
 uv run --directory analysis python -m teralizer.release source --out DIR
 uv run --directory analysis python -m teralizer.release jarvis-logs --staged DIR [--copy]
 uv run --directory analysis python -m teralizer.release declaration [--production]
+uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--component ID ...] [--production]
 """
 
 from __future__ import annotations
@@ -169,6 +170,43 @@ def _declaration(
     return 0
 
 
+def _build(
+    declared: inventory.Inventory,
+    repo: Path,
+    candidate: Path,
+    evidence: Path,
+    corpus_package: Path,
+    components: list[str] | None,
+    production: bool,
+) -> int:
+    from teralizer.release import build, declaration
+
+    release = declaration.load()
+    if production:
+        problems = declaration.production_problems(release, declared)
+        if components:
+            problems.append("a production candidate contains every component")
+        if problems:
+            return _report_problems(problems, "production")
+    selected = components or [component.id for component in release.components]
+    try:
+        built = build.build_candidate(
+            release,
+            declared,
+            repo=repo,
+            evidence=evidence,
+            corpus_package=corpus_package,
+            candidate=candidate,
+            components=selected,
+        )
+    except build.BuildError as error:
+        return _report_problems([str(error)], "build")
+    for item in built:
+        print(f"{item.path.name}\t{item.bytes}\t{item.unpacked_bytes}\t{item.sha256}")
+    print(f"candidate written to {candidate}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -214,6 +252,19 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also require the completeness rules of a publishable candidate",
     )
+    build_command = commands.add_parser(
+        "build", help="build a release candidate into a fresh directory"
+    )
+    build_command.add_argument("--candidate", type=Path, required=True)
+    build_command.add_argument("--evidence", type=Path, required=True)
+    build_command.add_argument("--corpus-package", type=Path, required=True)
+    build_command.add_argument(
+        "--component",
+        action="append",
+        dest="components",
+        help="build only these components, for development",
+    )
+    build_command.add_argument("--production", action="store_true")
     args = parser.parse_args(argv)
 
     try:
@@ -233,6 +284,16 @@ def main(argv: list[str] | None = None) -> int:
         return _jarvis_logs(args.repo, args.staged, args.copy)
     if args.command == "declaration":
         return _declaration(declared, args.declaration, args.production)
+    if args.command == "build":
+        return _build(
+            declared,
+            args.repo,
+            args.candidate,
+            args.evidence,
+            args.corpus_package,
+            args.components,
+            args.production,
+        )
     return _report_inputs(declared, args.repo, args.output)
 
 
