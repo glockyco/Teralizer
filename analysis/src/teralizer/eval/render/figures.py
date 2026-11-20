@@ -12,6 +12,7 @@ dictionary and warns on anything outside it, so the same string rides in
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import matplotlib
@@ -28,6 +29,12 @@ from teralizer.eval.artifacts import (
 from teralizer.eval.model import RQReport
 from teralizer.eval.provenance import capture
 from teralizer.plotting import setup_paper_style
+
+# Matplotlib stamps a PDF with the time it was written unless SOURCE_DATE_EPOCH is
+# set, which only the Nix development shell does. A figure published from any other
+# shell would then differ from the last one in every run. The date is the one that
+# shell's SOURCE_DATE_EPOCH yields, so published figures keep their bytes.
+_PDF_CREATION_DATE = datetime(1980, 1, 1, tzinfo=UTC)
 
 
 def materialize(
@@ -63,7 +70,7 @@ def materialize(
             fig.savefig(
                 pdf,
                 bbox_inches="tight",
-                metadata={"Subject": provenance},
+                metadata={"Subject": provenance, "CreationDate": _PDF_CREATION_DATE},
             )
             artifacts.add(
                 RenderedArtifact(

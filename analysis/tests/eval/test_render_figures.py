@@ -101,3 +101,21 @@ def test_a_report_without_figures_writes_nothing(tmp_path: Path):
         report, tmp_path / "png", tmp_path / "pdf", staging_root=tmp_path
     )
     assert len(written) == 0
+
+
+def test_pdf_does_not_depend_on_the_shell_it_is_drawn_in(tmp_path: Path, monkeypatch):
+    """Only the Nix development shell sets SOURCE_DATE_EPOCH. Without a fixed
+    creation date, a figure published from another shell carries the time of the
+    run and differs from the published one."""
+    monkeypatch.setenv("SOURCE_DATE_EPOCH", "315532800")
+    in_dev_shell = materialize(
+        _report(), tmp_path / "a-png", tmp_path / "a-pdf", staging_root=tmp_path
+    )
+    monkeypatch.delenv("SOURCE_DATE_EPOCH")
+    elsewhere = materialize(
+        _report(), tmp_path / "b-png", tmp_path / "b-pdf", staging_root=tmp_path
+    )
+    pdf = ArtifactId(RenderTarget.FIGURES, "bar")
+    assert (
+        elsewhere.get(pdf).path.read_bytes() == in_dev_shell.get(pdf).path.read_bytes()
+    )
