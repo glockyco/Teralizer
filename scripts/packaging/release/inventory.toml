@@ -157,14 +157,14 @@ location = "checkout-ambient"
 path = "data/cut-pvc-capture/raw"
 disposition = "payload"
 component = "core"
-reason = "Raw per-test CUT-PVC captures that analysis/data/jarvis-cut-values/cut_values.tsv aggregates. They do not exist yet and come from a rerun of scripts/run-cut-pvc-capture.sh."
+reason = "Raw per-test CUT-PVC captures that analysis/data/jarvis-cut-values/cut_values.tsv aggregates, from a rerun of scripts/run-cut-pvc-capture.sh on the pinned Commons Lang and Commons Math checkouts whose aggregate equals the committed file byte for byte."
 
 [[input]]
 id = "jarvis-source-cache"
 location = "checkout-ambient"
-path = "data/jarvis-scoreboard/source-cache"
+path = "data/jarvis-source-cache"
 disposition = "retrieval"
-reason = "Upstream Apache Commons clones at the pinned commits. The fixture preparer and the CUT-PVC capture clone them again from the repository URLs and commits recorded in their scripts."
+reason = "Upstream Apache Commons clones at the pinned commits, shared by the fixture preparer and the CUT-PVC capture. Both clone them again from the repository URLs and commits recorded in their scripts."
 
 [[input]]
 id = "reporeapers-facts-record"
@@ -285,9 +285,9 @@ disposition = "cache"
 reason = "Tool caches, virtual environments and operating-system metadata."
 
 [[ambient]]
-paths = ["build/*/", "analysis/build/", "analysis/output/verify/", "analysis/analysis/"]
+paths = ["build/*/", "analysis/build/", "analysis/output/verify/", "analysis/analysis/", "tools/cut-pvc-capture/target/", "tools/cut-pvc-capture/dependency-reduced-pom.xml"]
 disposition = "build-output"
-reason = "Outputs of the Gradle build and of report runs. The release regenerates them from source and verifies them against the committed reference outputs."
+reason = "Outputs of the Gradle build, of the capture agent's Maven build and of report runs. The release regenerates them from source and verifies the report outputs against the committed reference outputs."
 
 [[ambient]]
 paths = ["projects/example-*/*"]
@@ -338,10 +338,15 @@ inputs = ["jarvis-run-ledgers"]
 reason = "Source of the JARVIS run ledgers."
 
 [[ambient]]
-paths = ["data/jarvis-scoreboard/source-cache/"]
+paths = ["data/jarvis-source-cache/"]
 disposition = "input"
 inputs = ["jarvis-source-cache"]
-reason = "Upstream clones for fixture preparation."
+reason = "Upstream clones for fixture preparation and CUT-PVC capture."
+
+[[ambient]]
+paths = ["data/jarvis-scoreboard/source-cache/"]
+disposition = "unrelated"
+reason = "Upstream clones from before the fixture preparer moved its cache to data/jarvis-source-cache. Their checkouts carry CRLF line endings that the measured fixtures inherited."
 
 [[ambient]]
 paths = ["data/cut-pvc-capture/"]
@@ -384,10 +389,10 @@ reason = "The producer queries the real-world corpus and binds the dump identity
 
 [[report_input]]
 path = "analysis/data/jarvis-cut-values/cut_values.tsv"
-status = "frozen"
-producer = "scripts/run-cut-pvc-capture.sh"
-needs = ["core", "projects-jarvis-scoreboard"]
-reason = "The raw per-test captures that the aggregate was built from are lost. A rerun of the capture from the pinned checkouts replaces them."
+status = "regenerable"
+producer = "python -m teralizer.cut_pvc aggregate data/cut-pvc-capture/raw"
+needs = ["core"]
+reason = "The producer aggregates the raw captures in core. Repeating the capture itself is collection: scripts/run-cut-pvc-capture.sh runs the JARVIS Table 2 tests on the pinned checkouts with the capture agent."
 
 [[report_input]]
 path = "analysis/data/report-inputs/project-source-facts.json"
