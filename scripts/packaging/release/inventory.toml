@@ -231,7 +231,7 @@ path = "test-generalization-dev/projects/github_com_*"
 selector = "real-world-git-revisions"
 disposition = "payload"
 component = "projects-real-world-full"
-reason = "Real-world project sources exported from each recorded Git revision. Only projects with an established license that permits redistribution are included. The others keep repository URL and revision as retrieval records."
+reason = "Real-world project sources exported from each recorded Git revision, every project as in the first version. Each keeps its own license, and the third-party records state where none was found."
 
 [[input]]
 id = "reporeapers-project-sample"

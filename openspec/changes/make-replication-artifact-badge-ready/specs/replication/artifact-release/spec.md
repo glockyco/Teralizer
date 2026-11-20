@@ -208,19 +208,18 @@ Publishing a revision SHALL create a new archival version. It SHALL NOT alter th
 
 ### Requirement: Distribution rights and third-party provenance are explicit
 
-The release SHALL contain a top-level license map covering source code, authored data and documentation, and third-party materials. Every redistributed project SHALL retain its original license and attribution and SHALL be listed with its origin URL, immutable source revision, license identity, and redistribution decision. A project without established redistribution permission SHALL NOT be included as though the artifact license covered it.
+The release SHALL contain a top-level license map covering source code, authored data and documentation, and third-party materials. Every shipped project SHALL be listed with its origin URL, immutable source revision, the license found in its sources or the statement that none was found, and its retained license files. The artifact licenses SHALL NOT cover third-party project code, and the notice SHALL state that each analyzed project remains under its authors' terms.
 
+#### Scenario: A shipped project has a license
 
-#### Scenario: A redistributed project has an established license
+- **WHEN** a project archive contains a project whose sources carry a license
+- **THEN** its component manifest and third-party notice identify the origin, revision, license, attribution, and retained license text
 
-- **WHEN** a project archive contains that project
-- **THEN** its component manifest and third-party notice identify the origin, revision, license, attribution, redistribution decision, and retained license text
+#### Scenario: A shipped project has no license
 
-#### Scenario: Redistribution permission is unclear
-
-- **WHEN** no license or other redistribution basis can be established for a project
-- **THEN** release validation rejects its source payload
-- **AND** the release may retain only legally distributable provenance and retrieval instructions
+- **WHEN** a project archive contains a project whose sources carry no license file
+- **THEN** its third-party record states that no license was found
+- **AND** the notice states that the project remains under its authors' terms and is included only to reproduce the study
 
 ### Requirement: Shared reuse and licensing guidance is complete in core
 
