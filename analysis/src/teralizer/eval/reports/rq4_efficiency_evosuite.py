@@ -10,6 +10,7 @@ from matplotlib.patches import Rectangle
 from teralizer.eval.data import Required
 from teralizer.eval.entities import variant_ref
 from teralizer.eval.inputs import CorpusInputSpec, ReportContext
+from teralizer.eval.data import read_sql
 from teralizer.eval.model import (
     ColumnSpec,
     Figure,
@@ -21,6 +22,7 @@ from teralizer.eval.model import (
     decimal_value,
 )
 from teralizer.eval.provenance import capture
+from teralizer.eval.reports._causes_common import variant_sort_key
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.exports import (
     get_project_within_type_order,
@@ -38,7 +40,7 @@ from teralizer.rq3_runtime_requirements import (
 )
 
 REQUIRES = (
-    Required("project", "table", ("id",)),
+    Required("project", "table", ("id", "runtime", "use_test_generalization")),
     Required("v_projects_successes", "view", ("project_id",)),
     Required(
         "mv_efficiency_comparison_evosuite_vs_teralizer",
@@ -157,6 +159,124 @@ def _phase_table(data: pd.DataFrame) -> Table:
         "Mean EvoSuite runtime per phase, by project and search budget.",
         provenance=capture(compute_evosuite_phase_statistics),
         note="Each row is the mean over the runs of one project at one search budget.",
+    )
+
+
+_STAGES = ("Stage 1 + 2", "Stage 3", "Stage 4", "Stage 5")
+_STAGE_COLUMNS = ("stage_1_2", "stage_3", "stage_4", "stage_5")
+
+
+def _stage_rows(stages: pd.DataFrame) -> pd.DataFrame:
+    """Runtime of each stage for one project and strategy.
+
+    Stages 1 to 3 run once per project and every strategy builds on them, so each
+    strategy's row repeats them. Stages 4 and 5 run per strategy. The project-wide
+    Stage 5 work (variant SHARED) is excluded, as in the stage figure.
+    """
+    rows = []
+    for project, data in stages.groupby("project_name", observed=True):
+        shared = {
+            stage: float(data.loc[data["stage_group"] == stage, "total_runtime"].sum())
+            for stage in _STAGES[:2]
+        }
+        for variant, own in data[data["variant"] != "SHARED"].groupby(
+            "variant", observed=True
+        ):
+            values = {
+                **shared,
+                **{
+                    stage: float(
+                        own.loc[own["stage_group"] == stage, "total_runtime"].sum()
+                    )
+                    for stage in _STAGES[2:]
+                },
+            }
+            total = sum(values.values())
+            row: dict[str, object] = {
+                "project_name": standardize_project_name(str(project)),
+                "variant": str(variant),
+                "total": decimal_value(total, 1),
+            }
+            for stage, column in zip(_STAGES, _STAGE_COLUMNS, strict=True):
+                row[column] = decimal_value(values[stage], 1)
+                row[f"{column}_share"] = decimal_value(values[stage] / total, 6)
+            rows.append(row)
+    out = pd.DataFrame(rows)
+    out.loc[:, "_order"] = out.apply(
+        lambda row: (str(row["project_name"]), variant_sort_key(str(row["variant"]))),
+        axis=1,
+    )
+    out = out.sort_values("_order").drop(columns="_order").reset_index(drop=True)
+    out.loc[:, "row_key"] = out["project_name"] + ":" + out["variant"]
+    out.loc[:, "variant"] = out["variant"].map(variant_ref)
+    return out
+
+
+def _stage_table(stages: pd.DataFrame) -> Table:
+    return Table(
+        "tab-teralizer-stage-runtimes",
+        _stage_rows(stages),
+        [
+            ColumnSpec("Project", "project_name"),
+            ColumnSpec("Strategy", "variant", ValueKind.ENTITY),
+            *[
+                ColumnSpec(
+                    stage,
+                    column,
+                    ValueKind.DECIMAL,
+                    align="r",
+                    group_header="Runtime in seconds and share of the total",
+                )
+                for stage, column in zip(_STAGES, _STAGE_COLUMNS, strict=True)
+            ],
+            *[
+                ColumnSpec(f"{stage} %", f"{column}_share", ValueKind.SHARE, align="r")
+                for stage, column in zip(_STAGES, _STAGE_COLUMNS, strict=True)
+            ],
+            ColumnSpec("Total (s)", "total", ValueKind.DECIMAL, align="r"),
+        ],
+        "Teralizer runtime by pipeline stage for each project and generalization strategy.",
+        group_by="project_name",
+        row_key="row_key",
+        provenance=capture(compute_stage_runtime_breakdown),
+        note="Stages 1 to 3 run once per project and count toward every strategy.",
+    )
+
+
+PROJECT_RUNTIME_SQL = """
+SELECT project_name(p.id) AS project_name, p.runtime
+FROM project p
+JOIN v_projects_successes s ON s.project_id = p.id
+WHERE p.use_test_generalization
+"""
+
+
+def _fetch_project_runtimes(conn) -> pd.DataFrame:
+    df = read_sql(conn, PROJECT_RUNTIME_SQL)
+    out = pd.DataFrame(
+        {
+            "project_name": df["project_name"].map(standardize_project_name),
+            "seconds": df["runtime"].map(lambda value: decimal_value(value, 1)),
+            "hours": df["runtime"].map(
+                lambda value: decimal_value(float(value) / 3600, 2)
+            ),
+        }
+    )
+    return out.sort_values("project_name").reset_index(drop=True)
+
+
+def _project_runtime_table(conn) -> Table:
+    return Table(
+        "tab-teralizer-runtimes",
+        _fetch_project_runtimes(conn),
+        [
+            ColumnSpec("Project", "project_name"),
+            ColumnSpec("Runtime (s)", "seconds", ValueKind.DECIMAL, align="r"),
+            ColumnSpec("Runtime (h)", "hours", ValueKind.DECIMAL, align="r"),
+        ],
+        "Total Teralizer runtime per project across all generalization strategies.",
+        row_key="project_name",
+        provenance=capture(_fetch_project_runtimes, query=PROJECT_RUNTIME_SQL),
     )
 
 
@@ -553,6 +673,8 @@ def build(context: ReportContext) -> RQReport:
         _pareto_table(pareto, "eqbench"),
         _pareto_table(pareto, "commons-utils"),
         _phase_table(phases),
+        _stage_table(stages),
+        _project_runtime_table(conn),
     ]
     metrics = [
         Metric(
@@ -569,6 +691,8 @@ def build(context: ReportContext) -> RQReport:
             tables[1],
             _efficiency_figure(pareto),
             _runtime_stage_figure(stages),
+            tables[3],
+            tables[4],
             tables[2],
             _phase_figure(phases),
         ],

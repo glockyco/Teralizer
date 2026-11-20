@@ -36,7 +36,31 @@ def test_rq5_has_breakdown_and_filtering_tables():
     assert {table.key for table in report.tables()} == {
         "tab-exclusions-breakdown",
         "tab-exclusions-filtering",
+        "tab-exclusions-spf-causes",
+        "tab-exclusions-test-failures",
     }
+
+
+def test_rq5_failure_causes_match_published_counts():
+    report = _report()
+    tables = {table.key: table for table in report.tables()}
+    causes = tables["tab-exclusions-spf-causes"].df
+    by_group = causes.groupby("group")["assertions"].sum().to_dict()
+    assert by_group == {
+        "SPF exception": 1540,
+        "Exceeded analysis limit": 1358,
+        "Teralizer error": 97,
+    }
+    limits = dict(zip(causes["cause"], causes["assertions"], strict=True))
+    assert limits["Path condition size limit"] == 790
+    assert limits["Search depth limit"] == 524
+    assert limits["Execution timeout"] == 28
+    assert limits["Out of memory"] == 16
+    failures = tables["tab-exclusions-test-failures"].df.set_index("row_key")
+    assert failures.loc["NAIVE_10_TRIES", "too_many_filter_misses"] == 2233
+    assert failures.loc["IMPROVED_10_TRIES", "too_many_filter_misses"] == 1189
+    assert failures.loc["NAIVE_200_TRIES", "assertion_failed"] == 819
+    assert (failures["generalizations"] == 13836).all()
 
 
 def test_rq5_breakdown_levels_and_nonnegative_counts():

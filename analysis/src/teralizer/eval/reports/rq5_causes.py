@@ -12,9 +12,12 @@ from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import Prose, RQReport, Section
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
+from teralizer.eval.entities import variant_ref
+from teralizer.eval.model import ColumnSpec, Table, ValueKind, share_value
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
     build_filtering_table,
+    variant_sort_key,
 )
 
 REQUIRES: tuple[Required, ...] = (
@@ -202,6 +205,191 @@ ORDER BY
     report_rows.strategy
 """
 
+# The controlled corpus predates the typed extraction tokens, so its failure
+# messages carry the English phrases of that pipeline version. Each cause
+# matches both forms, so the classification is the same for old and new runs.
+ASSERTION_FAILURE_SQL = r"""
+SELECT
+    CASE
+        WHEN info LIKE '%PATH_CONDITION_TOO_LARGE%' OR info LIKE '%PC size limit exceeded%'
+            THEN 'limit|Path condition size limit'
+        WHEN info LIKE '%SEARCH_DEPTH_LIMIT%' OR info LIKE '%Depth limit of % exceeded%'
+            THEN 'limit|Search depth limit'
+        WHEN info LIKE '%EXECUTION_TIMEOUT%' OR info LIKE '%Execution timeout exceeded%'
+            THEN 'limit|Execution timeout'
+        WHEN info LIKE '%java.lang.OutOfMemoryError%'
+            THEN 'limit|Out of memory'
+        WHEN info LIKE '%TestGeneralizationListener.writeSpecificationFiles%'
+            THEN 'teralizer|NullPointerException while writing the specification'
+        WHEN info LIKE '%Failed to collect input/output specification for unknown reason%'
+            THEN 'teralizer|Specification not collected, no recorded reason'
+        WHEN info LIKE '%java.lang.ArithmeticException: !!!div by 0%'
+            THEN 'spf|ArithmeticException (division by zero)'
+        WHEN info LIKE '%java.lang.NoSuchMethodException!!%'
+            THEN 'spf|NoSuchMethodException'
+        ELSE 'spf|Other SPF/JPF exceptions'
+    END AS cause,
+    count(*) AS assertions
+FROM task
+WHERE stage = 'EXECUTE_JPF' AND status = 'FAILED'
+GROUP BY 1
+"""
+
+ASSERTION_TOTAL_SQL = "SELECT count(*) AS assertions FROM assertion"
+
+_CAUSE_GROUPS = {
+    "spf": (0, "SPF exception"),
+    "limit": (1, "Exceeded analysis limit"),
+    "teralizer": (2, "Teralizer error"),
+}
+
+GENERALIZATION_FAILURE_SQL = r"""
+WITH
+    totals AS (
+        SELECT variant, count(*) AS generalizations
+        FROM generalization
+        GROUP BY variant
+    ),
+    failures AS (
+        SELECT variant, failure_type, count(*) AS failures
+        FROM junit_test_report
+        WHERE generalization_id IS NOT NULL AND failure_type IS NOT NULL
+        GROUP BY variant, failure_type
+    )
+SELECT t.variant, t.generalizations, f.failure_type, coalesce(f.failures, 0) AS failures
+FROM totals t
+LEFT JOIN failures f ON f.variant = t.variant
+"""
+
+_FAILURE_TYPES = (
+    (
+        "net.jqwik.api.TooManyFilterMissesException",
+        "too_many_filter_misses",
+        "TooManyFilterMisses",
+    ),
+    ("org.opentest4j.AssertionFailedError", "assertion_failed", "AssertionFailedError"),
+    ("java.lang.ArithmeticException", "arithmetic", "ArithmeticException"),
+    ("java.lang.NumberFormatException", "number_format", "NumberFormatException"),
+)
+
+
+def _fetch_assertion_failures(conn: Connection) -> pd.DataFrame:
+    """Assertion-level SPF failures by cause, with shares of failures and assertions."""
+    df = read_sql(conn, ASSERTION_FAILURE_SQL)
+    assertions = int(read_sql(conn, ASSERTION_TOTAL_SQL)["assertions"].iloc[0])
+    failures = int(df["assertions"].sum())
+    parts = df["cause"].str.split("|", n=1, expand=True)
+    out = pd.DataFrame(
+        {
+            "group": parts[0].map(lambda key: _CAUSE_GROUPS[key][1]),
+            "cause": parts[1],
+            "assertions": df["assertions"].astype(int),
+            "_order": parts[0].map(lambda key: _CAUSE_GROUPS[key][0]),
+        }
+    )
+    out = out.sort_values(["_order", "assertions"], ascending=[True, False])
+    out.loc[:, "of_failures"] = out["assertions"].map(
+        lambda count: share_value(count, failures)
+    )
+    out.loc[:, "of_assertions"] = out["assertions"].map(
+        lambda count: share_value(count, assertions)
+    )
+    out.loc[:, "row_key"] = out["group"] + ":" + out["cause"]
+    return out.drop(columns="_order").reset_index(drop=True)
+
+
+def _fetch_generalization_failures(conn: Connection) -> pd.DataFrame:
+    """Failing generalized tests by failure type and variant."""
+    df = read_sql(conn, GENERALIZATION_FAILURE_SQL)
+    df = df[df["variant"].str.match(r"^(BASELINE|NAIVE_\d+_TRIES|IMPROVED_\d+_TRIES)$")]
+    rows = []
+    for variant, group in df.groupby("variant"):
+        total = int(group["generalizations"].iloc[0])
+        row: dict[str, object] = {"variant": variant, "generalizations": total}
+        counts = {
+            failure_type: int(count)
+            for failure_type, count in zip(
+                group["failure_type"], group["failures"], strict=True
+            )
+            if isinstance(failure_type, str)
+        }
+        for failure_type, column, _ in _FAILURE_TYPES:
+            count = counts.pop(failure_type, 0)
+            row[column] = count
+            row[f"{column}_pct"] = share_value(count, total)
+        if counts:
+            raise ValueError(f"unclassified generalized-test failures: {counts}")
+        rows.append(row)
+    out = pd.DataFrame(rows)
+    out.loc[:, "_order"] = out["variant"].map(variant_sort_key)
+    out = out.sort_values("_order").drop(columns="_order").reset_index(drop=True)
+    out.loc[:, "row_key"] = out["variant"]
+    out.loc[:, "variant"] = out["variant"].map(variant_ref)
+    return out
+
+
+def _assertion_failure_table(conn: Connection) -> Table:
+    return Table(
+        key="tab-exclusions-spf-causes",
+        df=_fetch_assertion_failures(conn),
+        columns=[
+            ColumnSpec("Group", "group"),
+            ColumnSpec("Cause", "cause"),
+            ColumnSpec(
+                "Assertions",
+                "assertions",
+                kind=ValueKind.COUNT,
+                align="r",
+                share_source="of_failures",
+            ),
+            ColumnSpec(
+                "Share of assertions", "of_assertions", kind=ValueKind.SHARE, align="r"
+            ),
+        ],
+        caption=(
+            "Causes of assertion-level failures during specification extraction in the "
+            "{entity.dataset.commons} and {entity.dataset.eqbench_es} projects, with "
+            "shares of all failures and of all assertions."
+        ),
+        group_by="group",
+        row_key="row_key",
+        provenance=capture(_fetch_assertion_failures, query=ASSERTION_FAILURE_SQL),
+    )
+
+
+def _generalization_failure_table(conn: Connection) -> Table:
+    return Table(
+        key="tab-exclusions-test-failures",
+        df=_fetch_generalization_failures(conn),
+        columns=[
+            ColumnSpec("Strategy", "variant", kind=ValueKind.ENTITY),
+            ColumnSpec(
+                "Generalized", "generalizations", kind=ValueKind.COUNT, align="r"
+            ),
+            *[
+                ColumnSpec(
+                    header,
+                    column,
+                    kind=ValueKind.COUNT,
+                    align="r",
+                    group_header="Failing generalized tests",
+                    share_source=f"{column}_pct",
+                )
+                for _, column, header in _FAILURE_TYPES
+            ],
+        ],
+        caption=(
+            "Generalized tests that fail on the original program, by failure type and "
+            "strategy, in the {entity.dataset.commons} and {entity.dataset.eqbench_es} "
+            "projects, with shares of all generalized tests of the strategy."
+        ),
+        row_key="row_key",
+        provenance=capture(
+            _fetch_generalization_failures, query=GENERALIZATION_FAILURE_SQL
+        ),
+        full_width=True,
+    )
+
 
 def _fetch_filtering(conn: Connection) -> pd.DataFrame:
     """Return filter rejection counts normalized for the shared table builder."""
@@ -266,6 +454,8 @@ def build(context: ReportContext) -> RQReport:
             ),
             breakdown,
             filtering,
+            _assertion_failure_table(conn),
+            _generalization_failure_table(conn),
         ],
     )
     return RQReport(
