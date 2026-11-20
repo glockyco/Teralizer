@@ -12,6 +12,7 @@ dictionary and warns on anything outside it, so the same string rides in
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -19,6 +20,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.patches import Patch
 
 from teralizer.eval.artifacts import (
     ArtifactId,
@@ -77,6 +80,94 @@ def materialize(
                     ArtifactId(RenderTarget.FIGURES, figure.key), pdf, report.rq
                 )
             )
+            source = pdf_dir / f"{figure.key}.source.json"
+            source.write_text(
+                json.dumps(figure_source(fig), indent=2, sort_keys=True) + "\n"
+            )
+            artifacts.add(
+                RenderedArtifact(
+                    ArtifactId(RenderTarget.FIGURES, f"{figure.key}.source"),
+                    source,
+                    report.rq,
+                )
+            )
         finally:
             plt.close(fig)
     return artifacts
+
+
+def _number(value: object) -> object:
+    """A JSON number that does not depend on the platform's float formatting."""
+    number = float(value)  # type: ignore[arg-type]
+    if number != number or number in (float("inf"), float("-inf")):
+        return str(number)
+    rounded = round(number, 9)
+    return int(rounded) if rounded.is_integer() else rounded
+
+
+def _points(values: object) -> list[list[object]]:
+    return [[_number(item) for item in row] for row in values]  # type: ignore[union-attr]
+
+
+def _vertices(patch: Patch) -> list[list[object]]:
+    """Outline of a patch in data coordinates, without display transforms."""
+    path = patch.get_path()
+    return _points(patch.get_patch_transform().transform(path.vertices))
+
+
+def figure_source(fig: Figure) -> dict[str, object]:
+    """The data and labels a figure shows, independent of fonts and rasterizer.
+
+    PNG and PDF bytes depend on the fonts installed where the figure is drawn,
+    so reproduction compares this canonical source instead: every plotted line,
+    bar, marker and text with its coordinates and every axis label and tick.
+    """
+    axes = []
+    for ax in fig.axes:
+        legend = ax.get_legend()
+        axes.append(
+            {
+                "title": ax.get_title(),
+                "xlabel": ax.get_xlabel(),
+                "ylabel": ax.get_ylabel(),
+                "xscale": ax.get_xscale(),
+                "yscale": ax.get_yscale(),
+                "xlim": [_number(value) for value in ax.get_xlim()],
+                "ylim": [_number(value) for value in ax.get_ylim()],
+                "xticks": [_number(value) for value in ax.get_xticks()],
+                "yticks": [_number(value) for value in ax.get_yticks()],
+                "xticklabels": [label.get_text() for label in ax.get_xticklabels()],
+                "yticklabels": [label.get_text() for label in ax.get_yticklabels()],
+                "lines": [
+                    {"label": line.get_label(), "xy": _points(line.get_xydata())}
+                    for line in ax.get_lines()
+                ],
+                "patches": [
+                    {
+                        "type": type(patch).__name__,
+                        "vertices": _vertices(patch),
+                        "label": patch.get_label(),
+                    }
+                    for patch in ax.patches
+                ],
+                "collections": [
+                    {
+                        "type": type(collection).__name__,
+                        "label": collection.get_label(),
+                        "offsets": _points(collection.get_offsets()),
+                    }
+                    for collection in ax.collections
+                ],
+                "texts": [
+                    {
+                        "text": text.get_text(),
+                        "xy": [_number(value) for value in text.get_position()],
+                    }
+                    for text in ax.texts
+                ],
+                "legend": [text.get_text() for text in legend.get_texts()]
+                if legend is not None
+                else [],
+            }
+        )
+    return {"axes": axes}

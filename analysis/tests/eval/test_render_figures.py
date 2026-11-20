@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import warnings
 
@@ -51,10 +52,39 @@ def test_pdf_is_keyed_by_figure_key_for_publishing(tmp_path: Path):
     )
     assert {
         artifact.id.key for artifact in written.by_target(RenderTarget.FIGURES)
-    } == {
-        "first",
-        "second",
-    }
+    } == {"first", "second", "first.source", "second.source"}
+
+
+def test_figure_source_records_plotted_data_independent_of_fonts(
+    tmp_path: Path, monkeypatch
+):
+    """Reproduction compares figures by what they show, so the source must not
+    change with the fonts available where the figure is drawn."""
+    from teralizer.eval.render import figures
+
+    sources = []
+    for family, size in (("serif", 8), ("monospace", 14)):
+        monkeypatch.setattr(
+            figures,
+            "setup_paper_style",
+            lambda family=family, size=size: matplotlib.rcParams.update(
+                {"font.family": family, "font.size": size}
+            ),
+        )
+        written = materialize(
+            _report(),
+            tmp_path / family / "png",
+            tmp_path / family / "pdf",
+            staging_root=tmp_path,
+        )
+        path = written.get(ArtifactId(RenderTarget.FIGURES, "bar.source")).path
+        sources.append(json.loads(path.read_text()))
+
+    assert sources[0] == sources[1]
+    bars = sources[0]["axes"][0]["patches"]
+    heights = sorted(max(y for _, y in bar["vertices"]) for bar in bars)
+    assert heights == [1, 2]
+    assert sources[0]["axes"][0]["xticklabels"] == ["a", "b"]
 
 
 def test_both_formats_carry_provenance(tmp_path: Path):

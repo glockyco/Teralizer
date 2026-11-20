@@ -65,12 +65,13 @@ collect() {
     done < <(find "$@" -type f -print0)
 }
 
-# teralizer.eval writes tables and CSV files to analysis/build/ and figures to
-# analysis/build/figures/ (PDF) and analysis/reports/figures/ (PNG).
+# teralizer.eval writes tables and CSV files to analysis/build/, figures and their
+# canonical data sources to analysis/build/figures/ (PDF, JSON), and figure PNGs
+# to analysis/reports/figures/.
 rm -rf "$OUTPUT_DIR"
 collect "$OUTPUT_DIR/tables" "$BUILD_DIR" -maxdepth 1 -name '*.tex'
 collect "$OUTPUT_DIR/data" "$BUILD_DIR" -mindepth 2 -name '*.csv'
 collect "$OUTPUT_DIR/figures" "$BUILD_DIR/figures" "$ANALYSIS_DIR/reports/figures" \
-    \( -name '*.pdf' -o -name '*.png' \)
+    \( -name '*.pdf' -o -name '*.png' -o -name '*.source.json' \)
 
 printf '%bAnalysis output written to %s%b\n' "$GREEN" "$OUTPUT_DIR" "$NC"
