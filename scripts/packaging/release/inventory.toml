@@ -1,0 +1,337 @@
+# Release input inventory.
+#
+# Every input the release can draw bytes from has one entry here. An input either
+# supplies payload to exactly one component or has an explicit non-payload
+# disposition with the reason the release does not need its bytes.
+#
+# Ambient entries cover every ignored or untracked path of a source checkout. They
+# prove that no required byte lives only in author state. The release builder never
+# reads an ambient path unless an input names it as its source.
+#
+# A corpus-package path is a semantic corpus id, which the corpus package manifest
+# resolves to its dump, or the manifest itself.
+#
+# Check with: uv run --directory analysis python -m teralizer.release inventory
+
+# Ambient roots whose children receive separate dispositions.
+expand = ["data/", "data/jarvis-census/", "data/jarvis-scoreboard/"]
+
+# --------------------------------------------------------------------------------
+# Inputs
+# --------------------------------------------------------------------------------
+
+[[input]]
+id = "source-tree"
+location = "git-tree"
+disposition = "payload"
+component = "core"
+reason = "Committed source, configuration, documentation, reference outputs and compact report inputs at the release revision. Gitlinks and LFS pointers are resolved by the inputs below."
+
+[[input]]
+id = "evosuite-jar"
+location = "git-lfs"
+path = "src/main/resources/evosuite/evosuite-1.2.0.jar"
+disposition = "payload"
+component = "core"
+reason = "The generation stage runs EvoSuite from this jar. The tree holds only an LFS pointer."
+
+[[input]]
+id = "reference-figures"
+location = "git-lfs"
+path = "analysis/output/original/figures/*.pdf"
+disposition = "payload"
+component = "core"
+reason = "Reference figures of the registered report run. The tree holds only LFS pointers."
+
+[[input]]
+id = "jpf-symbc"
+location = "submodule"
+path = "jpf-symbc"
+disposition = "payload"
+component = "core"
+reason = "Symbolic PathFinder fork that the Java pipeline builds and runs. The tree holds only a gitlink."
+
+[[input]]
+id = "jpf-core"
+location = "submodule"
+path = "jpf-symbc/jpf-core"
+disposition = "payload"
+component = "core"
+reason = "Java PathFinder core that jpf-symbc builds against. Its gitlink lives inside jpf-symbc and its URL needs SSH access, so the release materializes it."
+
+[[input]]
+id = "eqbench"
+location = "submodule"
+path = "projects/EqBench"
+disposition = "payload"
+component = "projects-controlled"
+reason = "Origin of the three EqBench-ES projects, which EvoSuite generated their tests into."
+
+[[input]]
+id = "controlled-projects"
+location = "checkout-ambient"
+path = "projects/{commons-utils,commons-utils-es-default-1s,commons-utils-es-default-10s,commons-utils-es-default-60s,eqbench-es-default-1s,eqbench-es-default-10s,eqbench-es-default-60s}"
+disposition = "payload"
+component = "projects-controlled"
+reason = "The seven project roots of the controlled corpus, including the EvoSuite tests whose stochastic generation cannot be repeated byte for byte. Teralizer outputs, build outputs and IDE files are excluded. The corpus test paths bound the selection."
+
+[[input]]
+id = "corpus-controlled"
+location = "corpus-package"
+path = "controlled"
+disposition = "payload"
+component = "corpus-controlled"
+reason = "Verified dump of the controlled corpus."
+
+[[input]]
+id = "corpus-real-world"
+location = "corpus-package"
+path = "real-world"
+disposition = "payload"
+component = "corpus-real-world"
+reason = "Verified dump of the real-world corpus. Its bytes are the version-seven database export of the reconstruction inventory."
+
+[[input]]
+id = "corpus-jarvis-scenarios"
+location = "corpus-package"
+path = "jarvis-scenarios"
+disposition = "payload"
+component = "corpus-jarvis-scenarios"
+reason = "Verified dump of the JARVIS scenarios corpus."
+
+[[input]]
+id = "corpus-jarvis-benchmark"
+location = "corpus-package"
+path = "jarvis-benchmark"
+disposition = "payload"
+component = "corpus-jarvis-benchmark"
+reason = "Verified dump of the JARVIS benchmark corpus."
+
+[[input]]
+id = "corpus-manifest"
+location = "corpus-package"
+path = "manifest.json"
+disposition = "payload"
+component = "core"
+reason = "Identity, provenance and checksums of the four corpus dumps. Each corpus component carries its own entry."
+
+[[input]]
+id = "jarvis-scoreboard-fixtures"
+location = "checkout-ambient"
+path = "data/jarvis-scoreboard/fixtures/{commons-lang-2017-02-01,commons-math-2017-02-01}"
+disposition = "payload"
+component = "projects-jarvis-scoreboard"
+reason = "Prepared scorecard fixture roots of the jarvis-scenarios corpus. Pipeline outputs inside the roots are excluded and preparation from the pinned commits must reproduce the payload."
+
+[[input]]
+id = "jarvis-census-fixtures"
+location = "checkout-ambient"
+path = "data/jarvis-census/fixtures/*-2017-02-01-census"
+disposition = "payload"
+component = "projects-jarvis-census"
+reason = "The twelve prepared census fixture roots of the jarvis-benchmark corpus. Pipeline outputs inside the roots are excluded and preparation from the pinned commits must reproduce the payload."
+
+[[input]]
+id = "jarvis-value-logs"
+location = "checkout-ambient"
+path = "data/jarvis-{scoreboard,census}/fixtures/**/*.values.tsv"
+selector = "jarvis-value-facts"
+disposition = "payload"
+component = "core"
+reason = "The value logs that jarvis-value-facts.json binds by count and aggregate checksum, at their repository-relative paths. Only logs selected by the two JARVIS corpora are included."
+
+[[input]]
+id = "jarvis-run-ledgers"
+location = "checkout-ambient"
+path = "data/jarvis-{scoreboard,census}/{PROVENANCE.md,status.tsv,run-logs}"
+disposition = "payload"
+component = "core"
+reason = "Fixture provenance, run status and run logs of the scorecard and census collection. The census status ledger is the completion evidence for the jarvis-benchmark corpus."
+
+[[input]]
+id = "cut-pvc-raw-captures"
+location = "checkout-ambient"
+path = "data/cut-pvc-capture/raw"
+disposition = "payload"
+component = "core"
+reason = "Raw per-test CUT-PVC captures that analysis/data/jarvis-cut-values/cut_values.tsv aggregates. They do not exist yet and come from a rerun of scripts/run-cut-pvc-capture.sh."
+
+[[input]]
+id = "jarvis-source-cache"
+location = "checkout-ambient"
+path = "data/jarvis-scoreboard/source-cache"
+disposition = "retrieval"
+reason = "Upstream Apache Commons clones at the pinned commits. The fixture preparer and the CUT-PVC capture clone them again from the repository URLs and commits recorded in their scripts."
+
+[[input]]
+id = "reporeapers-facts-record"
+location = "evaluation-host"
+path = "corpus-exports/real-world.complete/facts.json"
+disposition = "payload"
+component = "core"
+reason = "Completion facts of the version-seven export, named by the reconstruction inventory."
+
+[[input]]
+id = "reporeapers-run-status"
+location = "evaluation-host"
+path = "data/reporeapers-rerun-v7/status.tsv"
+disposition = "payload"
+component = "core"
+reason = "Per-project exit status of the version-seven run, named by the reconstruction inventory."
+
+[[input]]
+id = "reporeapers-project-logs"
+location = "evaluation-host"
+path = "data/reporeapers-rerun-v7/run-logs"
+disposition = "payload"
+component = "core"
+reason = "Per-project pipeline logs of the version-seven run, named by the reconstruction inventory. RQ6 cause reconstruction reads them."
+
+[[input]]
+id = "reporeapers-configurations"
+location = "git-tree"
+path = "project-configs/replication/extended"
+disposition = "duplicate"
+reason = "Project configurations of the version-seven run. The source-tree input already ships them, and their content must equal the checksum in the reconstruction inventory."
+
+[[input]]
+id = "reporeapers-project-checkouts"
+location = "evaluation-host"
+path = "projects/github_com_*"
+selector = "real-world-git-revisions"
+disposition = "payload"
+component = "projects-real-world-full"
+reason = "Real-world project sources exported from each recorded Git revision. Only projects with an established license that permits redistribution are included. The others keep repository URL and revision as retrieval records."
+
+[[input]]
+id = "reporeapers-project-sample"
+location = "evaluation-host"
+path = "projects/github_com_*"
+selector = "real-world-sample"
+disposition = "payload"
+component = "projects-real-world-sample"
+reason = "The declared reduced real-world subset. It is the one deliberate overlap: every sample project must equal its copy in projects-real-world-full."
+
+[[input]]
+id = "reporeapers-run-artifacts"
+location = "evaluation-host"
+path = "data/reporeapers-rerun-v7"
+disposition = "non-payload"
+reason = "Generated tests, build outputs and tool reports of the version-seven run. The corpus records the facts the reports read. Report reproduction does not need these bytes, and the reconstruction inventory records their content identity."
+
+[[input]]
+id = "reporeapers-project-mapping"
+location = "corpus-package"
+path = "real-world"
+disposition = "duplicate"
+reason = "The project-to-revision mapping is a query on the real-world corpus, which corpus-real-world already ships."
+
+[[input]]
+id = "paper"
+location = "external"
+path = "https://doi.org/10.48550/arXiv.2512.14475"
+disposition = "retrieval"
+reason = "The paper the release accompanies. The release cites it by persistent identifier and does not copy its text, whose rights the publisher may hold."
+
+[[input]]
+id = "jarvis-publication"
+location = "external"
+path = "https://doi.org/10.1007/978-3-319-73721-8_19"
+disposition = "retrieval"
+reason = "The JARVIS paper whose Table 2 values RQ0 compares against. The claims matrix cites the table. The release copies only the compared values."
+
+[[input]]
+id = "container-images"
+location = "external"
+path = "registry images named by Dockerfile and Compose files"
+disposition = "retrieval"
+reason = "Base and service images. The release pins each by digest and ships the Dockerfiles and Compose files in the source tree instead of image archives."
+
+# --------------------------------------------------------------------------------
+# Ambient checkout paths
+# --------------------------------------------------------------------------------
+
+[[ambient]]
+paths = [".env"]
+disposition = "sensitive"
+reason = "Local database credentials. The release ships .env.example."
+
+[[ambient]]
+paths = [".direnv/", ".gradle/", "analysis/.venv/", "analysis/.pytest_cache/", "analysis/.ruff_cache/", "analysis/.coverage", "analysis/src/teralizer_analysis.egg-info/", "*__pycache__/", "*.DS_Store", "*/._*", "._*", "*.jqwik-database", ".jqwik-database"]
+disposition = "cache"
+reason = "Tool caches, virtual environments and operating-system metadata."
+
+[[ambient]]
+paths = ["build/*/", "analysis/build/", "analysis/output/verify/", "analysis/analysis/"]
+disposition = "build-output"
+reason = "Outputs of the Gradle build and of report runs. The release regenerates them from source and verifies them against the committed reference outputs."
+
+[[ambient]]
+paths = ["projects/example-*/*"]
+disposition = "build-output"
+reason = "Residue of local pipeline runs on the example projects. The committed example sources are in the source tree."
+
+[[ambient]]
+paths = ["verification/fixtures/*"]
+disposition = "build-output"
+reason = "Residue of verification-corpus runs. The driver regenerates it and the committed fixtures and golden files are in the source tree."
+
+[[ambient]]
+paths = ["project-configs/verification/._*"]
+disposition = "cache"
+reason = "Operating-system metadata."
+
+[[ambient]]
+paths = ["logs/", "data/verification/", "data/detached/"]
+disposition = "scratch"
+reason = "Local run logs, verification run roots and detached-process records. data/detached holds a superseded census completion marker that no workflow reads."
+
+[[ambient]]
+paths = ["replication/datasets/"]
+disposition = "unrelated"
+reason = "Database dumps of the first artifact version. The corpus package supersedes them."
+
+[[ambient]]
+paths = ["projects/commons-utils/", "projects/commons-utils-es-default-1s/", "projects/commons-utils-es-default-10s/", "projects/commons-utils-es-default-60s/", "projects/eqbench-es-default-1s/", "projects/eqbench-es-default-10s/", "projects/eqbench-es-default-60s/"]
+disposition = "input"
+inputs = ["controlled-projects"]
+reason = "Source of the controlled project payload."
+
+[[ambient]]
+paths = ["projects/github_com_*/"]
+disposition = "unrelated"
+reason = "Local placeholders of real-world projects. The real-world sources come from the evaluation host."
+
+[[ambient]]
+paths = ["data/jarvis-scoreboard/fixtures/", "data/jarvis-census/fixtures/"]
+disposition = "input"
+inputs = ["jarvis-scoreboard-fixtures", "jarvis-census-fixtures", "jarvis-value-logs"]
+reason = "Source of the JARVIS fixture payloads and of the selected value logs. Fixture roots outside the two corpora are older census runs."
+
+[[ambient]]
+paths = ["data/jarvis-scoreboard/PROVENANCE.md", "data/jarvis-census/PROVENANCE.md", "data/jarvis-census/status.tsv", "data/jarvis-census/run-logs/"]
+disposition = "input"
+inputs = ["jarvis-run-ledgers"]
+reason = "Source of the JARVIS run ledgers."
+
+[[ambient]]
+paths = ["data/jarvis-scoreboard/source-cache/"]
+disposition = "input"
+inputs = ["jarvis-source-cache"]
+reason = "Upstream clones for fixture preparation."
+
+[[ambient]]
+paths = ["data/cut-pvc-capture/"]
+disposition = "input"
+inputs = ["cut-pvc-raw-captures"]
+reason = "Work directory of the CUT-PVC capture. Only its raw captures enter the release. The copied checkouts beside them are build scratch."
+
+[[ambient]]
+paths = ["data/jarvis-scoreboard/commons-*/", "data/jarvis-census/commons-*/", "data/jarvis-scoreboard/*.log"]
+disposition = "unrelated"
+reason = "Working run roots and refresh logs of the JARVIS runs. The two corpora and the selected value logs carry every fact the reports read."
+
+[[ambient]]
+paths = ["data/reporeapers-rerun-v7/", "data/reporeapers-rerun-v7-local/"]
+disposition = "unrelated"
+reason = "Local copies of the version-seven status ledger and of a partial local rerun. The release takes RepoReapers evidence from the evaluation host."
