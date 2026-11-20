@@ -149,19 +149,20 @@ compare_content() {
 }
 
 echo -e "${CYAN}File Counts:${NC}"
-compare_subdir "tables" "*.tex" || ((errors++))
-compare_subdir "data" "*.csv" || ((errors++))
-# teralizer.eval renders PNG figures, while older references may contain PDFs.
-# Compare whichever image artifacts each run produced without assuming a format.
-compare_subdir "figures" "*" || ((errors++))
+# A post-increment from zero has exit status 1 and would end the script here
+# under `set -e`, before the content comparison and the summary.
+compare_subdir "tables" "*.tex" || errors=$((errors + 1))
+compare_subdir "data" "*.csv" || errors=$((errors + 1))
+# Figures embed the commit that generated them, so only their presence counts.
+compare_subdir "figures" "*" || errors=$((errors + 1))
 echo ""
 
 echo -e "${CYAN}Content Comparison (tables):${NC}"
-compare_content "tables" "*.tex" || ((errors++))
+compare_content "tables" "*.tex" || errors=$((errors + 1))
 echo ""
 
 echo -e "${CYAN}Content Comparison (data):${NC}"
-compare_content "data" "*.csv" || ((errors++))
+compare_content "data" "*.csv" || errors=$((errors + 1))
 echo ""
 
 # Summary
