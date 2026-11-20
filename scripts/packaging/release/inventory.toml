@@ -9,7 +9,9 @@
 # reads an ambient path unless an input names it as its source.
 #
 # A corpus-package path is a semantic corpus id, which the corpus package manifest
-# resolves to its dump, or the manifest itself.
+# resolves to its dump, or the manifest itself. An evaluation-host path is relative
+# to the directory that holds the evaluation checkouts on that host. The content
+# identity in the reconstruction inventory, not this path, identifies the bytes.
 #
 # Check with: uv run --directory analysis python -m teralizer.release inventory
 
@@ -89,6 +91,7 @@ location = "corpus-package"
 path = "real-world"
 disposition = "payload"
 component = "corpus-real-world"
+reconstruction_source = "version-seven-database-export"
 reason = "Verified dump of the real-world corpus. Its bytes are the version-seven database export of the reconstruction inventory."
 
 [[input]]
@@ -121,7 +124,7 @@ location = "checkout-ambient"
 path = "data/jarvis-scoreboard/fixtures/{commons-lang-2017-02-01,commons-math-2017-02-01}"
 disposition = "payload"
 component = "projects-jarvis-scoreboard"
-reason = "Prepared scorecard fixture roots of the jarvis-scenarios corpus. Pipeline outputs inside the roots are excluded and preparation from the pinned commits must reproduce the payload."
+reason = "The measured scorecard fixture roots of the jarvis-scenarios corpus: pom.xml and src/ only. Generated _*_Generalized_* and _*_Driver_* sources, data/, target/ and Teralizer POMs are pipeline output and stay out. Preparation from the pinned commits reproduces the payload except that the measured copies of some upstream files have CRLF line endings."
 
 [[input]]
 id = "jarvis-census-fixtures"
@@ -129,7 +132,7 @@ location = "checkout-ambient"
 path = "data/jarvis-census/fixtures/*-2017-02-01-census"
 disposition = "payload"
 component = "projects-jarvis-census"
-reason = "The twelve prepared census fixture roots of the jarvis-benchmark corpus. Pipeline outputs inside the roots are excluded and preparation from the pinned commits must reproduce the payload."
+reason = "The twelve measured census fixture roots of the jarvis-benchmark corpus: pom.xml and src/ only. Generated _*_Generalized_* and _*_Driver_* sources, data/, target/ and Teralizer POMs are pipeline output and stay out. Preparation from the pinned commits reproduces the payload except that the measured copies of some upstream files have CRLF line endings."
 
 [[input]]
 id = "jarvis-value-logs"
@@ -166,38 +169,56 @@ reason = "Upstream Apache Commons clones at the pinned commits. The fixture prep
 [[input]]
 id = "reporeapers-facts-record"
 location = "evaluation-host"
-path = "corpus-exports/real-world.complete/facts.json"
+path = "test-generalization/corpus-exports/real-world.complete/facts.tsv"
 disposition = "payload"
 component = "core"
-reason = "Completion facts of the version-seven export, named by the reconstruction inventory."
+release_path = "data/reporeapers-rerun-v7/export-facts.tsv"
+reconstruction_source = "version-seven-facts-record"
+reason = "Completion facts of the version-seven export."
 
 [[input]]
 id = "reporeapers-run-status"
 location = "evaluation-host"
-path = "data/reporeapers-rerun-v7/status.tsv"
+path = "test-generalization-dev/data/reporeapers-rerun-v7/status.tsv"
 disposition = "payload"
 component = "core"
-reason = "Per-project exit status of the version-seven run, named by the reconstruction inventory."
+release_path = "data/reporeapers-rerun-v7/status.tsv"
+reconstruction_source = "version-seven-run-status"
+reason = "Per-project exit status of the version-seven run."
 
 [[input]]
 id = "reporeapers-project-logs"
 location = "evaluation-host"
-path = "data/reporeapers-rerun-v7/run-logs"
+path = "test-generalization-dev/data/reporeapers-rerun-v7/run-logs"
 disposition = "payload"
 component = "core"
-reason = "Per-project pipeline logs of the version-seven run, named by the reconstruction inventory. RQ6 cause reconstruction reads them."
+release_path = "data/reporeapers-rerun-v7/run-logs"
+reconstruction_source = "version-seven-project-logs"
+reason = "Per-project pipeline logs of the version-seven run. RQ6 cause reconstruction reads them."
 
 [[input]]
 id = "reporeapers-configurations"
 location = "git-tree"
 path = "project-configs/replication/extended"
 disposition = "duplicate"
-reason = "Project configurations of the version-seven run. The source-tree input already ships them, and their content must equal the checksum in the reconstruction inventory."
+reconstruction_source = "version-seven-configurations"
+reason = "Project configurations of the version-seven run. The source-tree input already ships them."
+
+[[input]]
+id = "reporeapers-checkout-revisions"
+location = "evaluation-host"
+path = "test-generalization-dev/projects/github_com_*"
+selector = "checkout HEAD and origin URL of every corpus project"
+disposition = "payload"
+component = "core"
+release_path = "data/reporeapers-rerun-v7/checkout-revisions.tsv"
+reconstruction_source = "version-seven-project-checkouts"
+reason = "Checkout revision and origin of every real-world project. The reconstruction inventory kept only a digest of this map, whose serialization the repository does not record, so the release ships the map itself and checks it against the corpus revisions."
 
 [[input]]
 id = "reporeapers-project-checkouts"
 location = "evaluation-host"
-path = "projects/github_com_*"
+path = "test-generalization-dev/projects/github_com_*"
 selector = "real-world-git-revisions"
 disposition = "payload"
 component = "projects-real-world-full"
@@ -206,7 +227,7 @@ reason = "Real-world project sources exported from each recorded Git revision. O
 [[input]]
 id = "reporeapers-project-sample"
 location = "evaluation-host"
-path = "projects/github_com_*"
+path = "test-generalization-dev/projects/github_com_*"
 selector = "real-world-sample"
 disposition = "payload"
 component = "projects-real-world-sample"
@@ -215,8 +236,9 @@ reason = "The declared reduced real-world subset. It is the one deliberate overl
 [[input]]
 id = "reporeapers-run-artifacts"
 location = "evaluation-host"
-path = "data/reporeapers-rerun-v7"
+path = "test-generalization-dev/data/reporeapers-rerun-v7"
 disposition = "non-payload"
+reconstruction_source = "version-seven-run-artifacts"
 reason = "Generated tests, build outputs and tool reports of the version-seven run. The corpus records the facts the reports read. Report reproduction does not need these bytes, and the reconstruction inventory records their content identity."
 
 [[input]]
@@ -224,6 +246,7 @@ id = "reporeapers-project-mapping"
 location = "corpus-package"
 path = "real-world"
 disposition = "duplicate"
+reconstruction_source = "version-seven-project-mapping"
 reason = "The project-to-revision mapping is a query on the real-world corpus, which corpus-real-world already ships."
 
 [[input]]

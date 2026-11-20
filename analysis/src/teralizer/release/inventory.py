@@ -72,6 +72,11 @@ class Input:
     path: str | None = None
     selector: str | None = None
     component: str | None = None
+    # Where an input from outside the source tree lands inside its component.
+    release_path: str | None = None
+    # The collected-source id of the RepoReapers reconstruction inventory this input
+    # accounts for.
+    reconstruction_source: str | None = None
 
 
 @dataclass(frozen=True)
@@ -142,6 +147,8 @@ def _parse_input(entry: dict[str, object], index: int) -> Input:
         path=_optional_text(entry, "path", where),
         selector=_optional_text(entry, "selector", where),
         component=_optional_text(entry, "component", where),
+        release_path=_optional_text(entry, "release_path", where),
+        reconstruction_source=_optional_text(entry, "reconstruction_source", where),
     )
     where = f"input {parsed.id!r}"
     if parsed.location not in INPUT_LOCATIONS:
@@ -155,6 +162,8 @@ def _parse_input(entry: dict[str, object], index: int) -> Input:
             )
     elif parsed.component is not None:
         raise InventoryError(f"{where}: only payload inputs name a component")
+    if parsed.release_path is not None and parsed.disposition != "payload":
+        raise InventoryError(f"{where}: only payload inputs have a release path")
     if parsed.location != "git-tree" and parsed.path is None:
         raise InventoryError(f"{where}: location {parsed.location!r} needs a path")
     return parsed

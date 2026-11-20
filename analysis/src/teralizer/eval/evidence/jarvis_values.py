@@ -68,7 +68,7 @@ def _parameter_values(path: object) -> list[dict[str, str]]:
     ]
 
 
-def _file_set_identity(paths: Iterable[object]) -> dict[str, object]:
+def file_set_identity(paths: Iterable[object]) -> dict[str, object]:
     unique = sorted(
         {
             Path(cast(str | Path, path))
@@ -102,7 +102,7 @@ def _scoreboard_facts(
     rows = _records(scoreboard, exclude=("jqwik_value_log_path",))
     for row, path in zip(rows, paths, strict=True):
         row["parameter_values"] = _parameter_values(path)
-    return rows, _file_set_identity(paths)
+    return rows, file_set_identity(paths)
 
 
 def _census_facts(
@@ -115,7 +115,7 @@ def _census_facts(
     paths = (
         runs["jqwik_value_log_path"].tolist() if "jqwik_value_log_path" in runs else []
     )
-    return _records(by_mut), _records(by_project), _file_set_identity(paths)
+    return _records(by_mut), _records(by_project), file_set_identity(paths)
 
 
 def build_facts(

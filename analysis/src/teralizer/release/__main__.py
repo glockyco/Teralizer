@@ -2,6 +2,9 @@
 
 uv run --directory analysis python -m teralizer.release inventory [--repo PATH]
 uv run --directory analysis python -m teralizer.release report-inputs [--json PATH]
+uv run --directory analysis python -m teralizer.release lineage [--staged DIR]
+uv run --directory analysis python -m teralizer.release source --out DIR
+uv run --directory analysis python -m teralizer.release jarvis-logs --staged DIR [--copy]
 """
 
 from __future__ import annotations
@@ -57,6 +60,94 @@ def _report_inputs(
     return 0
 
 
+def _lineage(
+    declared: inventory.Inventory,
+    repo: Path,
+    staged: Path | None,
+    corpus_package: Path | None,
+    with_corpus: bool,
+) -> int:
+    from teralizer.release import lineage
+
+    sources = lineage.load_sources(repo)
+    problems = lineage.closure(declared, sources)
+    if staged is not None:
+        dump_sha256 = None
+        if corpus_package is not None:
+            manifest = json.loads((corpus_package / "manifest.json").read_text())
+            dump_sha256 = next(
+                entry["dump"]["sha256"]
+                for entry in manifest["corpora"]
+                if entry["corpus_id"] == "real-world"
+            )
+        problems += lineage.verify_staged(declared, sources, staged, dump_sha256)
+        if with_corpus:
+            from sqlalchemy import text
+
+            from teralizer.corpora import open_corpus
+
+            revisions = declared.input("reporeapers-checkout-revisions")
+            assert revisions.release_path is not None
+            rows = lineage.read_checkout_map(staged / revisions.release_path)
+            with open_corpus("real-world") as (_, connection):
+                corpus_rows = [
+                    (str(root), version)
+                    for root, version in connection.execute(
+                        text("SELECT root_path, git_version FROM project")
+                    )
+                ]
+            problems += lineage.corpus_revision_mismatches(rows, corpus_rows)
+    if problems:
+        return _report_problems(problems, "lineage")
+    scope = "closure and staged evidence" if staged is not None else "closure"
+    print(f"RepoReapers lineage complete ({scope}): {len(sources)} collected sources")
+    return 0
+
+
+def _source(declared: inventory.Inventory, repo: Path, revision: str, out: Path) -> int:
+    from teralizer.release import source
+
+    try:
+        nested, lfs = source.materialize(repo, revision, out)
+    except source.SourceError as error:
+        return _report_problems([str(error)], "source")
+    declared_paths = {
+        item.path for item in declared.inputs if item.location == "submodule"
+    }
+    undeclared = [item.path for item in nested if item.path not in declared_paths]
+    if undeclared:
+        return _report_problems(
+            [f"nested source {path} has no submodule input" for path in undeclared],
+            "source",
+        )
+    for item in nested:
+        print(f"nested\t{item.path}\t{item.commit}")
+    for path in lfs:
+        print(f"lfs\t{path}")
+    print(f"source materialized at {out}")
+    return 0
+
+
+def _jarvis_logs(repo: Path, staged: Path, copy: bool) -> int:
+    from contextlib import ExitStack
+
+    from teralizer import corpora
+    from teralizer.release import jarvis
+
+    with ExitStack() as stack:
+        _, scenarios = stack.enter_context(corpora.open_corpus("jarvis-scenarios"))
+        _, benchmark = stack.enter_context(corpora.open_corpus("jarvis-benchmark"))
+        selection = jarvis.selected_value_logs(scenarios, benchmark, repo)
+    if copy:
+        jarvis.stage(selection, repo, staged)
+    problems = jarvis.verify(selection, staged, repo / jarvis.FACTS)
+    if problems:
+        return _report_problems(problems, "JARVIS value-log")
+    counts = ", ".join(f"{len(paths)} {key}" for key, paths in selection.items())
+    print(f"JARVIS value logs match the facts: {counts}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -70,6 +161,29 @@ def main(argv: list[str] | None = None) -> int:
         help="resolve every registered report input to its component and status",
     )
     closure.add_argument("--json", type=Path, dest="output")
+    lineage_command = commands.add_parser(
+        "lineage",
+        help="account for every RepoReapers reconstruction source and verify staged evidence",
+    )
+    lineage_command.add_argument("--staged", type=Path)
+    lineage_command.add_argument("--corpus-package", type=Path)
+    lineage_command.add_argument(
+        "--with-corpus",
+        action="store_true",
+        help="also compare the staged checkout map with the real-world corpus",
+    )
+    materialize = commands.add_parser(
+        "source",
+        help="export the committed tree with nested sources and LFS objects",
+    )
+    materialize.add_argument("--revision", default="HEAD")
+    materialize.add_argument("--out", type=Path, required=True)
+    logs = commands.add_parser(
+        "jarvis-logs",
+        help="verify, and with --copy stage, the value logs that the JARVIS facts bind",
+    )
+    logs.add_argument("--staged", type=Path, required=True)
+    logs.add_argument("--copy", action="store_true")
     args = parser.parse_args(argv)
 
     try:
@@ -79,6 +193,14 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.command == "inventory":
         return _inventory(declared, args.repo)
+    if args.command == "lineage":
+        return _lineage(
+            declared, args.repo, args.staged, args.corpus_package, args.with_corpus
+        )
+    if args.command == "source":
+        return _source(declared, args.repo, args.revision, args.out)
+    if args.command == "jarvis-logs":
+        return _jarvis_logs(args.repo, args.staged, args.copy)
     return _report_inputs(declared, args.repo, args.output)
 
 
