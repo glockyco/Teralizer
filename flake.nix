@@ -56,6 +56,12 @@
 
           JAVA_HOME = "${pkgs.zulu8}";
 
+          # uv looks for `.python-version` upward from the project it runs, which
+          # is `analysis/`, so it never reaches the file at the repository root and
+          # takes the system Python instead. That one can be too new for the
+          # locked packages to have wheels.
+          UV_PYTHON = nixpkgs.lib.fileContents ./.python-version;
+
           # Installing is idempotent, so it is safe on every entry. The guard
           # keeps it quiet outside a work tree.
           shellHook = ''
