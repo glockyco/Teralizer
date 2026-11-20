@@ -1,0 +1,17 @@
+  \renewcommand{\theHreporttablerow}{tab-exclusions-test-failures.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular*}{\linewidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lrrrrr}
+  \toprule
+   &  & \multicolumn{4}{c}{Failing generalized tests} \\
+  \cmidrule(lr){3-6}
+  Strategy & Generalized & \multicolumn{1}{c}{TooManyFilterMisses} & \multicolumn{1}{c}{AssertionFailedError} & \multicolumn{1}{c}{ArithmeticException} & \multicolumn{1}{c}{NumberFormatException} \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:BASELINE}\VariantBaseline{} & 13,836 & 0\; (\phantom{0}0.0\%) & 22\; (0.2\%) & 0\; (0.0\%) & 0\; (0.0\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:NAIVE_10_TRIES}\VariantNaiveA{} & 13,836 & 2,233\; (16.1\%) & 729\; (5.3\%) & 99\; (0.7\%) & 0\; (0.0\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:NAIVE_50_TRIES}\VariantNaiveB{} & 13,836 & 2,938\; (21.2\%) & 803\; (5.8\%) & 99\; (0.7\%) & 0\; (0.0\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:NAIVE_200_TRIES}\VariantNaiveC{} & 13,836 & 3,005\; (21.7\%) & 819\; (5.9\%) & 99\; (0.7\%) & 0\; (0.0\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:IMPROVED_10_TRIES}\VariantImprovedA{} & 13,836 & 1,189\; (\phantom{0}8.6\%) & 752\; (5.4\%) & 57\; (0.4\%) & 18\; (0.1\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:IMPROVED_50_TRIES}\VariantImprovedB{} & 13,836 & 1,223\; (\phantom{0}8.8\%) & 845\; (6.1\%) & 58\; (0.4\%) & 18\; (0.1\%) \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-exclusions-test-failures:IMPROVED_200_TRIES}\VariantImprovedC{} & 13,836 & 1,265\; (\phantom{0}9.1\%) & 866\; (6.3\%) & 58\; (0.4\%) & 18\; (0.1\%) \\
+  \bottomrule
+  \end{tabular*}

@@ -1,0 +1,10 @@
+row_key,group,cause,assertions,of_failures,of_assertions
+SPF exception:ArithmeticException (division by zero),SPF exception,ArithmeticException (division by zero),827,0.2761268781302170283806343907,0.02859316115202434049026726135
+SPF exception:NoSuchMethodException,SPF exception,NoSuchMethodException,534,0.1782971619365609348914858097,0.01846281506067835286795975521
+SPF exception:Other SPF/JPF exceptions,SPF exception,Other SPF/JPF exceptions,179,0.05976627712854757929883138564,0.006188846246931507796563288732
+Exceeded analysis limit:Path condition size limit,Exceeded analysis limit,Path condition size limit,790,0.2637729549248747913188647746,0.02731390243059157072226255921
+Exceeded analysis limit:Search depth limit,Exceeded analysis limit,Search depth limit,524,0.1749582637729549248747913189,0.01811706946029111779552605193
+Exceeded analysis limit:Execution timeout,Exceeded analysis limit,Execution timeout,28,0.009348914858096828046744574290,0.0009680876810842582028143691872
+Exceeded analysis limit:Out of memory,Exceeded analysis limit,Out of memory,16,0.005342237061769616026711185309,0.0005531929606195761158939252498
+Teralizer error:NullPointerException while writing the specification,Teralizer error,NullPointerException while writing the specification,89,0.02971619365609348914858096828,0.003077135843446392144659959202
+"Teralizer error:Specification not collected, no recorded reason",Teralizer error,"Specification not collected, no recorded reason",8,0.002671118530884808013355592654,0.0002765964803097880579469626249

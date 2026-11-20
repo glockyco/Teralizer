@@ -1,0 +1,8 @@
+project_name,seconds,hours
+commons-utils-dev,12203.0,3.39
+commons-utils-es-10s,35208.3,9.78
+commons-utils-es-1s,29635.1,8.23
+commons-utils-es-60s,32672.1,9.08
+eqbench-es-10s,101792.4,28.28
+eqbench-es-1s,89187.7,24.77
+eqbench-es-60s,111202.0,30.89

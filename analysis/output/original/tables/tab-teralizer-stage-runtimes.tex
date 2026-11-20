@@ -1,0 +1,65 @@
+  \renewcommand{\theHreporttablerow}{tab-teralizer-stage-runtimes.\arabic{reporttablerow}}
+  \setcounter{reporttablerow}{0}
+  \begin{tabular}{llrrrrrrrrr}
+  \toprule
+   &  & \multicolumn{4}{c}{Runtime in seconds and share of the total} &  &  &  &  &  \\
+  \cmidrule(lr){3-6}
+  Project & Strategy & Stage 1 + 2 & Stage 3 & Stage 4 & Stage 5 & Stage 1 + 2 \% & Stage 3 \% & Stage 4 \% & Stage 5 \% & Total (s) \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3ABASELINE}commons-utils-dev & \VariantBaseline{} & 80.0 & 59.8 & 5.3 & 1110.4 & 6.4\% & 4.8\% & 0.4\% & 88.4\% & 1255.4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3ANAIVE_10_TRIES}commons-utils-dev & \VariantNaiveA{} & 80.0 & 59.8 & 25.3 & 1496.4 & 4.8\% & 3.6\% & 1.5\% & 90.1\% & 1661.4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3ANAIVE_50_TRIES}commons-utils-dev & \VariantNaiveB{} & 80.0 & 59.8 & 27.5 & 1490.3 & 4.8\% & 3.6\% & 1.7\% & 89.9\% & 1657.5 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3ANAIVE_200_TRIES}commons-utils-dev & \VariantNaiveC{} & 80.0 & 59.8 & 28.1 & 2200.8 & 3.4\% & 2.5\% & 1.2\% & 92.9\% & 2368.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3AIMPROVED_10_TRIES}commons-utils-dev & \VariantImprovedA{} & 80.0 & 59.8 & 28.0 & 1353.9 & 5.3\% & 3.9\% & 1.8\% & 89.0\% & 1521.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3AIMPROVED_50_TRIES}commons-utils-dev & \VariantImprovedB{} & 80.0 & 59.8 & 30.2 & 1420.0 & 5.0\% & 3.8\% & 1.9\% & 89.3\% & 1589.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-dev@3AIMPROVED_200_TRIES}commons-utils-dev & \VariantImprovedC{} & 80.0 & 59.8 & 25.7 & 1505.7 & 4.8\% & 3.6\% & 1.5\% & 90.1\% & 1671.1 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3ABASELINE}commons-utils-es-10s & \VariantBaseline{} & 167.8 & 1757.2 & 14.0 & 2885.9 & 3.5\% & 36.4\% & 0.3\% & 59.8\% & 4824.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3ANAIVE_10_TRIES}commons-utils-es-10s & \VariantNaiveA{} & 167.8 & 1757.2 & 68.7 & 2886.9 & 3.4\% & 36.0\% & 1.4\% & 59.2\% & 4880.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3ANAIVE_50_TRIES}commons-utils-es-10s & \VariantNaiveB{} & 167.8 & 1757.2 & 72.1 & 4011.9 & 2.8\% & 29.2\% & 1.2\% & 66.8\% & 6009.0 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3ANAIVE_200_TRIES}commons-utils-es-10s & \VariantNaiveC{} & 167.8 & 1757.2 & 69.8 & 8940.1 & 1.5\% & 16.1\% & 0.6\% & 81.8\% & 10934.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3AIMPROVED_10_TRIES}commons-utils-es-10s & \VariantImprovedA{} & 167.8 & 1757.2 & 84.4 & 3508.2 & 3.0\% & 31.8\% & 1.5\% & 63.6\% & 5517.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3AIMPROVED_50_TRIES}commons-utils-es-10s & \VariantImprovedB{} & 167.8 & 1757.2 & 69.8 & 3044.2 & 3.3\% & 34.9\% & 1.4\% & 60.4\% & 5039.0 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-10s@3AIMPROVED_200_TRIES}commons-utils-es-10s & \VariantImprovedC{} & 167.8 & 1757.2 & 80.0 & 5701.8 & 2.2\% & 22.8\% & 1.0\% & 74.0\% & 7706.8 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3ABASELINE}commons-utils-es-1s & \VariantBaseline{} & 95.3 & 213.2 & 7.5 & 1793.5 & 4.5\% & 10.1\% & 0.4\% & 85.0\% & 2109.5 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3ANAIVE_10_TRIES}commons-utils-es-1s & \VariantNaiveA{} & 95.3 & 213.2 & 60.3 & 2594.5 & 3.2\% & 7.2\% & 2.0\% & 87.6\% & 2963.3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3ANAIVE_50_TRIES}commons-utils-es-1s & \VariantNaiveB{} & 95.3 & 213.2 & 61.0 & 5303.7 & 1.7\% & 3.8\% & 1.1\% & 93.5\% & 5673.2 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3ANAIVE_200_TRIES}commons-utils-es-1s & \VariantNaiveC{} & 95.3 & 213.2 & 61.6 & 7162.6 & 1.3\% & 2.8\% & 0.8\% & 95.1\% & 7532.7 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3AIMPROVED_10_TRIES}commons-utils-es-1s & \VariantImprovedA{} & 95.3 & 213.2 & 62.2 & 2291.7 & 3.6\% & 8.0\% & 2.3\% & 86.1\% & 2662.4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3AIMPROVED_50_TRIES}commons-utils-es-1s & \VariantImprovedB{} & 95.3 & 213.2 & 61.1 & 3170.0 & 2.7\% & 6.0\% & 1.7\% & 89.6\% & 3539.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-1s@3AIMPROVED_200_TRIES}commons-utils-es-1s & \VariantImprovedC{} & 95.3 & 213.2 & 62.1 & 5253.9 & 1.7\% & 3.8\% & 1.1\% & 93.4\% & 5624.5 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3ABASELINE}commons-utils-es-60s & \VariantBaseline{} & 129.0 & 600.0 & 12.9 & 2409.0 & 4.1\% & 19.0\% & 0.4\% & 76.5\% & 3151.0 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3ANAIVE_10_TRIES}commons-utils-es-60s & \VariantNaiveA{} & 129.0 & 600.0 & 91.7 & 3127.5 & 3.3\% & 15.2\% & 2.3\% & 79.2\% & 3948.4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3ANAIVE_50_TRIES}commons-utils-es-60s & \VariantNaiveB{} & 129.0 & 600.0 & 80.3 & 4027.9 & 2.7\% & 12.4\% & 1.7\% & 83.3\% & 4837.3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3ANAIVE_200_TRIES}commons-utils-es-60s & \VariantNaiveC{} & 129.0 & 600.0 & 79.7 & 8903.6 & 1.3\% & 6.2\% & 0.8\% & 91.7\% & 9712.3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3AIMPROVED_10_TRIES}commons-utils-es-60s & \VariantImprovedA{} & 129.0 & 600.0 & 84.0 & 2912.2 & 3.5\% & 16.1\% & 2.3\% & 78.2\% & 3725.2 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3AIMPROVED_50_TRIES}commons-utils-es-60s & \VariantImprovedB{} & 129.0 & 600.0 & 85.4 & 3699.6 & 2.9\% & 13.3\% & 1.9\% & 82.0\% & 4514.1 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:commons-utils-es-60s@3AIMPROVED_200_TRIES}commons-utils-es-60s & \VariantImprovedC{} & 129.0 & 600.0 & 93.2 & 4699.9 & 2.3\% & 10.9\% & 1.7\% & 85.1\% & 5522.2 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3ABASELINE}eqbench-es-10s & \VariantBaseline{} & 412.5 & 2776.1 & 12.3 & 7292.9 & 3.9\% & 26.5\% & 0.1\% & 69.5\% & 10493.7 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3ANAIVE_10_TRIES}eqbench-es-10s & \VariantNaiveA{} & 412.5 & 2776.1 & 145.6 & 9676.3 & 3.2\% & 21.3\% & 1.1\% & 74.4\% & 13010.5 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3ANAIVE_50_TRIES}eqbench-es-10s & \VariantNaiveB{} & 412.5 & 2776.1 & 177.9 & 11896.4 & 2.7\% & 18.2\% & 1.2\% & 77.9\% & 15262.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3ANAIVE_200_TRIES}eqbench-es-10s & \VariantNaiveC{} & 412.5 & 2776.1 & 147.2 & 29467.1 & 1.3\% & 8.5\% & 0.4\% & 89.8\% & 32802.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3AIMPROVED_10_TRIES}eqbench-es-10s & \VariantImprovedA{} & 412.5 & 2776.1 & 156.5 & 8045.1 & 3.6\% & 24.4\% & 1.4\% & 70.6\% & 11390.3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3AIMPROVED_50_TRIES}eqbench-es-10s & \VariantImprovedB{} & 412.5 & 2776.1 & 151.1 & 8782.2 & 3.4\% & 22.9\% & 1.2\% & 72.4\% & 12121.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-10s@3AIMPROVED_200_TRIES}eqbench-es-10s & \VariantImprovedC{} & 412.5 & 2776.1 & 154.6 & 14790.5 & 2.3\% & 15.3\% & 0.9\% & 81.6\% & 18133.8 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3ABASELINE}eqbench-es-1s & \VariantBaseline{} & 428.5 & 307.7 & 9.8 & 6422.2 & 6.0\% & 4.3\% & 0.1\% & 89.6\% & 7168.3 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3ANAIVE_10_TRIES}eqbench-es-1s & \VariantNaiveA{} & 428.5 & 307.7 & 146.7 & 9398.6 & 4.2\% & 3.0\% & 1.4\% & 91.4\% & 10281.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3ANAIVE_50_TRIES}eqbench-es-1s & \VariantNaiveB{} & 428.5 & 307.7 & 146.8 & 10202.3 & 3.9\% & 2.8\% & 1.3\% & 92.0\% & 11085.4 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3ANAIVE_200_TRIES}eqbench-es-1s & \VariantNaiveC{} & 428.5 & 307.7 & 142.5 & 19577.8 & 2.1\% & 1.5\% & 0.7\% & 95.7\% & 20456.5 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3AIMPROVED_10_TRIES}eqbench-es-1s & \VariantImprovedA{} & 428.5 & 307.7 & 134.9 & 9234.7 & 4.2\% & 3.0\% & 1.3\% & 91.4\% & 10105.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3AIMPROVED_50_TRIES}eqbench-es-1s & \VariantImprovedB{} & 428.5 & 307.7 & 143.0 & 10131.5 & 3.9\% & 2.8\% & 1.3\% & 92.0\% & 11010.8 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-1s@3AIMPROVED_200_TRIES}eqbench-es-1s & \VariantImprovedC{} & 428.5 & 307.7 & 140.6 & 15696.3 & 2.6\% & 1.9\% & 0.8\% & 94.7\% & 16573.2 \\
+  \midrule
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3ABASELINE}eqbench-es-60s & \VariantBaseline{} & 450.5 & 1818.6 & 12.2 & 7143.8 & 4.8\% & 19.3\% & 0.1\% & 75.8\% & 9425.1 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3ANAIVE_10_TRIES}eqbench-es-60s & \VariantNaiveA{} & 450.5 & 1818.6 & 168.4 & 10471.0 & 3.5\% & 14.1\% & 1.3\% & 81.1\% & 12908.5 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3ANAIVE_50_TRIES}eqbench-es-60s & \VariantNaiveB{} & 450.5 & 1818.6 & 158.3 & 11317.2 & 3.3\% & 13.2\% & 1.2\% & 82.3\% & 13744.6 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3ANAIVE_200_TRIES}eqbench-es-60s & \VariantNaiveC{} & 450.5 & 1818.6 & 173.9 & 35538.2 & 1.2\% & 4.8\% & 0.5\% & 93.6\% & 37981.2 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3AIMPROVED_10_TRIES}eqbench-es-60s & \VariantImprovedA{} & 450.5 & 1818.6 & 154.3 & 7711.8 & 4.4\% & 17.9\% & 1.5\% & 76.1\% & 10135.2 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3AIMPROVED_50_TRIES}eqbench-es-60s & \VariantImprovedB{} & 450.5 & 1818.6 & 170.9 & 10615.9 & 3.5\% & 13.9\% & 1.3\% & 81.3\% & 13055.9 \\
+  \refstepcounter{reporttablerow}\label{tabrow:tab-teralizer-stage-runtimes:eqbench-es-60s@3AIMPROVED_200_TRIES}eqbench-es-60s & \VariantImprovedC{} & 450.5 & 1818.6 & 153.9 & 17621.0 & 2.2\% & 9.1\% & 0.8\% & 87.9\% & 20044.0 \\
+  \bottomrule
+  \end{tabular}

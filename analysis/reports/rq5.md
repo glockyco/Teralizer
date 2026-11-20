@@ -20,7 +20,7 @@ Controlled-dataset exclusions separate successful inclusions from proactive filt
 | Improved (50 tries) | Generalization | 13,836 | 11,660 (84.3%) | 2,144 (15.5%) | 32 (0.2%) |
 | Improved (200 tries) | Generalization | 13,836 | 11,597 (83.8%) | 2,207 (16.0%) | 32 (0.2%) |
 
-source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq5_causes.py#L216)
+source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L404)
 
 **Filtering results for tests and assertions in the Commons and EqBench-ES projects.**
 
@@ -35,4 +35,34 @@ source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/50f2262d
 | Assertion | AssertionType | 28,923 | 28,180 (97.4%) | — | 743 (2.6%) |
 | Assertion | VoidReturnType | 28,923 | 21,763 (75.2%) | 7,157 (24.7%) | 3 (0.0%) |
 
-source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq5_causes.py#L206)
+source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L394)
+
+**Causes of assertion-level failures during specification extraction in the Commons and EqBench-ES projects, with shares of all failures and of all assertions.**
+
+| Group | Cause | Assertions | Share of assertions |
+| --- | --- | --- | --- |
+| SPF exception | ArithmeticException (division by zero) | 827 (27.6%) | 2.9% |
+| SPF exception | NoSuchMethodException | 534 (17.8%) | 1.8% |
+| SPF exception | Other SPF/JPF exceptions | 179 (6.0%) | 0.6% |
+| Exceeded analysis limit | Path condition size limit | 790 (26.4%) | 2.7% |
+| Exceeded analysis limit | Search depth limit | 524 (17.5%) | 1.8% |
+| Exceeded analysis limit | Execution timeout | 28 (0.9%) | 0.1% |
+| Exceeded analysis limit | Out of memory | 16 (0.5%) | 0.1% |
+| Teralizer error | NullPointerException while writing the specification | 89 (3.0%) | 0.3% |
+| Teralizer error | Specification not collected, no recorded reason | 8 (0.3%) | 0.0% |
+
+source: [`_fetch_assertion_failures`](https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L276)
+
+**Generalized tests that fail on the original program, by failure type and strategy, in the Commons and EqBench-ES projects, with shares of all generalized tests of the strategy.**
+
+| Strategy | Generalized | TooManyFilterMisses | AssertionFailedError | ArithmeticException | NumberFormatException |
+| --- | --- | --- | --- | --- | --- |
+| Baseline | 13,836 | 0 (0.0%) | 22 (0.2%) | 0 (0.0%) | 0 (0.0%) |
+| Naive (10 tries) | 13,836 | 2,233 (16.1%) | 729 (5.3%) | 99 (0.7%) | 0 (0.0%) |
+| Naive (50 tries) | 13,836 | 2,938 (21.2%) | 803 (5.8%) | 99 (0.7%) | 0 (0.0%) |
+| Naive (200 tries) | 13,836 | 3,005 (21.7%) | 819 (5.9%) | 99 (0.7%) | 0 (0.0%) |
+| Improved (10 tries) | 13,836 | 1,189 (8.6%) | 752 (5.4%) | 57 (0.4%) | 18 (0.1%) |
+| Improved (50 tries) | 13,836 | 1,223 (8.8%) | 845 (6.1%) | 58 (0.4%) | 18 (0.1%) |
+| Improved (200 tries) | 13,836 | 1,265 (9.1%) | 866 (6.3%) | 58 (0.4%) | 18 (0.1%) |
+
+source: [`_fetch_generalization_failures`](https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L301)

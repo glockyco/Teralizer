@@ -70,7 +70,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2186,7 +2186,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2465,7 +2465,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2548,7 +2548,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2675,7 +2675,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2746,6 +2746,16 @@
         "target": "csv"
       },
       {
+        "key": "tab-teralizer-runtimes",
+        "path": "build/rq4/tab-teralizer-runtimes.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-teralizer-stage-runtimes",
+        "path": "build/rq4/tab-teralizer-stage-runtimes.csv",
+        "target": "csv"
+      },
+      {
         "key": "evosuite_runtime_phases",
         "path": "build/figures/rq4/evosuite_runtime_phases.pdf",
         "target": "figures"
@@ -2793,6 +2803,16 @@
       {
         "key": "tab-pareto-eqbench",
         "path": "build/tab-pareto-eqbench.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-teralizer-runtimes",
+        "path": "build/tab-teralizer-runtimes.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-teralizer-stage-runtimes",
+        "path": "build/tab-teralizer-stage-runtimes.tex",
         "target": "latex"
       },
       {
@@ -2878,7 +2898,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -2916,6 +2936,88 @@
         "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L162",
         "value": "Pareto points for eqbench.",
         "version": "0.1.0"
+      },
+      "tab-teralizer-runtimes": {
+        "commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764",
+        "dirty": false,
+        "module": "teralizer.eval.reports.rq4_efficiency_evosuite",
+        "qualname": "_fetch_project_runtimes",
+        "query": "\nSELECT project_name(p.id) AS project_name, p.runtime\nFROM project p\nJOIN v_projects_successes s ON s.project_id = p.id\nWHERE p.use_test_generalization\n",
+        "row_key": "project_name",
+        "row_keys": [
+          "commons-utils-dev",
+          "commons-utils-es-10s",
+          "commons-utils-es-1s",
+          "commons-utils-es-60s",
+          "eqbench-es-10s",
+          "eqbench-es-1s",
+          "eqbench-es-60s"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq4_efficiency_evosuite.py#L254",
+        "value": "Total Teralizer runtime per project across all generalization strategies.",
+        "version": "0.1.0"
+      },
+      "tab-teralizer-stage-runtimes": {
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
+        "dirty": false,
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_stage_runtime_breakdown",
+        "query": null,
+        "row_key": "row_key",
+        "row_keys": [
+          "commons-utils-dev:BASELINE",
+          "commons-utils-dev:NAIVE_10_TRIES",
+          "commons-utils-dev:NAIVE_50_TRIES",
+          "commons-utils-dev:NAIVE_200_TRIES",
+          "commons-utils-dev:IMPROVED_10_TRIES",
+          "commons-utils-dev:IMPROVED_50_TRIES",
+          "commons-utils-dev:IMPROVED_200_TRIES",
+          "commons-utils-es-10s:BASELINE",
+          "commons-utils-es-10s:NAIVE_10_TRIES",
+          "commons-utils-es-10s:NAIVE_50_TRIES",
+          "commons-utils-es-10s:NAIVE_200_TRIES",
+          "commons-utils-es-10s:IMPROVED_10_TRIES",
+          "commons-utils-es-10s:IMPROVED_50_TRIES",
+          "commons-utils-es-10s:IMPROVED_200_TRIES",
+          "commons-utils-es-1s:BASELINE",
+          "commons-utils-es-1s:NAIVE_10_TRIES",
+          "commons-utils-es-1s:NAIVE_50_TRIES",
+          "commons-utils-es-1s:NAIVE_200_TRIES",
+          "commons-utils-es-1s:IMPROVED_10_TRIES",
+          "commons-utils-es-1s:IMPROVED_50_TRIES",
+          "commons-utils-es-1s:IMPROVED_200_TRIES",
+          "commons-utils-es-60s:BASELINE",
+          "commons-utils-es-60s:NAIVE_10_TRIES",
+          "commons-utils-es-60s:NAIVE_50_TRIES",
+          "commons-utils-es-60s:NAIVE_200_TRIES",
+          "commons-utils-es-60s:IMPROVED_10_TRIES",
+          "commons-utils-es-60s:IMPROVED_50_TRIES",
+          "commons-utils-es-60s:IMPROVED_200_TRIES",
+          "eqbench-es-10s:BASELINE",
+          "eqbench-es-10s:NAIVE_10_TRIES",
+          "eqbench-es-10s:NAIVE_50_TRIES",
+          "eqbench-es-10s:NAIVE_200_TRIES",
+          "eqbench-es-10s:IMPROVED_10_TRIES",
+          "eqbench-es-10s:IMPROVED_50_TRIES",
+          "eqbench-es-10s:IMPROVED_200_TRIES",
+          "eqbench-es-1s:BASELINE",
+          "eqbench-es-1s:NAIVE_10_TRIES",
+          "eqbench-es-1s:NAIVE_50_TRIES",
+          "eqbench-es-1s:NAIVE_200_TRIES",
+          "eqbench-es-1s:IMPROVED_10_TRIES",
+          "eqbench-es-1s:IMPROVED_50_TRIES",
+          "eqbench-es-1s:IMPROVED_200_TRIES",
+          "eqbench-es-60s:BASELINE",
+          "eqbench-es-60s:NAIVE_10_TRIES",
+          "eqbench-es-60s:NAIVE_50_TRIES",
+          "eqbench-es-60s:NAIVE_200_TRIES",
+          "eqbench-es-60s:IMPROVED_10_TRIES",
+          "eqbench-es-60s:IMPROVED_50_TRIES",
+          "eqbench-es-60s:IMPROVED_200_TRIES"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq3_runtime_requirements.py#L108",
+        "value": "Teralizer runtime by pipeline stage for each project and generalization strategy.",
+        "version": "0.1.0"
       }
     }
   },
@@ -2932,6 +3034,16 @@
         "target": "csv"
       },
       {
+        "key": "tab-exclusions-spf-causes",
+        "path": "build/rq5/tab-exclusions-spf-causes.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-exclusions-test-failures",
+        "path": "build/rq5/tab-exclusions-test-failures.csv",
+        "target": "csv"
+      },
+      {
         "key": "macros/rq5",
         "path": "build/macros/rq5.tex",
         "target": "latex"
@@ -2944,6 +3056,16 @@
       {
         "key": "tab-exclusions-filtering",
         "path": "build/tab-exclusions-filtering.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-exclusions-spf-causes",
+        "path": "build/tab-exclusions-spf-causes.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-exclusions-test-failures",
+        "path": "build/tab-exclusions-test-failures.tex",
         "target": "latex"
       },
       {
@@ -2968,23 +3090,23 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "tab-exclusions-breakdown": {
-        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
+        "commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764",
         "dirty": false,
         "module": "teralizer.eval.reports.rq5_causes",
         "qualname": "_fetch_breakdown",
         "query": "\nWITH\n    test_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Test' AS level,\n            CASE\n                WHEN t.is_included THEN 'included'\n                WHEN t.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.test_id = t.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM test t\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    assertion_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Assertion' AS level,\n            CASE\n                WHEN a.is_included THEN 'included'\n                WHEN a.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.assertion_id = a.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM assertion a\n        JOIN test t ON a.test_id = t.id\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    generalization_counts AS (\n        SELECT\n            g.variant AS strategy,\n            'Generalization' AS level,\n            CASE\n                WHEN g.is_included THEN 'included'\n                WHEN g.exclusion_info LIKE '%%TestFilteringTask%%' THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY g.variant, bucket\n    ),\n    combined AS (\n        SELECT strategy, level, bucket, item_count FROM test_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM assertion_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM generalization_counts\n    ),\n    report_rows AS (\n        SELECT 'All' AS strategy, 'Test' AS level\n        UNION ALL\n        SELECT 'All' AS strategy, 'Assertion' AS level\n        UNION ALL\n        SELECT DISTINCT g.variant AS strategy, 'Generalization' AS level\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n    )\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtering'), 0)::bigint AS filtering,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failures'), 0)::bigint AS failures\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq5_causes.py#L216",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L404",
         "value": "Exclusion results for tests, assertions, and generalizations in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects.",
         "version": "0.1.0"
       },
       "tab-exclusions-filtering": {
-        "commit": "50f2262d6d5a9f01a5297811192f908706978934",
+        "commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764",
         "dirty": false,
         "module": "teralizer.eval.reports.rq5_causes",
         "qualname": "_fetch_filtering",
@@ -3000,8 +3122,50 @@
           "Assertion:AssertionType",
           "Assertion:VoidReturnType"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01a5297811192f908706978934/analysis/src/teralizer/eval/reports/rq5_causes.py#L206",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L394",
         "value": "Filtering results for tests and assertions in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects.",
+        "version": "0.1.0"
+      },
+      "tab-exclusions-spf-causes": {
+        "commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764",
+        "dirty": false,
+        "module": "teralizer.eval.reports.rq5_causes",
+        "qualname": "_fetch_assertion_failures",
+        "query": "\nSELECT\n    CASE\n        WHEN info LIKE '%PATH_CONDITION_TOO_LARGE%' OR info LIKE '%PC size limit exceeded%'\n            THEN 'limit|Path condition size limit'\n        WHEN info LIKE '%SEARCH_DEPTH_LIMIT%' OR info LIKE '%Depth limit of % exceeded%'\n            THEN 'limit|Search depth limit'\n        WHEN info LIKE '%EXECUTION_TIMEOUT%' OR info LIKE '%Execution timeout exceeded%'\n            THEN 'limit|Execution timeout'\n        WHEN info LIKE '%java.lang.OutOfMemoryError%'\n            THEN 'limit|Out of memory'\n        WHEN info LIKE '%TestGeneralizationListener.writeSpecificationFiles%'\n            THEN 'teralizer|NullPointerException while writing the specification'\n        WHEN info LIKE '%Failed to collect input/output specification for unknown reason%'\n            THEN 'teralizer|Specification not collected, no recorded reason'\n        WHEN info LIKE '%java.lang.ArithmeticException: !!!div by 0%'\n            THEN 'spf|ArithmeticException (division by zero)'\n        WHEN info LIKE '%java.lang.NoSuchMethodException!!%'\n            THEN 'spf|NoSuchMethodException'\n        ELSE 'spf|Other SPF/JPF exceptions'\n    END AS cause,\n    count(*) AS assertions\nFROM task\nWHERE stage = 'EXECUTE_JPF' AND status = 'FAILED'\nGROUP BY 1\n",
+        "row_key": "row_key",
+        "row_keys": [
+          "SPF exception:ArithmeticException (division by zero)",
+          "SPF exception:NoSuchMethodException",
+          "SPF exception:Other SPF/JPF exceptions",
+          "Exceeded analysis limit:Path condition size limit",
+          "Exceeded analysis limit:Search depth limit",
+          "Exceeded analysis limit:Execution timeout",
+          "Exceeded analysis limit:Out of memory",
+          "Teralizer error:NullPointerException while writing the specification",
+          "Teralizer error:Specification not collected, no recorded reason"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L276",
+        "value": "Causes of assertion-level failures during specification extraction in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects, with shares of all failures and of all assertions.",
+        "version": "0.1.0"
+      },
+      "tab-exclusions-test-failures": {
+        "commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764",
+        "dirty": false,
+        "module": "teralizer.eval.reports.rq5_causes",
+        "qualname": "_fetch_generalization_failures",
+        "query": "\nWITH\n    totals AS (\n        SELECT variant, count(*) AS generalizations\n        FROM generalization\n        GROUP BY variant\n    ),\n    failures AS (\n        SELECT variant, failure_type, count(*) AS failures\n        FROM junit_test_report\n        WHERE generalization_id IS NOT NULL AND failure_type IS NOT NULL\n        GROUP BY variant, failure_type\n    )\nSELECT t.variant, t.generalizations, f.failure_type, coalesce(f.failures, 0) AS failures\nFROM totals t\nLEFT JOIN failures f ON f.variant = t.variant\n",
+        "row_key": "row_key",
+        "row_keys": [
+          "BASELINE",
+          "NAIVE_10_TRIES",
+          "NAIVE_50_TRIES",
+          "NAIVE_200_TRIES",
+          "IMPROVED_10_TRIES",
+          "IMPROVED_50_TRIES",
+          "IMPROVED_200_TRIES"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq5_causes.py#L301",
+        "value": "Generalized tests that fail on the original program, by failure type and strategy, in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects, with shares of all generalized tests of the strategy.",
         "version": "0.1.0"
       }
     }
@@ -6047,7 +6211,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "b915ef25bf45ac4f2cd8466f652abd67ce7524b9"
+      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
     },
     "tables": {
       "rq6_assertion_type_rejections": {

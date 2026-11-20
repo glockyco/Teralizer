@@ -329,6 +329,22 @@
       "target": "csv"
     },
     {
+      "digest": "c89365311fd01952e6dd7a1fbf6a1e565fb5408a8ca640874089864fe63b8874",
+      "key": "tab-teralizer-runtimes",
+      "path": "build/rq4/tab-teralizer-runtimes.csv",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "4f6544f7a7ff4ac5b9c22381e943906c66af17fb012aab54230479d208449002",
+      "key": "tab-teralizer-stage-runtimes",
+      "path": "build/rq4/tab-teralizer-stage-runtimes.csv",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
       "digest": "image",
       "key": "evosuite_runtime_phases",
       "path": "build/figures/rq4/evosuite_runtime_phases.pdf",
@@ -409,6 +425,22 @@
       "target": "latex"
     },
     {
+      "digest": "191692901c62ca5fe0455d3a1b5cb7c616eb6dab2d1b0c2a681a2e788535edd4",
+      "key": "tab-teralizer-runtimes",
+      "path": "build/tab-teralizer-runtimes.tex",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "accc6a09bb894dcb031a0ad6c4ae5f9e10bb413392621090089d346e0db5b722",
+      "key": "tab-teralizer-stage-runtimes",
+      "path": "build/tab-teralizer-stage-runtimes.tex",
+      "report": "rq4",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
       "digest": "image",
       "key": "evosuite_runtime_phases",
       "path": "reports/figures/rq4/evosuite_runtime_phases.png",
@@ -417,7 +449,7 @@
       "target": "md"
     },
     {
-      "digest": "cf2675ac820a41c286a93d39874b7414a3ed95f879844ff03fd2bbc029e14871",
+      "digest": "d2620a9befe54a8e588b0830ab441ebf1df885e90919826c7e6c870462374a9a",
       "key": "rq4",
       "path": "reports/rq4.md",
       "report": "rq4",
@@ -457,6 +489,22 @@
       "target": "csv"
     },
     {
+      "digest": "3b98e8421ea4ba632146a68d7bea3ed16490dfb76397300d93da441fd02c0236",
+      "key": "tab-exclusions-spf-causes",
+      "path": "build/rq5/tab-exclusions-spf-causes.csv",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
+      "digest": "67210fcc0f81ddd5d7b630ef725c59c494cb062199d778d8a1e830710433cc17",
+      "key": "tab-exclusions-test-failures",
+      "path": "build/rq5/tab-exclusions-test-failures.csv",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
       "digest": "c276e4e3b7154bfce8af218ac40b686c1dd95c21b2191df25c59f13e8e51996b",
       "key": "macros/rq5",
       "path": "build/macros/rq5.tex",
@@ -481,7 +529,23 @@
       "target": "latex"
     },
     {
-      "digest": "8a03e7e3a4916151f5e61f2600a949bf01d3a0089625551964b287e7cde51839",
+      "digest": "e8e044cfa5f61c5308ca677eb6b986fdfd370995ece0a0f176f1ed3f68f6b5fc",
+      "key": "tab-exclusions-spf-causes",
+      "path": "build/tab-exclusions-spf-causes.tex",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "a5c4f0f2b8ad41340c194791a80a38a5ad45f3e508cc5f0bd1ffa16026353845",
+      "key": "tab-exclusions-test-failures",
+      "path": "build/tab-exclusions-test-failures.tex",
+      "report": "rq5",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
+      "digest": "dbde0fb98e17792c2f5b44cb737c028fa7b78e5a4f080e99415b0c78cb7835fe",
       "key": "rq5",
       "path": "reports/rq5.md",
       "report": "rq5",
@@ -777,7 +841,7 @@
       "target": "md"
     },
     {
-      "digest": "e9c0ce9dc7f026372c0a12635b0bf61fa87b32c75702b4c5a8289a8cf884db3b",
+      "digest": "d3f3a24ed152587339259f6e1054f993fb856730831ca847421daf3ec7430754",
       "key": "provenance",
       "path": "reports/provenance.json",
       "report": "run",
