@@ -439,37 +439,6 @@ def extend_color_palette(base_colors: List[str], needed_count: int) -> List[str]
 # =============================================================================
 
 
-def get_multiplot_figure_size(
-    n_subplots: int, layout: str = "vertical"
-) -> Tuple[float, float]:
-    """Calculate optimal figure size for multi-subplot figures.
-
-    Args:
-        n_subplots: Number of subplots
-        layout: "vertical" or "horizontal"
-
-    Returns:
-        Tuple of (width, height) in inches
-
-    Raises:
-        ValueError: If layout is not recognized
-    """
-    if layout == "vertical":
-        width = FIGURE_CONFIG["width_full"]
-        height_per_plot = FIGURE_CONFIG["subplot_height"]
-        total_height = height_per_plot * n_subplots
-        # Cap height at maximum
-        height = min(total_height, FIGURE_CONFIG["max_height"])
-        return width, height
-    elif layout == "horizontal":
-        # Side-by-side comparison
-        width = FIGURE_CONFIG["width_comparison"]
-        height = FIGURE_CONFIG["comparison_height"]
-        return width, height
-    else:
-        raise ValueError(f"Unknown layout: {layout}")
-
-
 def get_font_size(size_name: str) -> int:
     """Get standardized font size.
 
@@ -488,28 +457,6 @@ def get_font_size(size_name: str) -> int:
             f"Valid options: {list(FIGURE_CONFIG['fonts'].keys())}"
         )
     return FIGURE_CONFIG["fonts"][size_name]
-
-
-def should_show_xaxis_labels(
-    subplot_idx: int, total_subplots: int, label_frequency: int = 2
-) -> bool:
-    """Determine if x-axis labels should be shown for a given subplot.
-
-    Args:
-        subplot_idx: Index of current subplot (0-based)
-        total_subplots: Total number of subplots
-        label_frequency: Show labels every N subplots
-
-    Returns:
-        True if labels should be shown
-    """
-    # Always show on last subplot
-    if subplot_idx == total_subplots - 1:
-        return True
-    # Show every label_frequency subplots
-    if subplot_idx % label_frequency == 0:
-        return True
-    return False
 
 
 # =============================================================================

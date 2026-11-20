@@ -182,13 +182,6 @@ def classify(expr: str | None) -> str:
     return "CHAINED_CALLS_END0ARG" if zero_arg else "CHAINED_CALLS_ENDNARG"
 
 
-def has_input_sites(expr: str | None) -> bool:
-    """At least one non-empty argument list anywhere in the expression."""
-    if expr is None:
-        return False
-    return bool(re.search(r"\((?!\s*\))", _strip_strings(expr)))
-
-
 def load_supported_assertions(conn: Connection) -> pd.DataFrame:
     """Supported-shape assertions with first-reject filter and tested_* state."""
     sql = text(

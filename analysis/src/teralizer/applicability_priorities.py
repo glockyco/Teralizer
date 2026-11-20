@@ -14,7 +14,6 @@ import argparse
 
 import re
 from collections import Counter
-from dataclasses import dataclass
 from typing import Any, cast
 
 import pandas as pd
@@ -156,17 +155,6 @@ def get_missingvalue_assertions(conn: Connection) -> pd.DataFrame:
 # =============================================================================
 # Computation
 # =============================================================================
-
-
-@dataclass(frozen=True)
-class BlockerStat:
-    """One filter as a first-reject blocker."""
-
-    filter_name: str
-    first_reject_count: int
-    total_reject_count: int
-    shadowed_count: int  # rejected by this filter AND an earlier one
-    net_reach: int  # first_reject_count (assertions this fix would unblock)
 
 
 def compute_first_reject_blockers(chain_df: pd.DataFrame) -> pd.DataFrame:
@@ -383,76 +371,6 @@ def get_project_summary(conn: Connection) -> pd.DataFrame:
     )
     df = df.drop(columns=["root_path"])
     return df
-
-
-# =============================================================================
-# Pipeline failure funnel
-# =============================================================================
-
-
-def get_pipeline_failure_funnel(conn: Connection) -> pd.DataFrame:
-    """Per-project first-failure stage: which stage kills each project.
-
-    Columns: project_id, first_failed_stage, first_failed_step.
-    Projects with no failures are excluded.
-    """
-    sql = text(
-        """
-        WITH first_failure AS (
-            SELECT project_id, stage, step,
-                ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY step) AS rn
-            FROM task
-            WHERE status = 'FAILED'
-        )
-        SELECT project_id, stage AS first_failed_stage, step AS first_failed_step
-        FROM first_failure
-        WHERE rn = 1
-        ORDER BY step
-        """
-    )
-    return pd.read_sql(sql, conn)
-
-
-def compute_stage_failure_summary(funnel_df: pd.DataFrame) -> pd.DataFrame:
-    """Count how many projects fail at each pipeline stage (first failure).
-
-    Columns: first_failed_stage, first_failed_step, n_projects, pct.
-    """
-    counter = Counter(
-        (row["first_failed_stage"], row["first_failed_step"])
-        for _, row in funnel_df.iterrows()
-    )
-    rows = [
-        {
-            "first_failed_stage": stage,
-            "first_failed_step": step,
-            "n_projects": count,
-        }
-        for (stage, step), count in counter.items()
-    ]
-    counts = pd.DataFrame(
-        rows, columns=["first_failed_stage", "first_failed_step", "n_projects"]
-    ).sort_values("first_failed_step", ignore_index=True)
-    total = counts["n_projects"].sum()
-    counts = counts.assign(pct=(counts["n_projects"] / total * 100).round(1))
-    return counts
-
-
-def get_stage_failure_causes(conn: Connection, stage: str) -> pd.DataFrame:
-    """Root-cause breakdown for one pipeline stage's failures.
-
-    Columns: cause_snippet, n.
-    """
-    sql = text(
-        """
-        SELECT left(info, 80) AS cause_snippet, count(*) AS n
-        FROM task
-        WHERE stage = :stage AND status = 'FAILED'
-        GROUP BY cause_snippet
-        ORDER BY n DESC
-        """
-    )
-    return pd.read_sql(sql, conn, params={"stage": stage})
 
 
 def main() -> None:

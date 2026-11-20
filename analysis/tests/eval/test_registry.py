@@ -23,7 +23,6 @@ def test_registered_report_modules_have_no_hidden_input_accessors():
     forbidden = {
         "open_report_connection(",
         "resolve_repo_relative_path(",
-        "get_total_classes_from_filesystem(",
         "get_scoreboard(",
         "get_census_by_mut(",
         "get_census_project_pvc(",

@@ -23,7 +23,6 @@ import pandas as pd
 from sqlalchemy import Connection, text
 
 from teralizer.corpora import open_corpus
-from teralizer.exports import save_csv_data
 from teralizer.report_basis import print_basis_header
 
 _ASSERTION_SCOPE = "assertion"
@@ -1068,11 +1067,21 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
         print(_format_frame(report[key], limit=limit))
 
 
-def export_report(report: dict[str, pd.DataFrame], prefix: str) -> list[Path]:
-    """Save report tables as CSV via the shared export helper."""
+def export_report(report: dict[str, pd.DataFrame], directory: Path) -> list[Path]:
+    """Save every report table as `<directory>/<table>.csv`.
+
+    Floating-point columns are rounded to two decimals so that repeated exports
+    of the same snapshot are byte-identical.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
     paths = []
     for name, frame in report.items():
-        paths.append(save_csv_data(frame, f"{prefix}-{name}"))
+        path = directory / f"{name}.csv"
+        rounded = frame.copy()
+        floats = rounded.select_dtypes(include=["float64", "float32"]).columns
+        rounded[floats] = rounded[floats].round(2)
+        rounded.to_csv(path, index=False)
+        paths.append(path)
     return paths
 
 
@@ -1096,8 +1105,9 @@ def parse_args() -> argparse.Namespace:
         help="number of rows for top-N detail tables",
     )
     parser.add_argument(
-        "--csv-prefix",
-        help="optional prefix for saving every report table under analysis/output/<variant>/data",
+        "--csv-dir",
+        type=Path,
+        help="optional directory that receives every report table as a CSV file",
     )
     return parser.parse_args()
 
@@ -1108,8 +1118,8 @@ def main() -> None:
         print_basis_header(conn, entry.database, ledger=args.ledger)
         report = generate_report(conn, args.top)
         print_report(report, args.top)
-    if args.csv_prefix:
-        paths = export_report(report, args.csv_prefix)
+    if args.csv_dir:
+        paths = export_report(report, args.csv_dir)
         print()
         print("## CSV exports")
         for path in paths:

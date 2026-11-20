@@ -114,28 +114,6 @@ def sort_dataframe_by_variant(
     return df_sorted
 
 
-def apply_standard_ordering(
-    df: pd.DataFrame,
-    project_column: str = "project_name",
-    variant_column: str = "variant",
-) -> pd.DataFrame:
-    """Apply combined project and variant ordering to DataFrame.
-
-    Args:
-        df: DataFrame to sort
-        project_column: Name of column containing project names
-        variant_column: Name of column containing variant names
-
-    Returns:
-        DataFrame sorted by project then variant ordering
-
-    Raises:
-        KeyError: If required columns are missing from DataFrame
-        ValueError: If DataFrame is empty when ordering is required
-    """
-    return sort_dataframe_by_project(df, project_column, variant_column)
-
-
 # =============================================================================
 # Data standardization functions
 # =============================================================================

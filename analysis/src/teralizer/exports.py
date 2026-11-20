@@ -1,139 +1,8 @@
-"""Data export utilities for generating both LaTeX tables and CSV datasets.
+"""Naming and ordering helpers shared by the registered reports.
 
-This module provides functions to export analysis results in multiple formats:
-- LaTeX tables for paper inclusion with consistent macro mappings
-- CSV files for LLM processing and analysis
-- Project and variant naming standardization
-- Table ordering for paper consistency
-
-Output paths are variant-aware based on DATASET_VARIANT environment variable:
-- original: analysis/output/original/ (reference outputs)
-- verify: analysis/output/verify/ (evaluator re-runs)
-- replicate: analysis/output/replicate/ (full replication)
+The helpers map database project and variant names to the LaTeX macros of the
+paper and give tables the paper's project and variant order.
 """
-
-import os
-import pandas as pd
-from pathlib import Path
-from typing import Optional, Any
-import matplotlib.figure
-
-
-def _get_variant() -> str:
-    """Get current dataset variant from environment.
-
-    Reads DATASET_VARIANT directly to avoid circular import with config module.
-
-    Returns:
-        Variant name: "original", "verify", or "replicate"
-    """
-    return os.getenv("DATASET_VARIANT", "original")
-
-
-def _get_output_base() -> Path:
-    """Get variant-aware output directory base path.
-
-    Returns:
-        Path: Absolute path to analysis/output/{variant}/ directory
-    """
-    project_root = _find_project_root()
-    variant = _get_variant()
-    return project_root / "analysis" / "output" / variant
-
-
-def _find_project_root() -> Path:
-    """Find project root by looking for .env file.
-
-    Returns:
-        Path: Absolute path to project root directory
-
-    Raises:
-        RuntimeError: If project root cannot be found
-    """
-    current = Path(__file__).parent
-    for _ in range(10):  # Prevent infinite loop
-        env_file = current / ".env"
-        if env_file.exists():
-            return current
-        if current == current.parent:
-            # Fallback: assume we're in analysis/src/teralizer/
-            return Path(__file__).parent.parent.parent.parent
-        current = current.parent
-
-    # Last fallback
-    return Path(__file__).parent.parent.parent.parent
-
-
-def get_data_output_dir() -> Path:
-    """Get the data output directory, creating it if it doesn't exist.
-
-    Returns:
-        Path: Absolute path to analysis/output/{variant}/data/ directory
-    """
-    data_dir = _get_output_base() / "data"
-    data_dir.mkdir(parents=True, exist_ok=True)
-    return data_dir
-
-
-def get_tables_output_dir() -> Path:
-    """Get the tables output directory, creating it if it doesn't exist.
-
-    Returns:
-        Path: Absolute path to analysis/output/{variant}/tables/ directory
-    """
-    tables_dir = _get_output_base() / "tables"
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    return tables_dir
-
-
-def get_figures_output_dir() -> Path:
-    """Get the figures output directory, creating it if it doesn't exist.
-
-    Returns:
-        Path: Absolute path to analysis/output/{variant}/figures/ directory
-    """
-    figures_dir = _get_output_base() / "figures"
-    figures_dir.mkdir(parents=True, exist_ok=True)
-    return figures_dir
-
-
-def save_csv_data(
-    dataframe: pd.DataFrame, filename: str, description: Optional[str] = None
-) -> Path:
-    """Save a pandas DataFrame as a CSV file.
-
-    Numeric columns are rounded to 2 decimal places to ensure reproducible
-    outputs across different database instances and query execution orders.
-
-    Args:
-        dataframe: The data to export
-        filename: Base filename (without .csv extension)
-        description: Human-readable description (used in print output)
-
-    Returns:
-        Path: Full path to the saved CSV file
-
-    Example:
-        >>> df = pd.DataFrame({'project': ['A', 'B'], 'runtime': [100, 200]})
-        >>> save_csv_data(df, 'runtime-data', 'Project runtime analysis')
-    """
-    data_dir = get_data_output_dir()
-
-    # Ensure filename has .csv extension
-    if not filename.endswith(".csv"):
-        filename += ".csv"
-
-    csv_path = data_dir / filename
-
-    # Round numeric columns to eliminate floating-point precision noise
-    df_export = dataframe.copy()
-    numeric_cols = df_export.select_dtypes(include=["float64", "float32"]).columns
-    df_export[numeric_cols] = df_export[numeric_cols].round(2)
-
-    # Save the CSV file
-    df_export.to_csv(csv_path, index=False)
-
-    return csv_path
 
 
 def standardize_project_name(project_name: str) -> str:
@@ -172,45 +41,6 @@ def standardize_project_name(project_name: str) -> str:
     return name
 
 
-def format_runtime_seconds(runtime_value: Any) -> float:
-    """Convert runtime value to standardized seconds format.
-
-    Args:
-        runtime_value: Runtime value (may be in different units)
-
-    Returns:
-        float: Runtime in seconds
-    """
-    if pd.isna(runtime_value):
-        return 0.0
-
-    # Assume input is already in seconds for now
-    # Future: add conversion logic for other units if needed
-    return float(runtime_value)
-
-
-def format_detection_rate_decimal(detection_rate: Any) -> float:
-    """Convert detection rate to standardized decimal format (0.0-1.0).
-
-    Args:
-        detection_rate: Detection rate (may be percentage or decimal)
-
-    Returns:
-        float: Detection rate as decimal between 0.0 and 1.0
-    """
-    if pd.isna(detection_rate):
-        return 0.0
-
-    rate = float(detection_rate)
-
-    # If rate > 1, assume it's a percentage and convert to decimal
-    if rate > 1.0:
-        rate = rate / 100.0
-
-    # Clamp to valid range
-    return max(0.0, min(1.0, rate))
-
-
 # Dataset name mappings to LaTeX macros
 DATASETS = {
     "eqbench": r"\DatasetEqBench{}",
@@ -236,13 +66,6 @@ VARIANTS = {
     "IMPROVED_50_TRIES": r"\VariantImprovedB{}",
     "IMPROVED_200_TRIES": r"\VariantImprovedC{}",
     "SHARED": r"\VariantShared{}",
-}
-
-# Tool name mappings to LaTeX macros
-TOOLS = {
-    "evosuite": r"\ToolEvoSuite{}",
-    "teralizer": r"\ToolTeralizer{}",
-    "spf": r"\ToolSPFLong{}",
 }
 
 
@@ -274,33 +97,6 @@ def get_variant_macro(variant_name: str) -> str:
         KeyError: If variant name not found in mappings
     """
     return VARIANTS[variant_name]
-
-
-def get_tool_macro(tool_name: str) -> str:
-    """Get LaTeX macro for tool name.
-
-    Args:
-        tool_name: Tool identifier
-
-    Returns:
-        LaTeX macro string
-
-    Raises:
-        KeyError: If tool name not found in mappings
-    """
-    return TOOLS[tool_name]
-
-
-def format_table_row(*values) -> str:
-    """Format values as LaTeX table row.
-    
-    Args:
-        *values: Cell values to format
-        
-    Returns:
-        LaTeX table row string ending with \\\\
-    """
-    return " & ".join(str(v) for v in values) + r" \\"
 
 
 def get_project_type(project_name: str) -> str:
@@ -402,103 +198,13 @@ def get_project_within_type_order() -> dict:
     }
 
 
-def save_latex_table(
-    content: str, filename: str, output_dir: Optional[str] = None
-) -> None:
-    """Save LaTeX table content to file.
-
-    Trailing whitespace is stripped from each line to ensure reproducible
-    outputs across different systems and editors.
-
-    Args:
-        content: LaTeX table content
-        filename: Output filename (without extension)
-        output_dir: Output directory (if None, uses tables output directory)
-    """
-    # Use tables output directory if not specified
-    if output_dir is None:
-        output_path = get_tables_output_dir()
-    else:
-        output_path = Path(output_dir)
-
-    # Create output directory if it doesn't exist
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    # Strip trailing whitespace from each line for reproducibility
-    content = "\n".join(line.rstrip() for line in content.split("\n"))
-
-    # Write content to file
-    filepath = output_path / f"{filename}.tex"
-    with open(filepath, "w") as f:
-        f.write(content)
-
-    print(f"Saved LaTeX table to {filepath}")
-
-
-def save_figure(
-    figure: matplotlib.figure.Figure,
-    filename: str,
-    format: str = "pdf",
-    dpi: int = 300,
-    bbox_inches: str = "tight",
-    **kwargs,
-) -> Path:
-    """Save a matplotlib figure to the figures output directory.
-
-    Args:
-        figure: Matplotlib figure object to save
-        filename: Output filename (without extension)
-        format: Output format (default: 'pdf')
-        dpi: Resolution in dots per inch (default: 300)
-        bbox_inches: Bounding box setting (default: 'tight')
-        **kwargs: Additional arguments passed to savefig
-
-    Returns:
-        Path: Full path to the saved figure file
-
-    Example:
-        >>> import matplotlib.pyplot as plt
-        >>> fig = plt.figure()
-        >>> plt.plot([1, 2, 3], [4, 5, 6])
-        >>> save_figure(fig, 'my_plot')
-    """
-    # Get figures output directory
-    figures_dir = get_figures_output_dir()
-
-    # Ensure filename has the correct extension
-    if not filename.endswith(f".{format}"):
-        filename = f"{filename}.{format}"
-
-    # Build full path
-    figure_path = figures_dir / filename
-
-    # Save the figure
-    figure.savefig(
-        figure_path, format=format, dpi=dpi, bbox_inches=bbox_inches, **kwargs
-    )
-
-    print(f"Saved figure to {figure_path}")
-    return figure_path
-
-
 __all__ = [
-    "save_csv_data",
-    "save_latex_table",
-    "save_figure",
-    "get_data_output_dir",
-    "get_tables_output_dir",
-    "get_figures_output_dir",
     "standardize_project_name",
     "get_dataset_macro",
     "get_variant_macro",
-    "get_tool_macro",
-    "format_table_row",
     "get_project_type",
     "get_table_group_order",
     "get_project_within_type_order",
     "DATASETS",
     "VARIANTS",
-    "TOOLS",
-    "format_runtime_seconds",
-    "format_detection_rate_decimal",
 ]
