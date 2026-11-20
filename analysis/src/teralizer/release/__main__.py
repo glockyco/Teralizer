@@ -5,6 +5,7 @@ uv run --directory analysis python -m teralizer.release report-inputs [--json PA
 uv run --directory analysis python -m teralizer.release lineage [--staged DIR]
 uv run --directory analysis python -m teralizer.release source --out DIR
 uv run --directory analysis python -m teralizer.release jarvis-logs --staged DIR [--copy]
+uv run --directory analysis python -m teralizer.release declaration [--production]
 """
 
 from __future__ import annotations
@@ -148,6 +149,26 @@ def _jarvis_logs(repo: Path, staged: Path, copy: bool) -> int:
     return 0
 
 
+def _declaration(
+    declared: inventory.Inventory, path: Path | None, production: bool
+) -> int:
+    from teralizer.release import declaration
+
+    try:
+        release = declaration.load(path or declaration.DEFAULT_DECLARATION)
+    except declaration.DeclarationError as error:
+        return _report_problems([str(error)], "declaration")
+    if production:
+        problems = declaration.production_problems(release, declared)
+        if problems:
+            return _report_problems(problems, "production")
+    print(
+        f"declaration valid: {len(release.components)} components, "
+        f"{len(release.workflows)} workflows, {len(release.platforms)} platforms"
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -184,6 +205,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     logs.add_argument("--staged", type=Path, required=True)
     logs.add_argument("--copy", action="store_true")
+    declaration_command = commands.add_parser(
+        "declaration", help="validate the release declaration against the inventory"
+    )
+    declaration_command.add_argument("--declaration", type=Path)
+    declaration_command.add_argument(
+        "--production",
+        action="store_true",
+        help="also require the completeness rules of a publishable candidate",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -201,6 +231,8 @@ def main(argv: list[str] | None = None) -> int:
         return _source(declared, args.repo, args.revision, args.out)
     if args.command == "jarvis-logs":
         return _jarvis_logs(args.repo, args.staged, args.copy)
+    if args.command == "declaration":
+        return _declaration(declared, args.declaration, args.production)
     return _report_inputs(declared, args.repo, args.output)
 
 

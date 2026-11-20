@@ -1,0 +1,165 @@
+# Release declaration.
+#
+# Stable facts of the archival release: identity, persistent identifiers, the paper,
+# the component graph, workflows and their component sets, supported platforms and
+# licenses. Measured sizes, times and resources come from the release build and the
+# acceptance record and are not repeated here. The inventory in inventory.toml says
+# which inputs fill each component.
+#
+# Check with: uv run --directory analysis python -m teralizer.release declaration
+
+[release]
+name = "teralizer-replication"
+# Zenodo's version field. Public prose does not repeat it.
+version = "2.0.0"
+title = "Replication package for: Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests"
+concept_doi = "10.5281/zenodo.17950380"
+# Reserved on the Zenodo draft before the final build. Empty only in development.
+version_doi = ""
+previous_version_dois = ["10.5281/zenodo.18242626"]
+code_license = "MIT"
+content_license = "CC-BY-4.0"
+
+[paper]
+title = "Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests"
+authors = ["Johann Glock", "Clemens Bauer", "Christian Macho", "Martin Pinzger"]
+doi = "10.48550/arXiv.2512.14475"
+
+[[component]]
+id = "core"
+root = "teralizer"
+purpose = "Teralizer source with materialized nested sources, the reviewer controller, runtime definitions, registered reference results, compact report inputs, backing evidence, claims and documentation."
+
+[[component]]
+id = "corpus-controlled"
+root = "teralizer/components/corpus-controlled"
+corpus = "controlled"
+purpose = "Database dump of the controlled EqBench and Apache Commons evaluation."
+
+[[component]]
+id = "corpus-real-world"
+root = "teralizer/components/corpus-real-world"
+corpus = "real-world"
+purpose = "Database dump of the real-world RepoReapers evaluation."
+
+[[component]]
+id = "corpus-jarvis-scenarios"
+root = "teralizer/components/corpus-jarvis-scenarios"
+corpus = "jarvis-scenarios"
+purpose = "Database dump of the JARVIS scorecard scenarios."
+
+[[component]]
+id = "corpus-jarvis-benchmark"
+root = "teralizer/components/corpus-jarvis-benchmark"
+corpus = "jarvis-benchmark"
+purpose = "Database dump of the JARVIS benchmark census."
+
+[[component]]
+id = "projects-controlled"
+root = "teralizer/components/projects-controlled"
+purpose = "Sources of the controlled projects, including the EvoSuite tests the evaluation generalized."
+
+[[component]]
+id = "projects-real-world-sample"
+root = "teralizer/components/projects-real-world-sample"
+purpose = "Sources of the reduced real-world project sample."
+
+[[component]]
+id = "projects-real-world-full"
+root = "teralizer/components/projects-real-world-full"
+purpose = "Sources of every redistributable real-world project, and retrieval records for the others."
+
+[[component]]
+id = "projects-jarvis-scoreboard"
+root = "teralizer/components/projects-jarvis-scoreboard"
+purpose = "Prepared scorecard fixtures of the JARVIS comparison."
+
+[[component]]
+id = "projects-jarvis-census"
+root = "teralizer/components/projects-jarvis-census"
+purpose = "Prepared census fixtures of the JARVIS comparison."
+
+# Workflows name the exact component set a reviewer downloads. Network phases are
+# setup (image pulls), collection (third-party build dependencies and project
+# retrieval) or none.
+
+[[workflow]]
+id = "inspect"
+command = "artifact preflight"
+components = ["core"]
+network = []
+purpose = "Read the reference results, claims, evidence and documentation without running services."
+
+[[workflow]]
+id = "smoke"
+command = "artifact smoke"
+components = ["core", "corpus-jarvis-scenarios", "corpus-jarvis-benchmark"]
+network = ["setup"]
+purpose = "Start the services, restore the two smallest corpora, and regenerate and check the RQ0 report."
+
+[[workflow]]
+id = "reproduce-rq0"
+command = "artifact reproduce-results rq0"
+components = ["core", "corpus-jarvis-scenarios", "corpus-jarvis-benchmark"]
+network = ["setup"]
+purpose = "Regenerate the JARVIS comparison from frozen corpora and value logs and verify it against the reference."
+
+[[workflow]]
+id = "reproduce-all"
+command = "artifact reproduce-results"
+components = ["core", "corpus-controlled", "corpus-real-world", "corpus-jarvis-scenarios", "corpus-jarvis-benchmark"]
+network = ["setup"]
+purpose = "Regenerate every registered report and verify every declared output against the reference."
+
+[[workflow]]
+id = "collect-controlled"
+command = "artifact collect-reduced controlled"
+full_command = "artifact collect-full controlled"
+components = ["core", "projects-controlled"]
+network = ["setup", "collection"]
+purpose = "Run the Teralizer pipeline on the controlled projects into scratch databases."
+
+[[workflow]]
+id = "collect-real-world-sample"
+command = "artifact collect-reduced real-world"
+components = ["core", "projects-real-world-sample"]
+network = ["setup", "collection"]
+purpose = "Run the Teralizer pipeline on the reduced real-world sample into a scratch database."
+
+[[workflow]]
+id = "collect-real-world-full"
+command = "artifact collect-full real-world"
+components = ["core", "projects-real-world-full"]
+network = ["setup", "collection"]
+purpose = "Run the Teralizer pipeline on every real-world project into a scratch database, retrieving projects whose sources the release cannot ship."
+
+[[workflow]]
+id = "collect-jarvis-scoreboard"
+command = "artifact collect-reduced jarvis-scenarios"
+full_command = "artifact collect-full jarvis-scenarios"
+components = ["core", "projects-jarvis-scoreboard"]
+network = ["setup", "collection"]
+purpose = "Run the scorecard collection on the prepared fixtures into a scratch database."
+
+[[workflow]]
+id = "collect-jarvis-census"
+command = "artifact collect-reduced jarvis-benchmark"
+full_command = "artifact collect-full jarvis-benchmark"
+components = ["core", "projects-jarvis-census"]
+network = ["setup", "collection"]
+purpose = "Run the census collection on the prepared fixtures into a scratch database."
+
+[[platform]]
+id = "linux-x86_64"
+status = "release-tested"
+host = "Linux on x86-64 with Docker Engine or Docker Desktop and Compose V2"
+
+[[platform]]
+id = "macos-arm64"
+status = "unsupported"
+host = "macOS on Apple Silicon with Docker Desktop, running linux/amd64 images under emulation"
+
+[[platform]]
+id = "windows-native"
+status = "unsupported"
+host = "Windows outside WSL2"
