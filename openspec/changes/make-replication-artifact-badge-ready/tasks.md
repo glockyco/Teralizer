@@ -42,8 +42,8 @@
 ## 4. Preserve provenance and verify paper evidence
 
 - [ ] 4.1 Generate embedded release provenance in a clean checkout with repository-relative producing-source paths, source hashes, last-changing commits, repository identity, and resolvable source URLs. Fail on dirty or unattributed producing sources.
-- [ ] 4.2 Extend report provenance resolution with verified release mode that activates only from validated package metadata, checks producing-source bytes, and returns embedded per-file revisions without Git.
-- [ ] 4.3 Test checkout and Git-free attribution equivalence. Reject absent records, mismatched source bytes, unrelated checkout commits, a fabricated common release commit, and an unverified Git-less directory.
+- [x] 4.2 Extend report provenance resolution with verified release mode that activates only from validated package metadata, checks producing-source bytes, and returns embedded per-file revisions without Git.
+- [x] 4.3 Test checkout and Git-free attribution equivalence. Reject absent records, mismatched source bytes, unrelated checkout commits, a fabricated common release commit, and an unverified Git-less directory.
 - [ ] 4.4 Define the claims-to-evidence matrix for every represented RQ0-RQ6 claim. Include semantic and file inputs, exact command, artifact ids, expected values or invariants, tolerance, runtime, inspection-versus-regeneration status, and evidence class.
 - [ ] 4.5 Audit RQ0 against the JARVIS publication. Bind its external table reference, fixture revisions, two JARVIS corpora, compact and raw value evidence, CUT-PVC evidence, completion/status evidence, and every report/table/CSV/macro/provenance artifact. State separately what report reproduction and each collection scope establish.
 - [ ] 4.6 Mark every unsupported claim with its legal, empirical, or practical reason. Do not use a report name, frozen fact file, generic nondeterminism statement, or file presence as an acceptance rule.

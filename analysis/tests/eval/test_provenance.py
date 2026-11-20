@@ -130,6 +130,20 @@ def test_release_rejects_changed_and_foreign_files(release_root: Path):
         provenance.file_snapshot("analysis/src/extra.py")
 
 
+def test_release_rejects_a_shipped_file_without_a_recorded_revision(
+    release_root: Path,
+):
+    manifest_path = release_root / "component-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    del manifest["provenance"]["files"]["analysis/src/b.py"]
+    manifest_path.write_text(json.dumps(manifest))
+    provenance._release.cache_clear()
+
+    assert provenance.file_snapshot("analysis/src/a.py") == ("a" * 40, False)
+    with pytest.raises(RuntimeError, match="no recorded producing revision"):
+        provenance.file_snapshot("analysis/src/b.py")
+
+
 def test_directory_without_git_or_release_manifest_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
