@@ -82,11 +82,26 @@ class AmbientRule:
     inputs: tuple[str, ...] = ()
 
 
+REPORT_INPUT_STATUSES = ("regenerable", "frozen")
+
+
+@dataclass(frozen=True)
+class ReportInput:
+    """How the release reproduces one registered report file input."""
+
+    path: str
+    status: str
+    producer: str
+    needs: tuple[str, ...]
+    reason: str
+
+
 @dataclass(frozen=True)
 class Inventory:
     expand: tuple[str, ...]
     inputs: tuple[Input, ...]
     ambient: tuple[AmbientRule, ...]
+    report_inputs: tuple[ReportInput, ...] = ()
 
     def input(self, input_id: str) -> Input:
         for candidate in self.inputs:
@@ -164,17 +179,51 @@ def _parse_ambient(entry: dict[str, object], index: int) -> AmbientRule:
     return rule
 
 
+def _parse_report_input(entry: dict[str, object], index: int) -> ReportInput:
+    where = f"report input {index + 1}"
+    parsed = ReportInput(
+        path=_text(entry, "path", where),
+        status=_text(entry, "status", where),
+        producer=_text(entry, "producer", where),
+        needs=_texts(entry, "needs", where),
+        reason=_text(entry, "reason", where),
+    )
+    where = f"report input {parsed.path!r}"
+    if parsed.status not in REPORT_INPUT_STATUSES:
+        raise InventoryError(f"{where}: unknown status {parsed.status!r}")
+    unknown = sorted(set(parsed.needs) - set(COMPONENTS))
+    if not parsed.needs or unknown:
+        raise InventoryError(f"{where}: needs must name declared components {unknown}")
+    return parsed
+
+
+def _tables(document: dict[str, object], key: str) -> list[dict[str, object]]:
+    value = document.get(key, [])
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise InventoryError(f"{key!r} must be an array of tables")
+    return value
+
+
 def parse(document: dict[str, object]) -> Inventory:
     """Validate an inventory document and its internal references."""
-    raw_inputs = document.get("input", [])
-    raw_ambient = document.get("ambient", [])
-    if not isinstance(raw_inputs, list) or not isinstance(raw_ambient, list):
-        raise InventoryError("'input' and 'ambient' must be arrays of tables")
     inventory = Inventory(
         expand=_texts(document, "expand", "inventory"),
-        inputs=tuple(_parse_input(entry, i) for i, entry in enumerate(raw_inputs)),
-        ambient=tuple(_parse_ambient(entry, i) for i, entry in enumerate(raw_ambient)),
+        inputs=tuple(
+            _parse_input(entry, i) for i, entry in enumerate(_tables(document, "input"))
+        ),
+        ambient=tuple(
+            _parse_ambient(entry, i)
+            for i, entry in enumerate(_tables(document, "ambient"))
+        ),
+        report_inputs=tuple(
+            _parse_report_input(entry, i)
+            for i, entry in enumerate(_tables(document, "report_input"))
+        ),
     )
+    paths = [item.path for item in inventory.report_inputs]
+    repeated = sorted({path for path in paths if paths.count(path) > 1})
+    if repeated:
+        raise InventoryError(f"duplicate report inputs: {', '.join(repeated)}")
     ids = [item.id for item in inventory.inputs]
     duplicates = sorted({item for item in ids if ids.count(item) > 1})
     if duplicates:

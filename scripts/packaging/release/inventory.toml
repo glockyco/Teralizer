@@ -335,3 +335,54 @@ reason = "Working run roots and refresh logs of the JARVIS runs. The two corpora
 paths = ["data/reporeapers-rerun-v7/", "data/reporeapers-rerun-v7-local/"]
 disposition = "unrelated"
 reason = "Local copies of the version-seven status ledger and of a partial local rerun. The release takes RepoReapers evidence from the evaluation host."
+
+# --------------------------------------------------------------------------------
+# Report file inputs
+# --------------------------------------------------------------------------------
+#
+# Every FileInputSpec of a registered report has one entry. "regenerable" means the
+# producer recreates the committed bytes from the components in `needs`.
+# "frozen" means the release ships the file for inspection only and the reason says
+# which evidence is missing for regeneration.
+
+[[report_input]]
+path = "analysis/data/report-inputs/jarvis-value-facts.json"
+status = "regenerable"
+producer = "python -m teralizer.eval.evidence jarvis-values"
+needs = ["core", "corpus-jarvis-scenarios", "corpus-jarvis-benchmark"]
+reason = "The producer reads both JARVIS corpora and the selected value logs in core."
+
+[[report_input]]
+path = "analysis/data/report-inputs/reporeapers-output-directories-population.json"
+status = "regenerable"
+producer = "python -m teralizer.eval.evidence reporeapers-output-directories"
+needs = ["core", "corpus-real-world"]
+reason = "The producer queries the real-world corpus and binds the dump identity from the reconstruction inventory."
+
+[[report_input]]
+path = "analysis/data/jarvis-cut-values/cut_values.tsv"
+status = "frozen"
+producer = "scripts/run-cut-pvc-capture.sh"
+needs = ["core", "projects-jarvis-scoreboard"]
+reason = "The raw per-test captures that the aggregate was built from are lost. A rerun of the capture from the pinned checkouts replaces them."
+
+[[report_input]]
+path = "analysis/data/report-inputs/project-source-facts.json"
+status = "frozen"
+producer = "python -m teralizer.eval.evidence project-sources --projects-root <projects>"
+needs = ["core", "corpus-controlled", "corpus-real-world", "projects-controlled", "projects-real-world-full"]
+reason = "The producer counts source files of the controlled projects and of every eligible real-world project. The release can ship real-world sources only where their license permits it, so only the controlled rows can be recomputed from the release."
+
+[[report_input]]
+path = "analysis/data/report-inputs/reporeapers-reconstruction-inventory.json"
+status = "frozen"
+producer = "python -m teralizer.eval.evidence.reporeapers_reconstruction inventory <specification> <output>"
+needs = ["core"]
+reason = "Content identities of the version-seven evidence on the evaluation host. Most of that evidence is in the release, but the run artifacts are not, so the inventory cannot be recomputed from it."
+
+[[report_input]]
+path = "analysis/data/report-inputs/reporeapers-reconstruction-audit.json"
+status = "frozen"
+producer = "manual review recorded with python -m teralizer.eval.evidence.reporeapers_reconstruction"
+needs = ["core"]
+reason = "Observation-only reconstruction with manual review of the version-seven failures. The release ships the audit for inspection, and its validator checks it against the inventory."

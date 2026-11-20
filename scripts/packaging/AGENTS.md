@@ -8,7 +8,7 @@ the artifact evaluation workflow, and no run driver references this directory.
 | `prepare-zenodo-package.sh` | Stages and zips the archive families (core, projects, data) for a Zenodo upload, with checksums. |
 | `setup-eval-environment.sh` | Simulates an ACM artifact evaluator's environment in `/tmp` from a fresh clone. |
 | `collect-disk-metrics.sh` | Computes the disk-space and version tables for REQUIREMENTS.md. Scopes are pinned to this workstation's checkout paths. |
-| `release/inventory.toml` | Gives every release input one payload component or non-payload disposition, and every ignored checkout path a disposition. `uv run --directory analysis python -m teralizer.release inventory` checks it against a checkout. |
+| `release/inventory.toml` | Gives every release input one payload component or non-payload disposition, every ignored checkout path a disposition, and every report file input a regenerable or frozen status. `uv run --directory analysis python -m teralizer.release inventory` checks it against a checkout. `uv run --directory analysis python -m teralizer.release report-inputs` resolves every registered report input to its component. |
 
 ## Boundaries
 
