@@ -12,32 +12,48 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
 
+      # setup-gradle cleans its cache after the job with the runner's own Gradle,
+      # which needs Java 17, while the build needs Java 8. Java 8 is set up second
+      # so that it is the default until the last step.
+      - name: Setup JDK 17 for the Gradle cache cleanup
+        id: cleanup-jdk
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Setup JDK 8 with JavaFX
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: 'liberica'
           java-version: '8'
           java-package: 'jdk+fx'
 
+      # v6 puts the cache under separate terms of use, so this stays on v5.
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Execute Gradle build
         run: ./gradlew build
+
+      - name: Hand Java 17 to the Gradle cache cleanup
+        shell: bash
+        run: echo "JAVA_HOME=${{ steps.cleanup-jdk.outputs.path }}" >> "$GITHUB_ENV"
 
   analysis:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
+      # setup-uv publishes no major tags since v8.
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.3
 
       # uv stops looking for .python-version at analysis/, the project root, and then
       # takes the runner's system Python, for which locked packages may have no wheel.

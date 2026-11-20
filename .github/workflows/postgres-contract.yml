@@ -85,7 +85,7 @@ jobs:
           --health-retries 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Nix
         uses: DeterminateSystems/determinate-nix-action@v3.21.9
