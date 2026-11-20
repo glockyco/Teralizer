@@ -1,4 +1,5 @@
 import os
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -75,3 +76,38 @@ def test_duplicate_names_are_refused(tmp_path: Path):
 
     with pytest.raises(archive.ArchiveError, match="duplicate"):
         archive.write(tmp_path / "a.zip", entries)
+
+
+def test_link_members_round_trip_through_unzip(tmp_path: Path):
+    entries = [
+        archive.Entry(f"{_ROOT}/p/target.txt", content=b"target\n"),
+        archive.Entry(f"{_ROOT}/p/alias.txt", link="target.txt"),
+        archive.Entry(f"{_ROOT}/p/docs/api", link="../build/api/"),
+    ]
+    members = archive.write(tmp_path / "a.zip", entries)
+
+    assert archive.verify(tmp_path / "a.zip", _ROOT, members) == []
+    out = tmp_path / "out"
+    subprocess.run(["unzip", "-q", str(tmp_path / "a.zip"), "-d", str(out)], check=True)
+    alias = out / _ROOT / "p/alias.txt"
+    assert alias.is_symlink() and alias.read_text() == "target\n"
+    assert os.readlink(out / _ROOT / "p/docs/api") == "../build/api/"
+
+
+def test_a_planned_file_stored_as_link_fails_verification(tmp_path: Path):
+    members = archive.write(
+        tmp_path / "a.zip", [archive.Entry(f"{_ROOT}/alias", link="target")]
+    )
+    as_file = [archive.Member(m.name, m.sha256, m.bytes, False) for m in members]
+
+    assert archive.verify(tmp_path / "a.zip", _ROOT, as_file) == [
+        f"a.zip: member {_ROOT}/alias is a link against its plan"
+    ]
+
+
+@pytest.mark.parametrize("target", ["/etc/passwd", "../../../../outside", ""])
+def test_links_that_leave_the_archive_root_are_refused(tmp_path: Path, target: str):
+    with pytest.raises(archive.ArchiveError, match="leave the archive root"):
+        archive.write(
+            tmp_path / "a.zip", [archive.Entry(f"{_ROOT}/alias", link=target)]
+        )

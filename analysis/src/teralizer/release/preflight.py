@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -79,7 +80,14 @@ def check_component(
     for entry in payload:
         assert isinstance(entry, Mapping)
         path = workspace / str(entry["path"])
-        if not path.is_file():
+        if "link" in entry:
+            if not path.is_symlink():
+                missing += 1
+            elif os.readlink(path) != entry["link"]:
+                changed += 1
+        elif path.is_symlink():
+            changed += 1
+        elif not path.is_file():
             missing += 1
         elif path.stat().st_size != entry["bytes"] or _sha256(path) != entry["sha256"]:
             changed += 1

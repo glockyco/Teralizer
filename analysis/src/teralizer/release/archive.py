@@ -28,12 +28,16 @@ class ArchiveError(RuntimeError):
 
 @dataclass(frozen=True)
 class Entry:
-    """One archive member: where its bytes come from and where they land."""
+    """One archive member: where its bytes come from and where they land.
+
+    A member with ``link`` is a symbolic link whose target is that relative path.
+    """
 
     name: str
     source: Path | None = None
     content: bytes | None = None
     executable: bool = False
+    link: str | None = None
 
 
 @dataclass(frozen=True)
@@ -42,6 +46,7 @@ class Member:
     sha256: str
     bytes: int
     executable: bool
+    link: str | None = None
 
 
 def safe_name(name: str) -> bool:
@@ -54,10 +59,37 @@ def safe_name(name: str) -> bool:
     )
 
 
-def _info(name: str, executable: bool) -> zipfile.ZipInfo:
+def link_stays_inside(name: str, target: str, root: str) -> bool:
+    """Whether a link at ``name`` pointing to ``target`` resolves below ``root``.
+
+    Resolution is lexical, so it holds for dangling links too. Extraction cannot
+    follow a link out of its root because no link target leaves it.
+    """
+    if not target or "\\" in target or PurePosixPath(target).is_absolute():
+        return False
+    parts = list(PurePosixPath(name).parent.parts)
+    for part in target.split("/"):
+        if part in ("", "."):
+            continue
+        if part == "..":
+            if not parts:
+                return False
+            parts.pop()
+        else:
+            parts.append(part)
+    root_parts = PurePosixPath(root).parts
+    return tuple(parts[: len(root_parts)]) == root_parts and len(parts) > len(
+        root_parts
+    )
+
+
+def _info(name: str, executable: bool, link: bool = False) -> zipfile.ZipInfo:
     info = zipfile.ZipInfo(name, date_time=_TIMESTAMP)
     info.compress_type = zipfile.ZIP_DEFLATED
     info.create_system = 3  # Unix, so external_attr carries the mode.
+    if link:
+        info.external_attr = (stat.S_IFLNK | 0o777) << 16
+        return info
     mode = 0o755 if executable else 0o644
     info.external_attr = (stat.S_IFREG | mode) << 16
     return info
@@ -73,6 +105,15 @@ def write(path: Path, entries: Iterable[Entry]) -> list[Member]:
     unsafe = [name for name in names if not safe_name(name)]
     if unsafe:
         raise ArchiveError(f"unsafe member names: {unsafe}")
+    root = names[0].split("/")[0] if names else ""
+    escaping = [
+        entry.name
+        for entry in ordered
+        if entry.link is not None
+        and not link_stays_inside(entry.name, entry.link, root)
+    ]
+    if escaping:
+        raise ArchiveError(f"links that leave the archive root: {escaping}")
     if path.exists():
         raise ArchiveError(f"archive already exists: {path}")
 
@@ -80,17 +121,22 @@ def write(path: Path, entries: Iterable[Entry]) -> list[Member]:
     partial = path.with_name(path.name + ".partial")
     with zipfile.ZipFile(partial, "w", compresslevel=9) as archive:
         for entry in ordered:
-            if (entry.source is None) == (entry.content is None):
+            given = [entry.source, entry.content, entry.link]
+            if sum(value is not None for value in given) != 1:
                 raise ArchiveError(
-                    f"{entry.name}: give exactly one of source or content"
+                    f"{entry.name}: give exactly one of source, content or link"
                 )
             digest = hashlib.sha256()
             size = 0
             with archive.open(
-                _info(entry.name, entry.executable), "w", force_zip64=True
+                _info(entry.name, entry.executable, entry.link is not None),
+                "w",
+                force_zip64=True,
             ) as out:
-                if entry.content is not None:
-                    chunks: Iterable[bytes] = [entry.content]
+                if entry.link is not None:
+                    chunks: Iterable[bytes] = [entry.link.encode()]
+                elif entry.content is not None:
+                    chunks = [entry.content]
                 else:
                     assert entry.source is not None
                     chunks = _read_chunks(entry.source)
@@ -99,7 +145,9 @@ def write(path: Path, entries: Iterable[Entry]) -> list[Member]:
                     size += len(chunk)
                     out.write(chunk)
             members.append(
-                Member(entry.name, digest.hexdigest(), size, entry.executable)
+                Member(
+                    entry.name, digest.hexdigest(), size, entry.executable, entry.link
+                )
             )
     partial.rename(path)
     return members
@@ -152,8 +200,19 @@ def verify(path: Path, root: str, expected: Iterable[Member]) -> list[str]:
                 problems.append(
                     f"{path.name}: member {info.filename} differs from its plan"
                 )
-            mode = (info.external_attr >> 16) & 0o777
-            if bool(mode & 0o111) != member.executable:
+            kind = info.external_attr >> 16
+            if stat.S_ISLNK(kind) != (member.link is not None):
+                problems.append(
+                    f"{path.name}: member {info.filename} is "
+                    f"{'a link' if stat.S_ISLNK(kind) else 'not a link'} against its plan"
+                )
+            if member.link is not None and not link_stays_inside(
+                info.filename, member.link, root
+            ):
+                problems.append(f"{path.name}: link {info.filename} leaves {root}/")
+            mode = kind & 0o777
+            regular = member.link is None and not stat.S_ISLNK(kind)
+            if regular and bool(mode & 0o111) != member.executable:
                 problems.append(
                     f"{path.name}: member {info.filename} has mode {oct(mode)}"
                 )

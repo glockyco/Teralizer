@@ -89,13 +89,29 @@ def _readme(declaration: Declaration, component_id: str) -> bytes:
 def _members_with_hashes(entries: Iterable[archive.Entry]) -> list[archive.Member]:
     members = []
     for entry in entries:
-        if entry.source is not None:
+        if entry.link is not None:
+            target = entry.link.encode()
+            digest, size = hashlib.sha256(target).hexdigest(), len(target)
+        elif entry.source is not None:
             digest, size = _sha256(entry.source), entry.source.stat().st_size
         else:
             assert entry.content is not None
             digest, size = hashlib.sha256(entry.content).hexdigest(), len(entry.content)
-        members.append(archive.Member(entry.name, digest, size, entry.executable))
+        members.append(
+            archive.Member(entry.name, digest, size, entry.executable, entry.link)
+        )
     return members
+
+
+def _payload_entry(member: archive.Member) -> dict[str, object]:
+    if member.link is not None:
+        return {"path": member.name, "link": member.link}
+    return {
+        "path": member.name,
+        "sha256": member.sha256,
+        "bytes": member.bytes,
+        "executable": member.executable,
+    }
 
 
 def build_candidate(
@@ -214,12 +230,7 @@ def build_candidate(
             "licenses": licenses,
             "provenance": provenance_section,
             "payload": [
-                {
-                    "path": member.name,
-                    "sha256": member.sha256,
-                    "bytes": member.bytes,
-                    "executable": member.executable,
-                }
+                _payload_entry(member)
                 for member in sorted(payload, key=lambda item: item.name)
             ],
         }

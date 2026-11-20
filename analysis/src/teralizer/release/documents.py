@@ -16,6 +16,8 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 
+from teralizer.release.archive import link_stays_inside
+
 RELEASE_MANIFEST = ("teralizer-release-manifest", 1)
 COMPONENT_MANIFEST = ("teralizer-component-manifest", 1)
 ACCEPTANCE_RECORD = ("teralizer-acceptance-record", 1)
@@ -147,7 +149,12 @@ def validate_component_manifest(document: object) -> Mapping[str, object]:
     for index, item in enumerate(_sequence(root["payload"], "payload")):
         where = f"payload[{index}]"
         entry = _mapping(item, where)
-        _keys(entry, {"path", "sha256", "bytes", "executable"}, where)
+        is_link = "link" in entry
+        _keys(
+            entry,
+            {"path", "link"} if is_link else {"path", "sha256", "bytes", "executable"},
+            where,
+        )
         path = _text(entry, "path", where)
         _require(
             path.startswith(component_root + "/"),
@@ -156,6 +163,13 @@ def validate_component_manifest(document: object) -> Mapping[str, object]:
         _require(".." not in path.split("/"), f"{where}.path {path} escapes its root")
         _require(path not in seen, f"{where}.path {path} is listed twice")
         seen.add(path)
+        if is_link:
+            target = _text(entry, "link", where)
+            _require(
+                link_stays_inside(path, target, component_root),
+                f"{where}.link {target} leaves the component root {component_root}",
+            )
+            continue
         _sha256(entry, "sha256", where)
         _count(entry, "bytes", where)
         _require(
