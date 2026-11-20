@@ -11,15 +11,19 @@ authors:
     family-names: Bauer
     affiliation: University of Klagenfurt
     orcid: https://orcid.org/0009-0000-9199-8563
+  - given-names: Christian
+    family-names: Macho
+    affiliation: University of Klagenfurt
+    orcid: https://orcid.org/0000-0001-8182-7277
   - given-names: Martin
     family-names: Pinzger
     affiliation: University of Klagenfurt
     orcid: https://orcid.org/0000-0002-5536-3859
-doi: 10.5281/zenodo.18242626
+doi: 10.5281/zenodo.17950380
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.18242626
-    description: Concept DOI for the replication package
+    value: 10.5281/zenodo.17950380
+    description: Concept DOI for all versions of the replication package
 repository: https://github.com/glockyco/Teralizer
 repository-code: https://github.com/glockyco/Teralizer
 license:

@@ -2,9 +2,9 @@
 
 ## Download
 
-Download archives from Zenodo: [10.5281/zenodo.18242626](https://doi.org/10.5281/zenodo.18242626)
+Download archives from Zenodo: [10.5281/zenodo.17950380](https://doi.org/10.5281/zenodo.17950380). The DOI resolves to the latest version.
 
-See README.md §Package Contents for which archives to download.
+The Package contents section of README.md says which archives to download.
 
 ## Unpack
 

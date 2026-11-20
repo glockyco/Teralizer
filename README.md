@@ -2,7 +2,7 @@
 
 Teralizer turns conventional Java JUnit tests into property-based jqwik tests through semantics-based test generalization. It is a research prototype for studying test generalization and reproducing the evaluation in [Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests](https://arxiv.org/abs/2512.14475), not a drop-in test-library replacement.
 
-The pipeline extracts specifications from implementations through single-path symbolic analysis. This repository holds the Java tool, the Python analysis, and the replication scripts. The [Zenodo replication package](https://doi.org/10.5281/zenodo.18242626) supplies production corpus data that is not in a source checkout.
+The pipeline extracts specifications from implementations through single-path symbolic analysis. This repository holds the Java tool, the Python analysis, and the replication scripts. The [Zenodo replication package](https://doi.org/10.5281/zenodo.17950380) supplies production corpus data that is not in a source checkout. Its DOI resolves to the latest version.
 
 ## Inspect the results
 
