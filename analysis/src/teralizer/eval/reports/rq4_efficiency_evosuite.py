@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
@@ -173,10 +175,11 @@ def _stage_rows(stages: pd.DataFrame) -> pd.DataFrame:
     strategy's row repeats them. Stages 4 and 5 run per strategy. The project-wide
     Stage 5 work (variant SHARED) is excluded, as in the stage figure.
     """
+    # math.fsum is exact, so the totals do not depend on the order of the rows.
     rows = []
     for project, data in stages.groupby("project_name", observed=True):
         shared = {
-            stage: float(data.loc[data["stage_group"] == stage, "total_runtime"].sum())
+            stage: math.fsum(data.loc[data["stage_group"] == stage, "total_runtime"])
             for stage in _STAGES[:2]
         }
         for variant, own in data[data["variant"] != "SHARED"].groupby(
@@ -185,13 +188,13 @@ def _stage_rows(stages: pd.DataFrame) -> pd.DataFrame:
             values = {
                 **shared,
                 **{
-                    stage: float(
-                        own.loc[own["stage_group"] == stage, "total_runtime"].sum()
+                    stage: math.fsum(
+                        own.loc[own["stage_group"] == stage, "total_runtime"]
                     )
                     for stage in _STAGES[2:]
                 },
             }
-            total = sum(values.values())
+            total = math.fsum(values.values())
             row: dict[str, object] = {
                 "project_name": standardize_project_name(str(project)),
                 "variant": str(variant),
@@ -496,7 +499,7 @@ def _runtime_stage_figure(data: pd.DataFrame) -> Figure:
                     ]
                     if row.empty:
                         continue
-                    value = float(row["total_runtime"].sum())
+                    value = math.fsum(row["total_runtime"])
                     if value <= 0:
                         continue
                     position = positions[(group, variant)]

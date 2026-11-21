@@ -145,15 +145,19 @@ def get_test_vs_generalization_runtime_comparison(conn) -> pd.DataFrame:
     Returns:
         DataFrame with runtime comparison statistics per variant
     """
+    # Averages over floats depend on the order PostgreSQL reads the rows in, so
+    # they are taken in exact numeric arithmetic.
     query = """
-    SELECT 
+    SELECT
         rc.variant,
-        avg(rc.t_runtime * 1000) AS mean_t_runtime_ms,
-        avg(rc.g_runtime * 1000) AS mean_g_runtime_ms,
-        avg(rc.runtime_diff * 1000) AS mean_runtime_diff_ms,
-        avg(rc.g_runtime) / avg(rc.t_runtime) AS ratio_of_mean_runtimes,
+        avg(rc.t_runtime::numeric * 1000)::double precision AS mean_t_runtime_ms,
+        avg(rc.g_runtime::numeric * 1000)::double precision AS mean_g_runtime_ms,
+        avg(rc.runtime_diff::numeric * 1000)::double precision AS mean_runtime_diff_ms,
+        (avg(rc.g_runtime::numeric) / avg(rc.t_runtime::numeric))::double precision
+            AS ratio_of_mean_runtimes,
         min(tries) AS tries,
-        avg(rc.runtime_diff_per_try * 1000) AS mean_runtime_diff_per_try_ms
+        avg(rc.runtime_diff_per_try::numeric * 1000)::double precision
+            AS mean_runtime_diff_per_try_ms
     FROM mv_runtime_comparison_test_vs_generalization rc
     GROUP BY rc.variant, rc.variant_order
     ORDER BY rc.variant_order

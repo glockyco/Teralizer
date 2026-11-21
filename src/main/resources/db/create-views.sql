@@ -308,7 +308,7 @@ SELECT
     variant_name(r.stage, r.variant) AS variant,
     variant_order(variant_name(r.stage, r.variant)) AS variant_order,
     coalesce(count(r.id), 0) AS reports,
-    sum(r.runtime) AS runtime
+    sum(r.runtime::numeric)::double precision AS runtime
 FROM test t
 LEFT JOIN junit_test_report r ON t.id = r.test_id
 GROUP BY t.id, r.stage, r.variant
@@ -352,7 +352,7 @@ SELECT
     g.variant AS variant,
     variant_order(g.variant) AS variant_order,
     coalesce(count(r.id), 0) AS reports,
-    sum(r.runtime) AS runtime
+    sum(r.runtime::numeric)::double precision AS runtime
 FROM generalization g
 LEFT JOIN junit_test_report r ON g.id = r.generalization_id
 GROUP BY g.id, g.variant
@@ -412,7 +412,7 @@ SELECT
     stage_group,
     variant,
     variant_order,
-    SUM(runtime) AS total_runtime
+    SUM(runtime::numeric)::double precision AS total_runtime
 FROM stage_grouped
 WHERE stage_group IS NOT NULL
 GROUP BY project_id, project_name, base_project_name, stage_group, variant, variant_order;
@@ -478,7 +478,7 @@ BEGIN
                 class_id,
                 project_id,
                 class_name,
-                SUM(runtime) AS total
+                SUM(runtime::numeric)::double precision AS total
             FROM
                 public.mv_evosuite_runtime
             GROUP BY
@@ -491,7 +491,7 @@ BEGIN
             WITH class_totals AS (
                 SELECT
                     class_id,
-                    SUM(runtime) AS total_runtime
+                    SUM(runtime::numeric)::double precision AS total_runtime
                 FROM
                     public.mv_evosuite_runtime
                 GROUP BY
@@ -504,7 +504,7 @@ BEGIN
                         rt.project_id,
                         rt.class_name,
                         rt.phase_name,
-                        sum(rt.runtime) AS runtime
+                        sum(rt.runtime::numeric) AS runtime
                     FROM
                         public.mv_evosuite_runtime AS rt
                     GROUP BY
@@ -983,7 +983,7 @@ test_stats AS (
         count(t.id) FILTER (WHERE t.is_included) AS included_tests,
         count(t.id) FILTER (WHERE NOT t.is_included) AS excluded_tests,
         sum(mct.reports) AS test_reports_sum,
-        sum(mct.runtime) AS test_runtime_sum
+        sum(mct.runtime::numeric)::double precision AS test_runtime_sum
     FROM mv_mutation_covering_tests mct
     LEFT JOIN test t ON mct.test_id = t.id
     GROUP BY mct.mutation_id
@@ -1007,7 +1007,7 @@ generalization_stats AS (
         count(g.id) FILTER (WHERE g.is_included) AS included_generalizations,
         count(g.id) FILTER (WHERE NOT g.is_included) AS excluded_generalizations,
         sum(mcg.reports) AS generalization_reports_sum,
-        sum(mcg.runtime) AS generalization_runtime_sum,
+        sum(mcg.runtime::numeric)::double precision AS generalization_runtime_sum,
         sum(mcg.total_constraint_count) AS total_constraint_count_sum,
         sum(mcg.used_constraint_count) AS used_constraint_count_sum
     FROM mv_mutation_covering_generalizations mcg
@@ -1209,7 +1209,7 @@ WITH
              WHERE kg.project_id = nkm.project_id
              AND kg.a_variant = nkm.a_variant
              AND kg.b_variant = nkm.b_variant) AS generalization_lines,
-            (SELECT sum(kg.runtime) FROM killing_generalizations kg
+            (SELECT sum(kg.runtime::numeric)::double precision FROM killing_generalizations kg
              WHERE kg.project_id = nkm.project_id
              AND kg.a_variant = nkm.a_variant
              AND kg.b_variant = nkm.b_variant) AS generalization_runtime
@@ -1223,7 +1223,7 @@ WITH
             bd.b_variant,
             count(rt.test_id) AS tests_replaceable,
             coalesce(sum(rt.line_count), 0) AS test_lines_replaceable,
-            coalesce(sum(rt.runtime), 0) AS test_runtime_replaceable
+            coalesce(sum(rt.runtime::numeric)::double precision, 0) AS test_runtime_replaceable
         FROM base_data bd
         LEFT JOIN replaceable_tests rt
             ON bd.project_id = rt.project_id
@@ -1236,7 +1236,7 @@ WITH
             project_id,
             count(*) AS test_count,
             sum(t.line_count) AS line_count,
-            sum(te.runtime) AS runtime
+            sum(te.runtime::numeric)::double precision AS runtime
         FROM test t
         JOIN mv_test_extension te ON t.id = te.test_id
         WHERE te.variant = 'ORIGINAL'
@@ -1760,7 +1760,7 @@ WITH
         SELECT
             rt.project_id,
             project_name(rt.project_id) AS project_name,
-            sum(rt.runtime) AS runtime
+            sum(rt.runtime::numeric)::double precision AS runtime
         FROM mv_evosuite_runtime rt
         GROUP BY rt.project_id
     ),
@@ -1768,7 +1768,7 @@ WITH
         SELECT
             rt.project_id,
             project_name(rt.project_id) AS project_name,
-            sum(rt.runtime) AS runtime
+            sum(rt.runtime::numeric)::double precision AS runtime
         FROM mv_evosuite_runtime rt
         WHERE rt.phase_name != 'JUNIT_CHECK'
         GROUP BY rt.project_id
@@ -1779,7 +1779,7 @@ WITH
             project_name(t.project_id) AS project_name,
             coalesce(t.variant, 'SHARED') AS variant,
             variant_order(t.variant) AS variant_order,
-            sum(t.runtime) AS runtime
+            sum(t.runtime::numeric)::double precision AS runtime
         FROM
             task t
         WHERE
@@ -1810,7 +1810,7 @@ WITH
             project_name(t.project_id) AS project_name,
             coalesce(t.variant, 'SHARED') AS variant,
             variant_order(t.variant) AS variant_order,
-            sum(t.runtime) AS runtime
+            sum(t.runtime::numeric)::double precision AS runtime
         FROM
             task t
         WHERE
@@ -1857,13 +1857,13 @@ SELECT
     pmr.variant,
     pmr.is_detected,
     count(DISTINCT pmr.id) AS count,
-    avg(mct.runtime) AS avg_test_runtime,
+    avg(mct.runtime::numeric)::double precision AS avg_test_runtime,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY mct.runtime) AS median_test_runtime,
     avg(mca.model_java_size) AS avg_model_java_size,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY mca.model_java_size) AS median_model_java_size,
     avg(mca.model_operation_count) AS avg_model_operation_count,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY mca.model_operation_count) AS median_model_operation_count,
-    avg(mcg.runtime) AS avg_generalization_runtime,
+    avg(mcg.runtime::numeric)::double precision AS avg_generalization_runtime,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY mcg.runtime) AS median_generalization_runtime,
     avg(mcg.total_constraint_count) AS avg_total_constraint_count,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY mcg.total_constraint_count) AS median_total_constraint_count,
