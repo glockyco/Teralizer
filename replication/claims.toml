@@ -1,11 +1,10 @@
-# Claims-to-evidence matrix for the RQ0 to RQ6 answers of the paper.
+# The paper's claims and the checks that bind them to report outputs.
 #
 # Each claim names the reports whose registered outputs carry its evidence and the
 # checks that bind every number of the claim to those outputs. Check kinds and the
-# evidence classes are defined in analysis/src/teralizer/release/claims.py, which
-# also reads the corpora and file inputs of each report from the report registry.
-# `python -m teralizer.release claims --analysis analysis` checks every claim
-# against a report run.
+# evidence classes are defined in analysis/src/teralizer/release/claims.py.
+# `python -m teralizer.release verify` checks the claims against a report run, and
+# `python -m teralizer.release claims-matrix` renders them into CLAIMS.md.
 
 format = "teralizer-claims"
 format_version = 1

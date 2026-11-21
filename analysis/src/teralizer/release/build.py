@@ -18,6 +18,7 @@ from pathlib import Path
 
 from teralizer.release import (
     archive,
+    claims,
     documents,
     plan,
     provenance,
@@ -182,6 +183,13 @@ def build_candidate(
     if partial.exists():
         raise BuildError(f"remove the failed candidate first: {partial}")
     provenance.require_clean(repo)
+    matrix = repo / claims.DEFAULT_MATRIX
+    if not matrix.is_file() or matrix.read_text() != claims.matrix(
+        claims.load(repo / claims.DEFAULT_CLAIMS)
+    ):
+        raise BuildError(
+            f"{claims.DEFAULT_MATRIX} is stale: run python -m teralizer.release claims-matrix"
+        )
     work = partial / "work"
     work.mkdir(parents=True)
 

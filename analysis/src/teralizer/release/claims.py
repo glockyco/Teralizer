@@ -332,6 +332,95 @@ def summary(outcomes: Sequence[Outcome]) -> dict[str, Any]:
     }
 
 
+DEFAULT_MATRIX = "replication/CLAIMS.md"
+
+_MATRIX_INTRO = """\
+# Claims and their evidence
+
+Generated from `replication/claims.toml` by
+`uv run --directory analysis python -m teralizer.release claims-matrix`. Edit the
+claims there.
+
+Each row is a claim of the RQ0 to RQ6 answers of the paper, or an observation an
+answer rests on. The command of a row regenerates its outputs from the published
+corpora and checks it: every number must equal the expected value after rounding
+half up to the decimals shown, with no tolerance. `output/evidence.json` records
+the result of every claim.
+
+Mode "inspection" marks a value that others published and the release carries as
+frozen input. Reproduction reads it and regenerates everything computed from it.
+"New collection" states what a rerun of the collection can establish, because
+collected values depend on jqwik's random inputs and on the host.
+
+The answers also explain some results, for example by the design of a generation
+strategy. Those explanations come from the design and from inspecting generated
+tests, and the artifact does not check them.
+
+"""
+
+
+def _selection(spec: Mapping[str, Any]) -> str:
+    parts = [
+        f"{column}={' or '.join(pattern) if isinstance(pattern, list) else pattern}"
+        for column, pattern in spec.get("where", {}).items()
+    ]
+    condition = spec.get("condition")
+    if condition is not None:
+        other = condition.get("other", condition.get("value", ""))
+        parts.append(f"{condition['column']} {condition['op']} {other}".rstrip())
+    return f" where {', '.join(parts)}" if parts else ""
+
+
+def _column(spec: Mapping[str, Any]) -> str:
+    column = spec["column"]
+    text = "+".join(column) if isinstance(column, list) else column
+    if "divide_by" in spec:
+        text += f" / {spec['divide_by']['column']}"
+    if "scale" in spec:
+        text += f" * {spec['scale']}"
+    return text
+
+
+def describe(spec: Mapping[str, Any]) -> str:
+    """One check as the expected value or invariant it states."""
+    kind = spec["kind"]
+    if kind == "macro":
+        return f"`\\{spec['macro']}` = {spec['value']}"
+    output = f"`{spec['table']}`"
+    where = _selection(spec)
+    if kind == "cell":
+        return f"{output} {_column(spec)}{where} = {spec['value']}"
+    if kind == "extent":
+        return f"{output} {_column(spec)}{where} from {spec['min']} to {spec['max']}"
+    if kind == "sum":
+        return f"{output} sum of {_column(spec)}{where} = {spec['value']}"
+    if kind == "count":
+        return f"{output} {spec['value']} rows{where}"
+    if kind == "wins":
+        return (
+            f"{output} {_column(spec)}: first row larger in {spec['value']} "
+            f"of {len(spec['pairs'])} pairs"
+        )
+    if kind == "reduction":
+        return (
+            f"{output} {_column(spec)}: reduction from {spec['min']} "
+            f"to {spec['max']}% per pair"
+        )
+    if kind == "top":
+        return f"{output} row with largest {spec['by']} has {spec['present']}"
+    raise ClaimsError(f"unknown check kind {kind}")
+
+
+def _outputs(claim: Claim) -> list[str]:
+    outputs: set[str] = set()
+    for spec in claim.checks:
+        if spec["kind"] == "macro":
+            outputs.add(f"`build/macros/{spec['report']}.tex`")
+        else:
+            outputs.add(f"`build/{spec['report']}/{spec['table']}.csv`")
+    return sorted(outputs)
+
+
 def matrix(claims: Sequence[Claim]) -> str:
     """The claims-to-evidence matrix in Markdown, with each report's inputs."""
     import teralizer.eval.reports  # noqa: F401  (registers every report)
@@ -339,9 +428,9 @@ def matrix(claims: Sequence[Claim]) -> str:
     from teralizer.eval.registry import get
 
     lines = [
-        "| Claim | RQ | Statement | Evidence | Mode | Corpora | File inputs "
-        "| Regenerate with | New collection |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Claim | RQ | Statement | Evidence | Mode | Inputs | Outputs "
+        "| Expected | Command | New collection |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for claim in claims:
         corpora: set[str] = set()
@@ -349,14 +438,15 @@ def matrix(claims: Sequence[Claim]) -> str:
         for report in claim.reports:
             for spec in get(report).inputs:
                 if isinstance(spec, CorpusInputSpec):
-                    corpora.add(spec.corpus_id)
+                    corpora.add(f"corpus {spec.corpus_id}")
                 elif isinstance(spec, FileInputSpec):
                     files.add(f"`{spec.path}`")
-        command = "<br>".join(
-            f"`python -m teralizer.eval {report}`" for report in claim.reports
+        # RQ0 alone needs only the two JARVIS corpora, every other report all four.
+        command = (
+            "`./artifact reproduce-results rq0`"
+            if set(claim.reports) == {"rq0"}
+            else "`./artifact reproduce-results`"
         )
-        # A published value is carried as frozen input, so results reproduction
-        # inspects it, while it regenerates everything computed from a corpus.
         mode = (
             "inspection"
             if claim.evidence == "external published reference"
@@ -364,8 +454,9 @@ def matrix(claims: Sequence[Claim]) -> str:
         )
         lines.append(
             f"| `{claim.id}` | {claim.rq} | {claim.statement} | {claim.evidence} | "
-            f"{mode} | {', '.join(sorted(corpora))} | "
-            f"{'<br>'.join(sorted(files)) or 'none'} | {command} | "
-            f"{claim.collection or 'No invariant declared.'} |"
+            f"{mode} | {'<br>'.join(sorted(corpora) + sorted(files))} | "
+            f"{'<br>'.join(_outputs(claim))} | "
+            f"{'<br>'.join(describe(spec) for spec in claim.checks)} | {command} | "
+            f"{claim.collection or 'Checked by report reproduction only.'} |"
         )
-    return "\n".join(lines) + "\n"
+    return _MATRIX_INTRO + "\n".join(lines) + "\n"

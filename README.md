@@ -50,7 +50,7 @@ Run every command from the extracted `teralizer/` directory. The smoke test rest
 ./artifact smoke
 ```
 
-With all four `corpus-*` archives extracted, rebuild every report, compare every output with the reference and check the paper's claims:
+With all four `corpus-*` archives extracted, rebuild every report, compare every output with the reference and check the paper's claims. [replication/CLAIMS.md](replication/CLAIMS.md) lists each claim with its inputs, outputs and expected values:
 
 ```sh
 ./artifact reproduce-results

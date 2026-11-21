@@ -10,7 +10,7 @@ uv run --directory analysis python -m teralizer.release build --candidate DIR --
 uv run --directory analysis python -m teralizer.release preflight WORKFLOW --workspace DIR [--release-manifest FILE]
 uv run --directory analysis python -m teralizer.release reference-outputs --analysis DIR --out FILE
 uv run --directory analysis python -m teralizer.release verify --analysis DIR --reference FILE [--claims FILE] [--json FILE] [--report ID ...]
-uv run --directory analysis python -m teralizer.release claims --analysis DIR [--claims FILE] [--json FILE] [--matrix FILE]
+uv run --directory analysis python -m teralizer.release claims-matrix [--check]
 
 Write the reference from a run of ./artifact reproduce-results, inside the analysis
 container, because matplotlib chooses axis ticks that differ between that pinned
@@ -325,37 +325,25 @@ def _verify(
     return 0 if verdict.passed else 1
 
 
-def _claims(
-    repo: Path,
-    analysis: Path,
-    declared: Path | None,
-    output: Path | None,
-    matrix: Path | None,
-) -> int:
+def _claims_matrix(repo: Path, check: bool) -> int:
     from teralizer.release import claims
 
+    target = repo / claims.DEFAULT_MATRIX
     try:
-        listed = claims.load(declared or repo / claims.DEFAULT_CLAIMS)
-        if matrix is not None:
-            matrix.write_text(claims.matrix(listed))
-        outcomes = claims.verify(listed, claims.Run(analysis))
+        rendered = claims.matrix(claims.load(repo / claims.DEFAULT_CLAIMS))
     except (claims.ClaimsError, OSError) as error:
         return _report_problems([str(error)], "claims")
-    result = claims.summary(outcomes)
-    if output is not None:
-        output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-    for outcome in outcomes:
-        status = "passed" if outcome.passed else "FAILED"
-        print(f"{status}: {outcome.claim.rq} {outcome.claim.id}")
-        for failure in outcome.failures:
-            print(f"  {failure}")
-    failed = sum(1 for outcome in outcomes if not outcome.passed)
-    print(
-        f"all {len(outcomes)} claims pass"
-        if not failed
-        else f"{failed} of {len(outcomes)} claims fail"
-    )
-    return 0 if not failed else 1
+    if check:
+        if not target.is_file() or target.read_text() != rendered:
+            return _report_problems(
+                [f"{claims.DEFAULT_MATRIX} is not generated from the current claims"],
+                "claims matrix",
+            )
+        print(f"{claims.DEFAULT_MATRIX} is current")
+        return 0
+    target.write_text(rendered)
+    print(f"wrote {claims.DEFAULT_MATRIX}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -466,14 +454,13 @@ def main(argv: list[str] | None = None) -> int:
         dest="reports",
         help="verify only this report; repeat for several",
     )
-    claims_command = commands.add_parser(
-        "claims", help="check the paper's RQ claims against a report run"
+    matrix_command = commands.add_parser(
+        "claims-matrix", help="write the claims-to-evidence matrix from the claims"
     )
-    claims_command.add_argument("--analysis", type=Path, required=True)
-    claims_command.add_argument("--claims", type=Path)
-    claims_command.add_argument("--json", type=Path, dest="summary")
-    claims_command.add_argument(
-        "--matrix", type=Path, help="also write the claims-to-evidence matrix"
+    matrix_command.add_argument(
+        "--check",
+        action="store_true",
+        help="only fail when the committed matrix differs from the claims",
     )
     args = parser.parse_args(argv)
 
@@ -491,8 +478,8 @@ def main(argv: list[str] | None = None) -> int:
             args.summary,
             args.reports,
         )
-    if args.command == "claims":
-        return _claims(args.repo, args.analysis, args.claims, args.summary, args.matrix)
+    if args.command == "claims-matrix":
+        return _claims_matrix(args.repo, args.check)
     try:
         declared = inventory.load(args.inventory)
     except inventory.InventoryError as error:
