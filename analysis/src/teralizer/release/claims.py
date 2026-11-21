@@ -350,7 +350,8 @@ the result of every claim.
 Mode "inspection" marks a value that others published and the release carries as
 frozen input. Reproduction reads it and regenerates everything computed from it.
 "New collection" states what a rerun of the collection can establish, because
-collected values depend on jqwik's random inputs and on the host.
+collected values depend on jqwik's random inputs and on the host. [RQ0.md](RQ0.md)
+describes the inputs of the JARVIS comparison and what each command establishes.
 
 The answers also explain some results, for example by the design of a generation
 strategy. Those explanations come from the design and from inspecting generated
