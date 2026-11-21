@@ -40,8 +40,8 @@ services:
       - checkpoint_timeout=30min
       - -c
       - checkpoint_completion_target=0.9
-    ports:
-      - "127.0.0.1:${REPLICATION_DB_PORT:-5432}:5432"
+    # No host port: the other services reach the database by its service name,
+    # so a host PostgreSQL or a second workspace does not collide with it.
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
