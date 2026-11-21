@@ -44,8 +44,6 @@ def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(cli.run.inputs, "resolve_inputs", _resolved)
     monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
-    monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
-    monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli.main(["smoke", "--targets", "md,figures,latex"])
     assert (tmp_path / "reports" / "smoke.md").exists()
     assert (tmp_path / "reports" / "provenance.json").exists()
@@ -70,8 +68,6 @@ def test_cli_resolves_declared_inputs_before_build(monkeypatch, tmp_path):
     monkeypatch.setitem(registry.REPORTS, "complete", spec)
     monkeypatch.setattr(cli.run.inputs, "resolve_inputs", resolve)
     monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
-    monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
-    monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli.main(["complete", "--targets", "md"])
 
     assert events == [("resolve", "complete", ()), ("build", "complete")]
@@ -88,8 +84,6 @@ def test_cli_publishes_csv_without_promoting_generator_outputs(monkeypatch, tmp_
     generator.mkdir()
     subprocess.run(["git", "init", "-q", str(generator)], check=True)
     monkeypatch.setattr(cli, "_ANALYSIS", generator)
-    monkeypatch.setattr(cli, "REPORTS_DIR", generator / "reports")
-    monkeypatch.setattr(cli, "BUILD_DIR", generator / "build")
     paper = tmp_path / "paper"
     paper.mkdir()
     subprocess.run(["git", "init", "-q", str(paper)], check=True)
@@ -173,8 +167,6 @@ def test_publishing_dirty_generator_is_refused_before_build(monkeypatch, tmp_pat
     subprocess.run(["git", "init", "-q", str(generator)], check=True)
     (generator / "dirty.txt").write_text("dirty")
     monkeypatch.setattr(cli, "_ANALYSIS", generator)
-    monkeypatch.setattr(cli, "REPORTS_DIR", generator / "reports")
-    monkeypatch.setattr(cli, "BUILD_DIR", generator / "build")
     paper = tmp_path / "paper"
     paper.mkdir()
     subprocess.run(["git", "init", "-q", str(paper)], check=True)

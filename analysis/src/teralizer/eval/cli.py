@@ -23,7 +23,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--paper-out", default=None)
     # A release extracts the source read-only, so its runs write elsewhere. The
     # root takes the reports/ and build/ layout of the analysis directory.
-    parser.add_argument("--output-root", type=Path, default=_ANALYSIS)
+    parser.add_argument("--output-root", type=Path, default=None)
     args = parser.parse_args(argv)
     target_names = {
         target.strip() for target in args.targets.split(",") if target.strip()
@@ -54,12 +54,11 @@ def main(argv: list[str] | None = None) -> None:
     if not report_ids:
         print("no reports registered")
         return
+    output_root = args.output_root or _ANALYSIS
     result = run.execute(
         report_ids,
         selected_targets,
-        run.RunPaths(
-            args.output_root, args.output_root / "reports", args.output_root / "build"
-        ),
+        run.RunPaths(output_root, output_root / "reports", output_root / "build"),
         repo_url=REPO_URL,
         full=args.rq == "all",
         declaration=declaration,
