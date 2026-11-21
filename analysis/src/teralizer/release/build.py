@@ -212,6 +212,7 @@ def build_candidate(
 
     release = _release_identity(declaration, revision)
     built: list[BuiltArchive] = []
+    records: dict[str, bytes] = {}
     for component_id in selected:
         component = declaration.component(component_id)
         component_plan = plans[component_id]
@@ -271,12 +272,13 @@ def build_candidate(
                     corpus_package, component.corpus
                 )
             else:
+                records[component_id] = _third_party(
+                    component_id, component.root, entries, sources
+                )
                 entries.append(
                     archive.Entry(
                         f"{component.root}/{thirdparty.RECORDS}",
-                        content=_third_party(
-                            component_id, component.root, entries, sources
-                        ),
+                        content=records[component_id],
                     )
                 )
                 licenses = [
@@ -331,6 +333,18 @@ def build_candidate(
             )
         )
 
+    if set(ALTERNATIVE_SCOPES) <= set(records):
+        sample, full = (
+            {item["path"]: item for item in json.loads(records[scope])["projects"]}
+            for scope in ALTERNATIVE_SCOPES
+        )
+        differing = sorted(
+            path for path, item in sample.items() if full.get(path) != item
+        )
+        if differing:
+            raise BuildError(
+                f"sample records differ from the full component: {differing[:5]}"
+            )
     included = {item.component for item in built}
     release_manifest = {
         "format": documents.RELEASE_MANIFEST[0],
