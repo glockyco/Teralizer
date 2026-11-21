@@ -127,10 +127,10 @@ build_reports() {
 }
 
 verify() {
-    step "Comparing the outputs with the reference"
+    step "Verifying the outputs, the paper's claims and the JARVIS inputs"
     # "$@" rather than an array: macOS's bash 3.2 rejects an empty array under set -u.
-    analysis -m teralizer.release verify-outputs --analysis /output \
-        --reference "$REFERENCE" --json /output/verify-outputs.json "$@"
+    analysis -m teralizer.release verify --analysis /output \
+        --reference "$REFERENCE" --json /output/evidence.json "$@"
 }
 
 # The CUT-PVC capture runs the original Commons test cases of JARVIS Table 2 with the
@@ -345,9 +345,6 @@ case "$command" in
                 restore "${ALL_CORPORA[@]}"
                 build_reports all
                 verify
-                step "Checking the paper's claims"
-                analysis -m teralizer.release claims --analysis /output \
-                    --json /output/claims.json
                 ;;
             rq0)
                 preflight reproduce-rq0

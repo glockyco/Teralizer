@@ -56,7 +56,7 @@ With all four `corpus-*` archives extracted, rebuild every report, compare every
 ./artifact reproduce-results
 ```
 
-`./artifact reproduce-results rq0` does the same for RQ0 alone. The reports land in `output/`, together with `verify-outputs.json`, and `claims.json` after a full run. The services need the network only while Docker pulls and builds their images. A corpus that is already restored and verified is reused by the next command.
+`./artifact reproduce-results rq0` does the same for RQ0 alone. Both also check that the JARVIS value logs are the ones the compact JARVIS facts were built from. The reports land in `output/`, and `output/evidence.json` records the verdict on every output, claim and JARVIS input. The services need the network only while Docker pulls and builds their images. A corpus that is already restored and verified is reused by the next command.
 
 To browse the databases, start Adminer and open <http://localhost:18080>. The connection details are in [replication/docker-compose.yml](replication/docker-compose.yml).
 

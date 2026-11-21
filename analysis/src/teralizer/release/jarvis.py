@@ -26,26 +26,35 @@ from teralizer.jarvis_scoreboard import (
 FACTS = Path("analysis/data/report-inputs/jarvis-value-facts.json")
 
 
-def _relative(paths: Iterable[object], repo: Path) -> list[str]:
-    selected = {
-        Path(str(path)).resolve().relative_to(repo.resolve()).as_posix()
-        for path in paths
-        if path is not None and str(path) != "nan"
-    }
+# A corpus records each value log either by its repository-relative path or by the
+# absolute path of the checkout that ran the collection. Every log lies below
+# data/jarvis-*/, which keeps its place in a release. Fixture logs repeat that
+# segment further down, so only its first occurrence marks the repository root.
+_LOG_ROOT = "/data/jarvis-"
+
+
+def _relative(paths: Iterable[object]) -> list[str]:
+    selected: set[str] = set()
+    for path in paths:
+        if path is None or str(path) == "nan":
+            continue
+        text = "/" + Path(str(path)).as_posix().lstrip("/")
+        position = text.find(_LOG_ROOT)
+        if position < 0:
+            raise ValueError(f"value log outside data/jarvis-*: {path}")
+        selected.add(text[position + 1 :])
     return sorted(selected)
 
 
 def selected_value_logs(
-    scenarios: Connection, benchmark: Connection, repo: Path
+    scenarios: Connection, benchmark: Connection
 ) -> dict[str, list[str]]:
     """Repository-relative value logs that the facts bind, per JARVIS corpus."""
     scoreboard = get_scoreboard(scenarios, variants=SWEEP_VARIANTS)
     census = get_generated_test_runs(benchmark, variants=(CENSUS_VARIANT,))
     return {
-        "scoreboard_value_logs": _relative(
-            scoreboard.get("jqwik_value_log_path", []), repo
-        ),
-        "census_value_logs": _relative(census.get("jqwik_value_log_path", []), repo),
+        "scoreboard_value_logs": _relative(scoreboard.get("jqwik_value_log_path", [])),
+        "census_value_logs": _relative(census.get("jqwik_value_log_path", [])),
     }
 
 
