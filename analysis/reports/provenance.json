@@ -70,7 +70,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2186,7 +2186,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2240,6 +2240,11 @@
         "target": "csv"
       },
       {
+        "key": "tab-mutation-score-improvements",
+        "path": "build/rq1/tab-mutation-score-improvements.csv",
+        "target": "csv"
+      },
+      {
         "key": "mutation_detection_comparison",
         "path": "build/figures/rq1/mutation_detection_comparison.pdf",
         "target": "figures"
@@ -2262,6 +2267,11 @@
       {
         "key": "tab-mutants-per-project",
         "path": "build/tab-mutants-per-project.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-mutation-score-improvements",
+        "path": "build/tab-mutation-score-improvements.tex",
         "target": "latex"
       },
       {
@@ -2465,7 +2475,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2490,6 +2500,68 @@
         "row_keys": [],
         "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L253",
         "value": "Number of total, covered, and uncovered mutants in included classes per project.",
+        "version": "0.1.0"
+      },
+      "tab-mutation-score-improvements": {
+        "commit": "54d4a4e231f92dc5e8bc3238623cc75b7415e8ad",
+        "dirty": false,
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_detection_improvements",
+        "query": null,
+        "row_key": "row_key",
+        "row_keys": [
+          "eqbench-es-default-1s:INITIAL",
+          "eqbench-es-default-1s:NAIVE_10_TRIES",
+          "eqbench-es-default-1s:NAIVE_50_TRIES",
+          "eqbench-es-default-1s:NAIVE_200_TRIES",
+          "eqbench-es-default-1s:IMPROVED_10_TRIES",
+          "eqbench-es-default-1s:IMPROVED_50_TRIES",
+          "eqbench-es-default-1s:IMPROVED_200_TRIES",
+          "eqbench-es-default-10s:INITIAL",
+          "eqbench-es-default-10s:NAIVE_10_TRIES",
+          "eqbench-es-default-10s:NAIVE_50_TRIES",
+          "eqbench-es-default-10s:NAIVE_200_TRIES",
+          "eqbench-es-default-10s:IMPROVED_10_TRIES",
+          "eqbench-es-default-10s:IMPROVED_50_TRIES",
+          "eqbench-es-default-10s:IMPROVED_200_TRIES",
+          "eqbench-es-default-60s:INITIAL",
+          "eqbench-es-default-60s:NAIVE_10_TRIES",
+          "eqbench-es-default-60s:NAIVE_50_TRIES",
+          "eqbench-es-default-60s:NAIVE_200_TRIES",
+          "eqbench-es-default-60s:IMPROVED_10_TRIES",
+          "eqbench-es-default-60s:IMPROVED_50_TRIES",
+          "eqbench-es-default-60s:IMPROVED_200_TRIES",
+          "commons-utils-es-default-1s:INITIAL",
+          "commons-utils-es-default-1s:NAIVE_10_TRIES",
+          "commons-utils-es-default-1s:NAIVE_50_TRIES",
+          "commons-utils-es-default-1s:NAIVE_200_TRIES",
+          "commons-utils-es-default-1s:IMPROVED_10_TRIES",
+          "commons-utils-es-default-1s:IMPROVED_50_TRIES",
+          "commons-utils-es-default-1s:IMPROVED_200_TRIES",
+          "commons-utils-es-default-10s:INITIAL",
+          "commons-utils-es-default-10s:NAIVE_10_TRIES",
+          "commons-utils-es-default-10s:NAIVE_50_TRIES",
+          "commons-utils-es-default-10s:NAIVE_200_TRIES",
+          "commons-utils-es-default-10s:IMPROVED_10_TRIES",
+          "commons-utils-es-default-10s:IMPROVED_50_TRIES",
+          "commons-utils-es-default-10s:IMPROVED_200_TRIES",
+          "commons-utils-es-default-60s:INITIAL",
+          "commons-utils-es-default-60s:NAIVE_10_TRIES",
+          "commons-utils-es-default-60s:NAIVE_50_TRIES",
+          "commons-utils-es-default-60s:NAIVE_200_TRIES",
+          "commons-utils-es-default-60s:IMPROVED_10_TRIES",
+          "commons-utils-es-default-60s:IMPROVED_50_TRIES",
+          "commons-utils-es-default-60s:IMPROVED_200_TRIES",
+          "commons-utils:INITIAL",
+          "commons-utils:NAIVE_10_TRIES",
+          "commons-utils:NAIVE_50_TRIES",
+          "commons-utils:NAIVE_200_TRIES",
+          "commons-utils:IMPROVED_10_TRIES",
+          "commons-utils:IMPROVED_50_TRIES",
+          "commons-utils:IMPROVED_200_TRIES"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/54d4a4e231f92dc5e8bc3238623cc75b7415e8ad/analysis/src/teralizer/rq1_mutation_detection.py#L275",
+        "value": "Detected share of covered mutants per project and strategy, with the gain over the initial test suite.",
         "version": "0.1.0"
       }
     }
@@ -2548,7 +2620,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2675,7 +2747,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2898,7 +2970,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -3090,7 +3162,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "tab-exclusions-breakdown": {
@@ -6211,7 +6283,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764"
+      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
     },
     "tables": {
       "rq6_assertion_type_rejections": {

@@ -113,6 +113,14 @@
       "target": "csv"
     },
     {
+      "digest": "1ace5d1a2c6bebd08d87563762ab86b78d84c86828f9d1a81ebfd128e196d80b",
+      "key": "tab-mutation-score-improvements",
+      "path": "build/rq1/tab-mutation-score-improvements.csv",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "csv"
+    },
+    {
       "digest": "image",
       "key": "mutation_detection_comparison",
       "path": "build/figures/rq1/mutation_detection_comparison.pdf",
@@ -153,6 +161,14 @@
       "target": "latex"
     },
     {
+      "digest": "4a87f54fd93ecb28d09625becea3b1bad667558a9bcb0af97000bbeae30f9e50",
+      "key": "tab-mutation-score-improvements",
+      "path": "build/tab-mutation-score-improvements.tex",
+      "report": "rq1",
+      "rule": "bytes",
+      "target": "latex"
+    },
+    {
       "digest": "image",
       "key": "mutation_detection_comparison",
       "path": "reports/figures/rq1/mutation_detection_comparison.png",
@@ -161,7 +177,7 @@
       "target": "md"
     },
     {
-      "digest": "ae9f0bb246946c51859526dffbb8176d92866378e44f8719cf58a9755e057fc8",
+      "digest": "1638c76d3ba399d3aef59ec95923ec8f394290664ae479e7029d919534ebe8a7",
       "key": "rq1",
       "path": "reports/rq1.md",
       "report": "rq1",
@@ -841,7 +857,7 @@
       "target": "md"
     },
     {
-      "digest": "d3f3a24ed152587339259f6e1054f993fb856730831ca847421daf3ec7430754",
+      "digest": "643f7f75955c8348144f5d8d6f3f805f0cae238d13f06a950841cee7a9c4978f",
       "key": "provenance",
       "path": "reports/provenance.json",
       "report": "run",
