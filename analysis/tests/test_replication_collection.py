@@ -36,7 +36,7 @@ case "$*" in
     info) ;;
     'info --format {{.Architecture}}') printf 'x86_64\n' ;;
     'compose version --short') printf '2.25.0\n' ;;
-    *' build -q analysis'|*' up -d --wait postgres'|*' down --volumes --remove-orphans') ;;
+    *' build -q analysis'|*' build -q teralizer'|*' up -d --wait postgres'|*' down --volumes --remove-orphans') ;;
     *' -m teralizer.release preflight '*) ;;
     *' -m teralizer.corpora export controlled')
         printf 'DB_NAME=published_controlled\nCONFIG_DIR=project-configs/primary\n' ;;

@@ -133,6 +133,33 @@ verify() {
         --reference "$REFERENCE" --json /output/verify-outputs.json "$@"
 }
 
+# The CUT-PVC capture runs the original Commons test cases of JARVIS Table 2 with the
+# capture agent. Each run starts over and ends with a comparison against the published
+# values, which the RQ0 report reads.
+capture_cut_pvc() {
+    local collection_root="$1"
+    local work="$collection_root/data/cut-pvc-capture"
+    local state_work="/state/collect/${collection_root##*/}/data/cut-pvc-capture"
+    local published="$ROOT/analysis/data/jarvis-cut-values/cut_values.tsv"
+    step "Capturing CUT-PVC values in $work"
+    # The analysis service writes the aggregate as the invoking user, so the directory
+    # is created here. Earlier raw captures are root-owned files of the pipeline container.
+    mkdir -p "$work"
+    "${COMPOSE[@]}" run --rm -T --no-deps teralizer rm -rf /app/data/cut-pvc-capture/raw
+    "${COMPOSE[@]}" run --rm -T --no-deps analysis -m teralizer.cut_pvc plan |
+        "${COMPOSE[@]}" run --rm -T --no-deps --name "${COMPOSE_PROJECT_NAME:-teralizer}-collect-cut-pvc" \
+            teralizer scripts/lib/cut-pvc-capture.sh /dev/stdin \
+            /app/data/jarvis-source-cache /app/data/cut-pvc-capture /app/data/cut-pvc-capture/raw
+    "${COMPOSE[@]}" run --rm -T --no-deps analysis -m teralizer.cut_pvc aggregate \
+        "$state_work/raw" --out "$state_work/cut_values.tsv"
+    if cmp -s "$work/cut_values.tsv" "$published"; then
+        printf 'CUT-PVC values match the published %s\n' "${published#"$ROOT"/}"
+    else
+        printf 'CUT-PVC values differ from the published %s. Compare %s\n' \
+            "${published#"$ROOT"/}" "$work/cut_values.tsv"
+    fi
+}
+
 copy_collection_tree() (
     local source="$1" target="$2" name parent temp
     [[ -d "$target" ]] && exit 0
@@ -174,7 +201,8 @@ collect() {
             fi
             ;;
         jarvis-scenarios)
-            # The scorecard uses this runner. CUT-PVC capture is a separate stage.
+            # The scorecard collection also repeats the CUT-PVC capture, which clones the
+            # pinned Commons Lang and Commons Math sources.
             component=jarvis-scoreboard
             jarvis_data=data/jarvis-scoreboard
             runner="$ROOT/scripts/run-jarvis-scoreboard.sh"
@@ -195,6 +223,8 @@ collect() {
     esac
 
     preflight "collect-$component"
+    # An image left by another release under the same Compose project would run old code.
+    "${COMPOSE[@]}" build -q teralizer
     start_database
 
     local collection_root="$TERALIZER_STATE/collect/$workspace"
@@ -243,6 +273,9 @@ collect() {
             done
         fi
         "$runner" "${args[@]}" || rc=$?
+        if [[ "$corpus" == jarvis-scenarios && $rc -eq 0 ]]; then
+            capture_cut_pvc "$collection_root" || rc=$?
+        fi
     else
         export REPLICATION_SCRATCH_DB="$scratch"
         export REPLICATION_DATA_DIR="data/replication-$corpus"
