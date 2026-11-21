@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
+import tomllib
 from decimal import Decimal
-from importlib.metadata import version
 from pathlib import Path
 
 from teralizer import corpora
@@ -19,7 +19,11 @@ from teralizer.eval.artifacts import (
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot, InputSnapshot
 from teralizer.eval.model import BuiltReport, Metric, Table
 
-ANALYSIS_VERSION = version("teralizer-analysis")
+# The release runs this source without installing it, so the version comes from
+# the project file next to it rather than from installed package metadata.
+ANALYSIS_VERSION = tomllib.loads(
+    (Path(__file__).resolve().parents[4] / "pyproject.toml").read_text()
+)["project"]["version"]
 
 
 def _json_value(value: object) -> object:

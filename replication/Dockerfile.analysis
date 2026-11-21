@@ -1,15 +1,15 @@
-# Dockerfile for the Python analysis and verification environment.
+# The Python environment for the reports and the release checks.
 #
-# The replication compose file uses this image for the one-shot `verify`
-# service. Reviewer-facing report generation runs through uv on the host with
-# replication/scripts/run-analysis.sh, so this image no longer serves a web UI.
-# Build context should be the repository root:
-#   docker build -f replication/Dockerfile.analysis -t teralizer-analysis .
+# The image holds only the interpreter, fonts and locked dependencies. The
+# source it runs is the extracted release, mounted read-only at /teralizer, so
+# release provenance checks the very files that produce the reports. Runs write
+# only to the mounted /output and /state directories.
+#
+# Build context is the analysis directory, which holds the project and its lock:
+#   docker build -f replication/Dockerfile.analysis -t teralizer-analysis analysis
 
 # The tag names the version, the digest the exact multi-architecture index.
 FROM python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
-
-WORKDIR /app
 
 # Install the fonts matplotlib renders with from the Debian snapshot that the
 # base image was built from, so a rebuild installs the same package versions.
@@ -25,16 +25,24 @@ RUN sed -i \
 # The uv release that analysis/uv.lock was resolved with.
 COPY --from=ghcr.io/astral-sh/uv:0.11.21@sha256:ff07b86af50d4d9391d9daf4ff89ce427bc544f9aae87057e69a1cc0aa369946 /uv /usr/local/bin/uv
 
-# Copy the analysis package and install exactly its locked runtime dependencies
-# into the image's Python.
-COPY analysis/pyproject.toml analysis/uv.lock /app/analysis/
-COPY analysis/src /app/analysis/src/
-
-WORKDIR /app/analysis
+# Install exactly the locked runtime dependencies. The analysis package itself
+# is not installed: the mount supplies every source file, and PYTHONPATH finds it.
+COPY pyproject.toml uv.lock /tmp/analysis/
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_PYTHON=/usr/local/bin/python3 \
-    UV_PYTHON_DOWNLOADS=never
-RUN uv sync --frozen --no-dev
+    UV_PYTHON_DOWNLOADS=never \
+    UV_NO_CACHE=1
+RUN cd /tmp/analysis \
+    && uv sync --frozen --no-dev --no-install-project \
+    && rm -rf /tmp/analysis /usr/local/bin/uv
 
-# Keep a writable output location for one-shot verification commands.
-RUN mkdir -p /app/analysis/output
+# No bytecode lands in the read-only source, and matplotlib and fontconfig keep
+# their caches in the disposable state directory.
+ENV PATH=/opt/venv/bin:$PATH \
+    PYTHONPATH=/teralizer/analysis/src \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HOME=/state \
+    MPLCONFIGDIR=/state/matplotlib
+
+WORKDIR /teralizer
+ENTRYPOINT ["python"]

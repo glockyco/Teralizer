@@ -1,0 +1,5 @@
+# The analysis image installs only the locked dependencies. The source comes
+# from the mounted release at run time.
+*
+!pyproject.toml
+!uv.lock

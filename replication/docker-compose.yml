@@ -4,7 +4,7 @@
 #   postgres  - PostgreSQL 17.10, the version that wrote the corpus dumps (port 5432)
 #   adminer   - Database web UI (port 18080)
 #   teralizer - Java pipeline for data collection (on-demand)
-#   verify    - Output comparison tool (on-demand)
+#   analysis  - Reports and release checks on the mounted release (on-demand)
 #
 # Usage:
 #   # Quick start (inspect data, re-run analysis)
@@ -13,8 +13,12 @@
 #   ./scripts/run-analysis.sh verify
 #   # Open http://localhost:18080 for Adminer
 #
-#   # Verify outputs match after re-running analysis
-#   docker compose run --rm verify original verify
+#   # Build every report into ../output and compare it with the reference
+#   docker compose run --rm analysis -m teralizer.eval all \
+#       --targets md,figures,latex,csv --output-root /output
+#   docker compose run --rm analysis -m teralizer.release verify-outputs \
+#       --analysis /output \
+#       --reference analysis/output/original/reference-manifest.json
 #
 #   # Run pipeline on subset (via run.sh script)
 #   ./scripts/run.sh --corpus real-world --count 5
@@ -98,22 +102,28 @@ services:
         limits:
           memory: 8G
 
-  # One-shot verification service
-  # Usage: docker compose run --rm verify [original verify|original replicate]
-  verify:
+  # The release root is mounted read-only, so the reports run on the extracted
+  # files and cannot change them. Runs write only to /output and /state, which
+  # must exist before the run so that Docker does not create them as root.
+  # The service holds only the report role's credentials, which can read the
+  # prepared corpora and nothing else.
+  analysis:
     build:
-      context: ..
-      dockerfile: replication/Dockerfile.analysis
+      context: ../analysis
+      dockerfile: ../replication/Dockerfile.analysis
+    user: "${TERALIZER_UID:-1000}:${TERALIZER_GID:-1000}"
+    read_only: true
+    tmpfs:
+      - /tmp
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ${REPLICATION_DB_USER:-teralizer}
-      DB_PASSWORD: ${REPLICATION_DB_PASSWORD:-teralizer}
+      REPORT_DB_USER: ${REPLICATION_REPORT_DB_USER:-teralizer_report}
+      REPORT_DB_PASSWORD: ${REPLICATION_REPORT_DB_PASSWORD:-teralizer-report}
     volumes:
-      - ../analysis:/app/analysis
-    working_dir: /app/analysis
-    entrypoint: ["/opt/venv/bin/python", "-m", "teralizer.verify"]
-    command: ["original", "verify"]
+      - ..:/teralizer:ro
+      - ${TERALIZER_OUTPUT:-../output}:/output
+      - ${TERALIZER_STATE:-../state}:/state
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,4 +1,4 @@
-"""python -m teralizer.eval <rq|all> [--targets md,figures,latex,csv]."""
+"""python -m teralizer.eval <rq|all> [--targets md,figures,latex,csv] [--output-root DIR]."""
 
 from __future__ import annotations
 
@@ -11,8 +11,6 @@ from teralizer.eval.artifacts import RenderTarget
 
 REPO_URL = "https://github.com/glockyco/Teralizer"
 _ANALYSIS = Path(__file__).resolve().parents[3]
-REPORTS_DIR = _ANALYSIS / "reports"
-BUILD_DIR = _ANALYSIS / "build"
 _RENDER_TARGETS = frozenset(
     target.value for target in RenderTarget if target is not RenderTarget.MANIFEST
 )
@@ -23,6 +21,9 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("rq", help="report id or 'all'")
     parser.add_argument("--targets", default="md,figures,latex")
     parser.add_argument("--paper-out", default=None)
+    # A release extracts the source read-only, so its runs write elsewhere. The
+    # root takes the reports/ and build/ layout of the analysis directory.
+    parser.add_argument("--output-root", type=Path, default=_ANALYSIS)
     args = parser.parse_args(argv)
     target_names = {
         target.strip() for target in args.targets.split(",") if target.strip()
@@ -56,7 +57,9 @@ def main(argv: list[str] | None = None) -> None:
     result = run.execute(
         report_ids,
         selected_targets,
-        run.RunPaths(_ANALYSIS, REPORTS_DIR, BUILD_DIR),
+        run.RunPaths(
+            args.output_root, args.output_root / "reports", args.output_root / "build"
+        ),
         repo_url=REPO_URL,
         full=args.rq == "all",
         declaration=declaration,
