@@ -87,6 +87,60 @@ table = "rq0-table2-comparison"
 condition = { column = "suite_pvc", op = "missing" }
 value = 3
 
+[[claim]]
+id = "rq0-pvc-budget"
+rq = "RQ0"
+statement = "Raising the budget of the Improved generalized tests from 100 to 200 and 1,000 tries raises PVC, while all three budgets cover the same 80 mutants and kill the same 51, for a covered mutation score of 63.8%."
+evidence = "deterministic transformation"
+reports = ["rq0"]
+collection = "Scorecard collection reruns the three budgets on the two scorecard fixtures. PVC depends on jqwik's random inputs, so the claim holds for a rerun when PVC rises with the budget and the covered and killed mutants are the same at all three budgets."
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-pvc-budget"
+value = 3
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-pvc-budget"
+condition = { column = "total_pvc", op = ">", value = "1135" }
+value = 2
+
+[[claim.check]]
+kind = "cell"
+report = "rq0"
+table = "rq0-pvc-budget"
+where = { variant = "IMPROVED_100_TRIES" }
+column = "total_pvc"
+value = "1135"
+
+[[claim.check]]
+kind = "extent"
+report = "rq0"
+table = "rq0-pvc-budget"
+column = "covered_mutants"
+min = "80"
+max = "80"
+
+[[claim.check]]
+kind = "extent"
+report = "rq0"
+table = "rq0-pvc-budget"
+column = "killed_mutants"
+min = "51"
+max = "51"
+
+[[claim.check]]
+kind = "extent"
+report = "rq0"
+table = "rq0-pvc-budget"
+column = "covered_mutation_score"
+scale = 100
+min = "63.8"
+max = "63.8"
+
 # RQ1
 
 [[claim]]
