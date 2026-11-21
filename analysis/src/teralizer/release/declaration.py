@@ -18,6 +18,7 @@ PLATFORM_STATUSES = ("release-tested", "compatibility-tested", "unsupported")
 NETWORK_PHASES = ("setup", "collection")
 CORE_ROOT = "teralizer"
 _DOI = re.compile(r"^10\.\d{4,9}/\S+$")
+_ORCID = re.compile(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$")
 
 
 class DeclarationError(ValueError):
@@ -50,6 +51,13 @@ class Platform:
 
 
 @dataclass(frozen=True)
+class Creator:
+    name: str
+    affiliation: str
+    orcid: str
+
+
+@dataclass(frozen=True)
 class Declaration:
     name: str
     version: str
@@ -59,6 +67,10 @@ class Declaration:
     previous_version_dois: tuple[str, ...]
     code_license: str
     content_license: str
+    repository: str
+    keywords: tuple[str, ...]
+    description: str
+    creators: tuple[Creator, ...]
     paper_title: str
     paper_authors: tuple[str, ...]
     paper_doi: str
@@ -149,6 +161,17 @@ def parse(document: dict[str, object]) -> Declaration:
         previous_version_dois=_texts(release, "previous_version_dois", "release"),
         code_license=_text(release, "code_license", "release"),
         content_license=_text(release, "content_license", "release"),
+        repository=_text(release, "repository", "release"),
+        keywords=_texts(release, "keywords", "release"),
+        description=_text(release, "description", "release"),
+        creators=tuple(
+            Creator(
+                name=_text(entry, "name", "creator"),
+                affiliation=_text(entry, "affiliation", "creator"),
+                orcid=_text(entry, "orcid", "creator"),
+            )
+            for entry in _tables(document, "creator")
+        ),
         paper_title=_text(paper, "title", "paper"),
         paper_authors=_texts(paper, "authors", "paper"),
         paper_doi=_text(paper, "doi", "paper"),
@@ -175,6 +198,13 @@ def _validate(declaration: Declaration) -> None:
         *declaration.previous_version_dois,
     ):
         raise DeclarationError("version_doi must be a new version identifier")
+    if not declaration.creators:
+        raise DeclarationError("the release needs at least one creator")
+    for creator in declaration.creators:
+        if not _ORCID.match(creator.orcid):
+            raise DeclarationError(f"creator {creator.name}: not an ORCID iD")
+    if not declaration.repository.startswith("https://"):
+        raise DeclarationError("repository must be an https URL")
 
     ids = [component.id for component in declaration.components]
     if sorted(ids) != sorted(COMPONENTS):
