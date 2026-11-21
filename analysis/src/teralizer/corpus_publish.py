@@ -22,6 +22,9 @@ from teralizer.report_basis import resolve_repo_path
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_NAME = "manifest.json"
 CHECKSUMS_NAME = "checksums.sha256"
+# Where an extracted release keeps the corpus manifest and the corpus dumps.
+RELEASE_MANIFEST = "replication/corpus-manifest.json"
+RELEASE_COMPONENTS = "components"
 
 
 @dataclass(frozen=True)
@@ -139,10 +142,10 @@ def publication_plan() -> dict[str, object]:
     }
 
 
-def validate_manifest(
-    document: dict[str, object], stage: Path, registry: corpora.CorpusRegistry
-) -> None:
-    """Reject any staged fact that disagrees with the registry or staged bytes."""
+def _manifest_entries(
+    document: dict[str, object], registry: corpora.CorpusRegistry
+) -> dict[str, dict[str, object]]:
+    """The manifest's corpus records by id, which must be exactly the published ones."""
     raw_entries = document.get("corpora")
     if not isinstance(raw_entries, list):
         raise ValueError("corpus manifest must contain a corpora list")
@@ -156,66 +159,79 @@ def validate_manifest(
         raise ValueError(
             f"manifest corpus ids {sorted(by_id)} do not match published ids {sorted(expected_ids)}"
         )
+    return by_id
+
+
+def _validate_entry(
+    record: dict[str, object], declared: corpora.CorpusEntry, dump_file: Path
+) -> None:
+    """Reject a corpus record that disagrees with the registry or its dump bytes."""
+    if record.get("database") != declared.database:
+        raise ValueError(f"manifest database disagrees for corpus {declared.id!r}")
+    if record.get("expected_projects") != declared.expected_projects:
+        raise ValueError(
+            f"manifest expected project count disagrees for {declared.id!r}"
+        )
+    if record.get("observed_projects") != declared.expected_projects:
+        raise ValueError(
+            f"manifest observed project count disagrees for {declared.id!r}"
+        )
+    database_bytes = record.get("database_bytes")
+    if not isinstance(database_bytes, int) or database_bytes <= 0:
+        raise ValueError(f"manifest database size is invalid for {declared.id!r}")
+    dump = record.get("dump")
+    if not isinstance(dump, dict) or not isinstance(dump.get("path"), str):
+        raise ValueError(f"manifest dump fact is missing for {declared.id!r}")
+    if str(dump["path"]) != f"{declared.database}.dump":
+        raise ValueError(f"manifest dump filename disagrees for {declared.id!r}")
+    observed_dump = _file_fact(dump_file, relative_to=dump_file.parent).__dict__
+    if dump != observed_dump:
+        raise ValueError(f"manifest dump fact disagrees for {declared.id!r}")
+    if declared.derived_views:
+        expected_revision = corpora.derived_view_revision()
+        if record.get("derived_view_revision") != expected_revision:
+            raise ValueError(
+                f"manifest derived-view revision disagrees for {declared.id!r}"
+            )
+    elif record.get("derived_view_revision") is not None:
+        raise ValueError(
+            f"manifest records inapplicable derived views for {declared.id!r}"
+        )
+    raw_inputs = record.get("inputs")
+    if not isinstance(raw_inputs, list) or not raw_inputs:
+        raise ValueError(f"manifest inputs are missing for {declared.id!r}")
+    for fact in raw_inputs:
+        if not isinstance(fact, dict) or not isinstance(fact.get("path"), str):
+            raise ValueError(f"manifest input fact is malformed for {declared.id!r}")
+        path = _REPO_ROOT / str(fact["path"])
+        if (
+            not path.is_file()
+            or fact != _file_fact(path, relative_to=_REPO_ROOT).__dict__
+        ):
+            raise ValueError(
+                f"manifest input fact disagrees for {declared.id!r}: {fact['path']}"
+            )
+
+
+def validate_manifest(
+    document: dict[str, object], stage: Path, registry: corpora.CorpusRegistry
+) -> None:
+    """Reject any staged fact that disagrees with the registry or staged bytes."""
+    by_id = _manifest_entries(document, registry)
     dump_files: set[str] = set()
     for declared in registry.published_entries:
         record = by_id[declared.id]
-        if record.get("database") != declared.database:
-            raise ValueError(f"manifest database disagrees for corpus {declared.id!r}")
-        if record.get("expected_projects") != declared.expected_projects:
-            raise ValueError(
-                f"manifest expected project count disagrees for {declared.id!r}"
-            )
-        if record.get("observed_projects") != declared.expected_projects:
-            raise ValueError(
-                f"manifest observed project count disagrees for {declared.id!r}"
-            )
-        if (
-            not isinstance(record.get("database_bytes"), int)
-            or record["database_bytes"] <= 0
-        ):
-            raise ValueError(f"manifest database size is invalid for {declared.id!r}")
         dump = record.get("dump")
-        if not isinstance(dump, dict) or not isinstance(dump.get("path"), str):
-            raise ValueError(f"manifest dump fact is missing for {declared.id!r}")
-        dump_path = str(dump["path"])
-        if dump_path != f"{declared.database}.dump":
-            raise ValueError(f"manifest dump filename disagrees for {declared.id!r}")
-        if dump_path in dump_files:
-            raise ValueError(f"manifest reuses dump file {dump_path!r}")
-        dump_files.add(dump_path)
-        observed_dump = _file_fact(stage / dump_path, relative_to=stage).__dict__
-        if dump != observed_dump:
-            raise ValueError(f"manifest dump fact disagrees for {declared.id!r}")
-        if declared.derived_views:
-            expected_revision = corpora.derived_view_revision()
-            if record.get("derived_view_revision") != expected_revision:
-                raise ValueError(
-                    f"manifest derived-view revision disagrees for {declared.id!r}"
-                )
-        elif record.get("derived_view_revision") is not None:
-            raise ValueError(
-                f"manifest records inapplicable derived views for {declared.id!r}"
-            )
-        raw_inputs = record.get("inputs")
-        if not isinstance(raw_inputs, list) or not raw_inputs:
-            raise ValueError(f"manifest inputs are missing for {declared.id!r}")
-        for fact in raw_inputs:
-            if not isinstance(fact, dict) or not isinstance(fact.get("path"), str):
-                raise ValueError(
-                    f"manifest input fact is malformed for {declared.id!r}"
-                )
-            path = _REPO_ROOT / str(fact["path"])
-            if (
-                not path.is_file()
-                or fact != _file_fact(path, relative_to=_REPO_ROOT).__dict__
-            ):
-                raise ValueError(
-                    f"manifest input fact disagrees for {declared.id!r}: {fact['path']}"
-                )
+        dump_path = dump.get("path") if isinstance(dump, dict) else None
+        if isinstance(dump_path, str):
+            if dump_path in dump_files:
+                raise ValueError(f"manifest reuses dump file {dump_path!r}")
+            dump_files.add(dump_path)
+        _validate_entry(record, declared, stage / str(dump_path))
 
 
-def _verified_document(input_dir: Path) -> tuple[Path, dict[str, object]]:
-    manifest_path = input_dir / MANIFEST_NAME
+def _read_manifest(manifest_path: Path) -> dict[str, object]:
+    """A corpus manifest whose producer is one clean commit."""
     try:
         document = json.loads(manifest_path.read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -230,6 +246,12 @@ def _verified_document(input_dir: Path) -> tuple[Path, dict[str, object]]:
         or producer.get("dirty") is not False
     ):
         raise ValueError("corpus manifest does not identify a clean producer commit")
+    return document
+
+
+def _verified_document(input_dir: Path) -> tuple[Path, dict[str, object]]:
+    manifest_path = input_dir / MANIFEST_NAME
+    document = _read_manifest(manifest_path)
     validate_manifest(document, input_dir, corpora.load())
     checksums_path = input_dir / CHECKSUMS_NAME
     expected_checksums = _checksums(document)
@@ -262,6 +284,27 @@ def package_corpus_fields(input_dir: Path, corpus_id: str) -> tuple[str, str, in
         str(record["database"]),
         str(record["dump"]["path"]),
         int(record["observed_projects"]),
+        str(record["derived_view_revision"] or ""),
+    )
+
+
+def release_corpus_fields(workspace: Path, corpus_id: str) -> tuple[str, str, int, str]:
+    """Verify one corpus of an extracted release against the manifest in core.
+
+    A workflow extracts only the corpus components it needs, so this checks the
+    one requested corpus and its dump in ``components/corpus-<id>/``. The dump
+    path in the result is relative to the release root.
+    """
+    registry = corpora.load()
+    declared = corpora.resolve(corpus_id, registry)
+    document = _read_manifest(workspace / RELEASE_MANIFEST)
+    record = _manifest_entries(document, registry)[declared.id]
+    dump = f"{RELEASE_COMPONENTS}/corpus-{corpus_id}/{declared.database}.dump"
+    _validate_entry(record, declared, workspace / dump)
+    return (
+        declared.database,
+        dump,
+        declared.expected_projects,
         str(record["derived_view_revision"] or ""),
     )
 
@@ -489,6 +532,11 @@ def main(argv: list[str] | None = None) -> None:
         help="verify the output package and print one corpus entry as tab-separated fields",
     )
     action.add_argument(
+        "--resolve-release-corpus",
+        metavar="CORPUS_ID",
+        help="verify one corpus of this extracted release and print it as tab-separated fields",
+    )
+    action.add_argument(
         "--copy-complete-to",
         type=Path,
         metavar="REPOSITORY_ROOT",
@@ -545,6 +593,15 @@ def main(argv: list[str] | None = None) -> None:
                 str(field)
                 for field in package_corpus_fields(
                     args.output_dir, args.resolve_package_corpus
+                )
+            )
+        )
+    elif args.resolve_release_corpus is not None:
+        print(
+            "\t".join(
+                str(field)
+                for field in release_corpus_fields(
+                    _REPO_ROOT, args.resolve_release_corpus
                 )
             )
         )

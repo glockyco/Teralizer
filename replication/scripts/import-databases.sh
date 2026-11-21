@@ -1,31 +1,32 @@
 #!/usr/bin/env bash
-# Restore and verify registered corpora from one published manifest set.
+# Restore, prepare and verify corpora of an extracted release.
 #
 # Usage:
-#   ./import-databases.sh [--force] [--corpus ID]... input_dir
+#   ./import-databases.sh [--force] CORPUS_ID...
 #
 # Options:
-#   --corpus ID  Restore one registered corpus. Repeat to restore a subset.
-#   --force      Replace existing corpus databases without prompting.
-#   --help       Show this help text.
+#   --force  Replace existing corpus databases without prompting.
+#   --help   Show this help text.
 #
-# Without --corpus, the script restores every published corpus. The complete
-# package is verified before any database is changed.
+# Each corpus comes from its component, components/corpus-<id>/, and is checked
+# against replication/corpus-manifest.json before any database changes. Every
+# step runs in the release's Compose services, so the host needs only Docker.
+# Set COMPOSE_PROJECT_NAME to keep this workspace's services and volumes apart
+# from other installations.
 
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
-REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
-COMPOSE_FILE="$REPO_ROOT/replication/docker-compose.yml"
-INPUT_DIR=""
+RELEASE_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
+COMPOSE=(docker compose -f "$RELEASE_ROOT/replication/docker-compose.yml")
 FORCE=false
 CORPUS_IDS=()
-REPLICATION_DB_HOST="${REPLICATION_DB_HOST:-127.0.0.1}"
-REPLICATION_DB_PORT="${REPLICATION_DB_PORT:-5432}"
 REPLICATION_DB_USER="${REPLICATION_DB_USER:-teralizer}"
 REPLICATION_DB_PASSWORD="${REPLICATION_DB_PASSWORD:-teralizer}"
-REPLICATION_REPORT_DB_USER="${REPLICATION_REPORT_DB_USER:-teralizer_report}"
-REPLICATION_REPORT_DB_PASSWORD="${REPLICATION_REPORT_DB_PASSWORD:-teralizer-report}"
+# The analysis service writes as the invoking user, so that its output and
+# state directories stay removable without root.
+export TERALIZER_UID="${TERALIZER_UID:-$(id -u)}"
+export TERALIZER_GID="${TERALIZER_GID:-$(id -g)}"
 
 usage() {
     sed -n '2,15p' "$0"
@@ -33,10 +34,6 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --corpus)
-            CORPUS_IDS+=("${2:?--corpus needs an id}")
-            shift 2
-            ;;
         --force)
             FORCE=true
             shift
@@ -50,64 +47,55 @@ while [[ $# -gt 0 ]]; do
             exit 2
             ;;
         *)
-            if [[ -n "$INPUT_DIR" ]]; then
-                echo "Only one input directory is permitted" >&2
-                exit 2
-            fi
-            INPUT_DIR="$1"
+            CORPUS_IDS+=("$1")
             shift
             ;;
     esac
 done
 
-if [[ -z "$INPUT_DIR" ]]; then
-    echo "A verified corpus package directory is required" >&2
+if [[ ${#CORPUS_IDS[@]} -eq 0 ]]; then
+    echo "Name at least one corpus to restore" >&2
     usage >&2
     exit 2
 fi
-INPUT_DIR=$(cd "$INPUT_DIR" && pwd -P)
 
-uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
-    --verify-package "$INPUT_DIR"
-
-if [[ ${#CORPUS_IDS[@]} -eq 0 ]]; then
-    while IFS= read -r corpus_id; do
-        CORPUS_IDS+=("$corpus_id")
-    done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
-fi
-
-if [[ "$(docker compose -f "$COMPOSE_FILE" ps --status running --services postgres)" != "postgres" ]]; then
+if [[ "$("${COMPOSE[@]}" ps --status running --services postgres)" != "postgres" ]]; then
     echo "The replication PostgreSQL service is not running" >&2
-    echo "Start it with: docker compose -f $COMPOSE_FILE up -d postgres" >&2
+    echo "Start it with: ${COMPOSE[*]} up -d postgres" >&2
     exit 1
 fi
 
-compose_exec() {
-    docker compose -f "$COMPOSE_FILE" exec -T postgres "$@"
+# Compose creates missing bind-mount sources as root, so the default output and
+# state directories exist before the analysis service first runs.
+[[ -n "${TERALIZER_OUTPUT:-}" ]] || mkdir -p "$RELEASE_ROOT/output"
+[[ -n "${TERALIZER_STATE:-}" ]] || mkdir -p "$RELEASE_ROOT/state"
+
+# The analysis service holds only the report role. Preparation creates views and
+# grants, so it alone receives the owner role.
+analysis() {
+    "${COMPOSE[@]}" run --rm -T analysis "$@"
 }
 
-corpus_registry() {
-    (
-        cd "$REPO_ROOT"
-        DB_HOST="$REPLICATION_DB_HOST" \
-            DB_PORT="$REPLICATION_DB_PORT" \
-            DB_USER="$REPLICATION_DB_USER" \
-            DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
-            REPORT_DB_USER="$REPLICATION_REPORT_DB_USER" \
-            REPORT_DB_PASSWORD="$REPLICATION_REPORT_DB_PASSWORD" \
-            "$REPO_ROOT/scripts/corpus-registry" "$@"
-    )
+owner_analysis() {
+    "${COMPOSE[@]}" run --rm -T \
+        -e DB_USER="$REPLICATION_DB_USER" \
+        -e DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
+        analysis "$@"
+}
+
+postgres_exec() {
+    "${COMPOSE[@]}" exec -T postgres "$@"
 }
 
 remove_restored_corpus() {
     local database="$1"
-    compose_exec dropdb -U "$REPLICATION_DB_USER" --force "$database" >/dev/null 2>&1
+    postgres_exec dropdb -U "$REPLICATION_DB_USER" --force "$database" >/dev/null 2>&1
 }
 
 cleanup_failed_restore() {
     local database="$1"
     local container_dump="$2"
-    compose_exec rm -f "$container_dump" >/dev/null 2>&1 || true
+    postgres_exec rm -f "$container_dump" >/dev/null 2>&1 || true
     if ! remove_restored_corpus "$database"; then
         echo "Import cleanup could not remove database '$database'" >&2
         return 1
@@ -116,17 +104,15 @@ cleanup_failed_restore() {
 
 restore_corpus() {
     local corpus_id="$1"
-    local database dump_relative expected _manifest_revision dump container_dump existing observed
-    IFS=$'\t' read -r database dump_relative expected _manifest_revision < <(
-        uv run --frozen --directory "$REPO_ROOT/analysis" \
-            python -m teralizer.corpus_publish \
-            --output-dir "$INPUT_DIR" \
-            --resolve-package-corpus "$corpus_id"
-    )
-    dump="$INPUT_DIR/$dump_relative"
+    local fields database dump expected _revision container_dump existing observed
+    if ! fields=$(analysis -m teralizer.corpus_publish --resolve-release-corpus "$corpus_id"); then
+        echo "Corpus '$corpus_id' does not match the release manifest" >&2
+        return 1
+    fi
+    IFS=$'\t' read -r database dump expected _revision <<<"$fields"
     container_dump="/tmp/teralizer-${corpus_id}.dump"
 
-    existing=$(compose_exec psql -U "$REPLICATION_DB_USER" -d postgres -tA \
+    existing=$(postgres_exec psql -U "$REPLICATION_DB_USER" -d postgres -tA \
         -v name="$database" -f - 2>/dev/null \
         <<<"SELECT 1 FROM pg_database WHERE datname = :'name'" || true)
     if [[ "$existing" == 1 ]]; then
@@ -144,25 +130,25 @@ restore_corpus() {
         fi
     fi
 
-    compose_exec createdb -U "$REPLICATION_DB_USER" "$database"
-    if ! docker compose -f "$COMPOSE_FILE" cp "$dump" "postgres:$container_dump"; then
+    postgres_exec createdb -U "$REPLICATION_DB_USER" "$database"
+    if ! "${COMPOSE[@]}" cp "$RELEASE_ROOT/$dump" "postgres:$container_dump"; then
         echo "Could not copy the verified dump for corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
-    if ! compose_exec pg_restore -U "$REPLICATION_DB_USER" -d "$database" \
+    if ! postgres_exec pg_restore -U "$REPLICATION_DB_USER" -d "$database" \
         --no-owner --no-privileges "$container_dump"; then
         echo "Could not restore corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
-    if ! compose_exec rm -f "$container_dump"; then
+    if ! postgres_exec rm -f "$container_dump"; then
         echo "Could not remove the temporary dump for corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
 
-    if ! observed=$(compose_exec psql -U "$REPLICATION_DB_USER" -d "$database" -tA \
+    if ! observed=$(postgres_exec psql -U "$REPLICATION_DB_USER" -d "$database" -tA \
         -c "SELECT count(*) FROM project"); then
         echo "Could not count projects for restored corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
@@ -174,13 +160,13 @@ restore_corpus() {
         return 1
     fi
 
-    if ! corpus_registry prepare-corpus "$corpus_id"; then
+    if ! owner_analysis -m teralizer.corpora prepare-corpus "$corpus_id"; then
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
-    # Package verification binds the manifest's revision to the checked-in revision.
-    # verify-corpus checks that installed revision through the report-only role.
-    if ! corpus_registry verify-corpus "$corpus_id"; then
+    # Verification reads the prepared corpus through the report role, the only
+    # access the reports have.
+    if ! analysis -m teralizer.corpora verify-corpus "$corpus_id"; then
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi

@@ -7,10 +7,9 @@
 #   analysis  - Reports and release checks on the mounted release (on-demand)
 #
 # Usage:
-#   # Quick start (inspect data, re-run analysis)
+#   # Restore the corpora of the extracted corpus components
 #   docker compose up -d postgres adminer
-#   ./scripts/import-databases.sh
-#   ./scripts/run-analysis.sh verify
+#   ./scripts/import-databases.sh --force jarvis-benchmark jarvis-scenarios
 #   # Open http://localhost:18080 for Adminer
 #
 #   # Build every report into ../output and compare it with the reference
