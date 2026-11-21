@@ -13,6 +13,7 @@ uv run --directory analysis python -m teralizer.release preflight WORKFLOW --wor
 uv run --directory analysis python -m teralizer.release reference-outputs --analysis DIR --out FILE
 uv run --directory analysis python -m teralizer.release verify --analysis DIR --reference FILE [--claims FILE] [--json FILE] [--report ID ...]
 uv run --directory analysis python -m teralizer.release claims-matrix [--check]
+uv run --directory analysis python -m teralizer.release data-dictionary [--check]
 
 Write the reference from a run of ./artifact reproduce-results, inside the analysis
 container, because matplotlib chooses axis ticks that differ between that pinned
@@ -348,6 +349,29 @@ def _claims_matrix(repo: Path, check: bool) -> int:
     return 0
 
 
+def _data_dictionary(repo: Path, check: bool) -> int:
+    from teralizer.release import dictionary
+
+    target = repo / dictionary.DEFAULT_RENDERED
+    try:
+        rendered, problems = dictionary.current(repo)
+    except (dictionary.DictionaryError, OSError) as error:
+        return _report_problems([str(error)], "data dictionary")
+    if problems:
+        return _report_problems(problems, "data dictionary")
+    if check:
+        if not target.is_file() or target.read_text() != rendered:
+            return _report_problems(
+                [f"{dictionary.DEFAULT_RENDERED} is not generated from the dictionary"],
+                "data dictionary",
+            )
+        print(f"{dictionary.DEFAULT_RENDERED} is current")
+        return 0
+    target.write_text(rendered)
+    print(f"wrote {dictionary.DEFAULT_RENDERED}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -464,6 +488,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="only fail when the committed matrix differs from the claims",
     )
+    dictionary_command = commands.add_parser(
+        "data-dictionary",
+        help="write the data dictionary from its descriptions and the corpora",
+    )
+    dictionary_command.add_argument(
+        "--check",
+        action="store_true",
+        help="only fail when the committed dictionary differs from the corpora",
+    )
     args = parser.parse_args(argv)
 
     # Reviewer workspaces have no inventory to load, only release documents.
@@ -482,6 +515,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.command == "claims-matrix":
         return _claims_matrix(args.repo, args.check)
+    if args.command == "data-dictionary":
+        return _data_dictionary(args.repo, args.check)
     try:
         declared = inventory.load(args.inventory)
     except inventory.InventoryError as error:

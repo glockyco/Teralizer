@@ -58,7 +58,7 @@ With all four `corpus-*` archives extracted, rebuild every report, compare every
 
 `./artifact reproduce-results rq0` does the same for RQ0 alone. Both also check RQ0's file inputs against the raw evidence they were built from, as [replication/RQ0.md](replication/RQ0.md) describes. The reports land in `output/`, and `output/evidence.json` records the verdict on every output, claim and JARVIS input. The services need the network only while Docker pulls and builds their images. A corpus that is already restored and verified is reused by the next command.
 
-To browse the databases, start Adminer and open <http://localhost:18080>. The connection details are in [replication/docker-compose.yml](replication/docker-compose.yml).
+To browse the databases, start Adminer and open <http://localhost:18080>. The connection details are in [replication/docker-compose.yml](replication/docker-compose.yml). [replication/DATA-DICTIONARY.md](replication/DATA-DICTIONARY.md) describes every table, the views that the reports read, and every result CSV file.
 
 ```sh
 docker compose -f replication/docker-compose.yml up -d adminer
