@@ -9,7 +9,11 @@ uv run --directory analysis python -m teralizer.release declaration [--productio
 uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--component ID ...] [--production]
 uv run --directory analysis python -m teralizer.release preflight WORKFLOW --workspace DIR [--release-manifest FILE]
 uv run --directory analysis python -m teralizer.release reference-outputs --analysis DIR --out FILE
-uv run --directory analysis python -m teralizer.release verify-outputs --analysis DIR --reference FILE [--json FILE]
+uv run --directory analysis python -m teralizer.release verify-outputs --analysis DIR --reference FILE [--json FILE] [--report ID ...]
+
+Write the reference from a run of ./artifact reproduce-results, inside the analysis
+container, because matplotlib chooses axis ticks that differ between that pinned
+environment and a host installation, and reviewers compare in the container.
 """
 
 from __future__ import annotations
