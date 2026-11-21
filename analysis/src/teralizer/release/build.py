@@ -153,6 +153,7 @@ def _size(count: int) -> str:
 def _summary(declaration: Declaration, built: Sequence[BuiltArchive]) -> bytes:
     """RELEASE.md: what to download for each workflow, beside the archives."""
     filenames = {item.component: item.path.name for item in built}
+    by_component = {item.component: item for item in built}
     included = set(filenames)
     doi = declaration.version_doi or "reserved before publication"
     lines = [
@@ -169,14 +170,19 @@ def _summary(declaration: Declaration, built: Sequence[BuiltArchive]) -> bytes:
         "",
         "## Workflows",
         "",
-        "| Workflow | Command | Archives |",
-        "| --- | --- | --- |",
+        "| Workflow | Command | Archives | Download | Unpacked |",
+        "| --- | --- | --- | --- | --- |",
     ]
     for workflow in declaration.workflows:
         if not set(workflow.components) <= included:
             continue
         archives = "<br>".join(f"`{filenames[c]}`" for c in workflow.components)
-        lines.append(f"| {workflow.purpose} | `./{workflow.command}` | {archives} |")
+        download = sum(by_component[c].bytes for c in workflow.components)
+        unpacked = sum(by_component[c].unpacked_bytes for c in workflow.components)
+        lines.append(
+            f"| {workflow.purpose} | `./{workflow.command}` | {archives} "
+            f"| {_size(download)} | {_size(unpacked)} |"
+        )
     lines += [
         "",
         "## Archives",
