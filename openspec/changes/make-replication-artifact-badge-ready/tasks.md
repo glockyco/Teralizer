@@ -67,7 +67,7 @@
 - [x] 6.2 Implement the third-party inventory gate for origin URL, immutable revision, the license found or none, retained license paths and checksums, attribution, and component membership. Verify declared records against packaged bytes; do not build a license classifier. licensee identifies the packaged license files, and the records hash the packaged bytes.
 - [x] 6.3 Build and verify the third-party records for every controlled, real-world sample, real-world full, JARVIS scorecard, and JARVIS census project input, including the projects without a license. Prove sample/full shared records and retained license bytes match. commons-utils records no upstream revision, which its record states.
 - [x] 6.4 Cite the JARVIS publication and keep the licenses of the JARVIS fixtures, `jpf-symbc`, and `jpf-core`. `replication/RQ0.md` cites the paper and treats its table values as published facts, the fixture components retain the Apache Commons LICENSE and NOTICE files, and the nested JPF sources keep theirs.
-- [ ] 6.6 State in the README license section that the bundled EvoSuite jar and JPF sources keep their own licenses, next to the existing statement for analyzed projects.
+- [x] 6.6 State in the README license section that the bundled EvoSuite jar and JPF sources keep their own licenses, next to the existing statement for analyzed projects.
 - [x] 6.9 Generate a short README for each optional component and publish a workflow matrix with exact component lists and sizes. The builder writes both, the matrix as `RELEASE.md`.
 - [ ] 6.10 Correct citation, paper, DOI, and Zenodo metadata: `CITATION.cff` with the version 2 DOI and all four authors, and `zenodo.json` reviewed against the packaged documentation.
 

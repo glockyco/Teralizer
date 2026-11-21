@@ -122,4 +122,4 @@ The container supplies the Java and Linux runtime needed by Symbolic Pathfinder.
 
 ## Citation and license
 
-Use [CITATION.cff](CITATION.cff) for citation metadata. Source code is licensed under [MIT](LICENSE-MIT). Data and documentation are licensed under [CC BY 4.0](LICENSE-CC-BY-4.0). Analyzed projects retain their own licenses.
+Use [CITATION.cff](CITATION.cff) for citation metadata. Source code is licensed under [MIT](LICENSE-MIT). Data and documentation are licensed under [CC BY 4.0](LICENSE-CC-BY-4.0). The bundled EvoSuite jar is under the LGPL 3.0, with its license files inside the jar, and the Symbolic PathFinder and JPF sources in `jpf-symbc/` are under the Apache License 2.0. Analyzed projects keep their own licenses, which the `third-party.json` of each project archive records.
