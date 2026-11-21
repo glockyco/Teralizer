@@ -1,14 +1,10 @@
-"""One verdict on a report run: its outputs, the paper's claims and the JARVIS inputs.
+"""One verdict on a report run: its outputs and, for RQ0, the JARVIS inputs.
 
-The verifier compares every output of the run with the reference manifest, checks
-every claim whose reports the run built, and, when the run includes RQ0, checks
-RQ0's file inputs against the raw evidence in the release: the JARVIS value logs
-must be the logs the compact JARVIS facts were built from, and the CUT-PVC captures
-must aggregate to `cut_values.tsv`. RQ0 reads only the compact files, so a changed
-raw file would otherwise pass unnoticed.
-
-A run of selected reports is checked for those reports only. The verdict passes when
-all three parts pass.
+The verifier compares every output of the run with the reference manifest. When the
+run includes RQ0, it also checks RQ0's file inputs against the raw evidence in the
+release: the JARVIS value logs must be the logs the compact JARVIS facts were built
+from, and the CUT-PVC captures must aggregate to `cut_values.tsv`. RQ0 reads only
+the compact files, so a changed raw file would otherwise pass unnoticed.
 """
 
 from __future__ import annotations
@@ -19,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from teralizer.release import claims, outputs
+from teralizer.release import outputs
 
 JarvisCheck = Callable[[], list[str]]
 
@@ -27,51 +23,34 @@ JarvisCheck = Callable[[], list[str]]
 @dataclass(frozen=True)
 class Verdict:
     outputs: list[outputs.Comparison]
-    claims: list[claims.Outcome]
     jarvis_problems: list[str] | None
 
     @property
     def passed(self) -> bool:
         return (
-            all(result.passed for result in self.outputs)
-            and all(outcome.passed for outcome in self.claims)
-            and not self.jarvis_problems
+            all(result.passed for result in self.outputs) and not self.jarvis_problems
         )
 
     def summary(self) -> dict[str, Any]:
         return {
             "passed": self.passed,
             "outputs": outputs.summary(self.outputs),
-            "claims": claims.summary(self.claims),
             "jarvis_inputs": None
             if self.jarvis_problems is None
             else {"passed": not self.jarvis_problems, "problems": self.jarvis_problems},
         }
 
 
-def selected_claims(
-    declared: list[claims.Claim], reports: Collection[str] | None
-) -> list[claims.Claim]:
-    """The claims that a run of ``reports`` can establish, or all of them."""
-    if reports is None:
-        return declared
-    return [claim for claim in declared if set(claim.reports) <= set(reports)]
-
-
 def verify(
     analysis: Path,
     reference: Path,
-    claims_path: Path,
     reports: Collection[str] | None,
     jarvis_check: JarvisCheck,
 ) -> Verdict:
     """Verify the run in ``analysis`` for ``reports``, or for every report."""
     compared = outputs.compare(json.loads(reference.read_text()), analysis, reports)
-    checked = claims.verify(
-        selected_claims(claims.load(claims_path), reports), claims.Run(analysis)
-    )
     includes_rq0 = reports is None or "rq0" in reports
-    return Verdict(compared, checked, jarvis_check() if includes_rq0 else None)
+    return Verdict(compared, jarvis_check() if includes_rq0 else None)
 
 
 def release_jarvis_check(repo: Path) -> list[str]:

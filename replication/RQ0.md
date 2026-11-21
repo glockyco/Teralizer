@@ -1,6 +1,6 @@
 # RQ0 evidence
 
-RQ0 compares Teralizer with JARVIS as published in Hila Peleg, Dan Rasin and Eran Yahav, "Generating Tests by Example", VMCAI 2018, <https://doi.org/10.1007/978-3-319-73721-8_19>. JARVIS has no public implementation, so the comparison uses the values its paper reports. This page lists every input of the comparison and what each command establishes about it. [CLAIMS.md](CLAIMS.md) lists the RQ0 claims and their checks.
+RQ0 compares Teralizer with JARVIS as published in Hila Peleg, Dan Rasin and Eran Yahav, "Generating Tests by Example", VMCAI 2018, <https://doi.org/10.1007/978-3-319-73721-8_19>. JARVIS has no public implementation, so the comparison uses the values its paper reports. This page lists every input of the comparison and what each command establishes about it.
 
 ## Inputs
 
@@ -21,9 +21,9 @@ The RQ0 outputs are `reports/rq0.md`, the CSV files `rq0-breadth-summary`, `rq0-
 
 ## What each command establishes
 
-`./artifact smoke` and `./artifact reproduce-results rq0` restore the two JARVIS corpora and regenerate every RQ0 output from them, the value facts and the CUT-PVC values. They compare each output with the reference and check the RQ0 claims. They also check that the value logs in core have the count, size and checksum the value facts record, and that aggregating the CUT-PVC captures again yields `cut_values.tsv`. They repeat no collection.
+`./artifact smoke` and `./artifact reproduce-results rq0` restore the two JARVIS corpora and regenerate every RQ0 output from them, the value facts and the CUT-PVC values, and compare each output with the reference. They also check that the value logs in core have the count, size and checksum the value facts record, and that aggregating the CUT-PVC captures again yields `cut_values.tsv`. They repeat no collection.
 
-`./artifact collect-reduced jarvis-scenarios` runs Teralizer on both scorecard fixtures at all three budgets into the scratch database `scratch_jarvis_scoreboard`. It then captures the CUT-PVC values again from Commons Lang and Commons Math checked out at their pins, and compares the aggregate with `cut_values.tsv`. The reduced and the full scorecard collection are the same. jqwik chooses the generated inputs at random, so a rerun yields other value logs and PVC counts. The collection text of each RQ0 claim in [CLAIMS.md](CLAIMS.md) states what a rerun can establish.
+`./artifact collect-reduced jarvis-scenarios` runs Teralizer on both scorecard fixtures at all three budgets into the scratch database `scratch_jarvis_scoreboard`. It then captures the CUT-PVC values again from Commons Lang and Commons Math checked out at their pins, and compares the aggregate with `cut_values.tsv`. The reduced and the full scorecard collection are the same. jqwik chooses the generated inputs at random, so a rerun yields other value logs and PVC counts than the published corpus.
 
 `./artifact collect-reduced jarvis-benchmark` runs the census on the commons-cli and commons-csv fixtures into the scratch database `scratch_jarvis_census`, and `./artifact collect-full jarvis-benchmark` runs all twelve.
 

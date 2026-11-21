@@ -127,7 +127,7 @@ build_reports() {
 }
 
 verify() {
-    step "Verifying the outputs, the paper's claims and the JARVIS inputs"
+    step "Comparing the outputs with the reference and checking the JARVIS inputs"
     # "$@" rather than an array: macOS's bash 3.2 rejects an empty array under set -u.
     analysis -m teralizer.release verify --analysis /output \
         --reference "$REFERENCE" --json /output/evidence.json "$@"

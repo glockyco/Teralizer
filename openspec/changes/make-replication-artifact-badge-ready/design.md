@@ -62,7 +62,7 @@ The release builder consumes:
 
 1. The complete verified corpus package and its corpus manifest.
 2. The complete registered report output and artifact/provenance manifest.
-3. A new release declaration that names public components, workflows, platform support, licenses, citations, paper claims, and optional source/data inputs.
+3. A new release declaration that names public components, workflows, platform support, licenses, citations, and optional source/data inputs.
 
 The release declaration references semantic corpus ids and registered report/artifact ids. It does not repeat physical database names, report implementations, or emitted-file discovery rules. Assembly resolves and cross-checks those references before reading bulk payloads.
 
@@ -83,7 +83,7 @@ Release closure is computed from declarations, not from the files currently visi
 | JARVIS backing evidence | Every source value log declared by the validated compact-facts manifest and bound by its counts and aggregate checksums; raw CUT-PVC captures bound to `cut_values.tsv`; scorecard and census status/provenance ledgers | JARVIS evidence extractors, capture plan, run ledgers, manifests, and checksums | `core` |
 | Project inputs | Redistributable source snapshots, exact revisions, configs, patches, licenses, and retrieval records for controlled, real-world, and JARVIS collection workflows, including the two scorecard and twelve census fixture roots | Corpus/config declarations plus the third-party rights ledger | Workflow-specific project components |
 | Runtime | Digest-pinned analysis, PostgreSQL, and collection image references; Dockerfiles; Compose declarations; lock files; architecture and network facts | Release declaration and container build records | `core` |
-| Public contract | Release and component manifests, checksums, release summary, requirements, citation, accepted-paper link, licenses, third-party records, claim matrix, data dictionary, and limitations | Release declaration and measured release facts | Standalone release files and every independently downloadable component as applicable |
+| Public contract | Release and component manifests, checksums, release summary, requirements, citation, accepted-paper link, licenses, third-party records, data dictionary, and limitations | Release declaration and measured release facts | Standalone release files and every independently downloadable component as applicable |
 
 The three RepoReapers reconstruction documents are compact report inputs and belong in `core`. Their source inventory describes collected evidence used to audit the claims; it is not permission to omit those sources silently or to copy author-machine paths into the release. The release ledger resolves each source identity to bytes already owned by a corpus or project component, a separate core evidence payload, or an explicit non-payload disposition with the resulting claim-verification boundary. Report reproduction consumes the normalized audit and does not rerun reconstruction or project analysis.
 
@@ -97,7 +97,7 @@ Every remaining ignored or generated path receives an explicit disposition: requ
 
 The upload set contains standalone `release-manifest.json`, `checksums.sha256`, a human-readable release summary, Zenodo metadata, and all declared component archives. The release manifest is the only release catalog. It records final archive checksums, sizes, workflow dependencies, and compatibility rules after all archives close. Core does not contain another component catalog.
 
-Only two formats are public contracts: the release manifest and the component manifest. Provenance, claims, evidence lineage, and path dispositions remain typed payload sections or build records. They do not become independent versioned schema families unless a separate consumer is demonstrated. A machine-readable acceptance record has no consumer, so the clean release run is recorded as measured facts in `REQUIREMENTS.md`.
+Only two formats are public contracts: the release manifest and the component manifest. Provenance, evidence lineage, and path dispositions remain typed payload sections or build records. They do not become independent versioned schema families unless a separate consumer is demonstrated. A machine-readable acceptance record has no consumer, so the clean release run is recorded as measured facts in `REQUIREMENTS.md`.
 
 Each archive has a unique component id and declared wrapper root. It contains `component-manifest.json`, applicable retained license files, and one payload subtree. The core archive contains the complete reviewer guidance. Each optional archive adds a short generated README that points to the standalone release manifest and core guidance. The component manifest records payload paths and checksums, release identity, purpose, dependencies, incompatibilities, license mapping, and provenance. No component owns another component's archive path.
 
@@ -105,7 +105,7 @@ The initial component graph is manifest-declared and aligned with independently 
 
 | Component | Payload | Required by |
 |---|---|---|
-| `core` | Complete Teralizer source and runtime inputs, reviewer controller, configuration, locks, schemas, documentation, embedded provenance, registered reference results, compact report inputs, selected JARVIS backing evidence, claims, and data dictionary | Reference inspection and all executable reviewer workflows |
+| `core` | Complete Teralizer source and runtime inputs, reviewer controller, configuration, locks, schemas, documentation, embedded provenance, registered reference results, compact report inputs, selected JARVIS backing evidence, and data dictionary | Reference inspection and all executable reviewer workflows |
 | `corpus-controlled` | Verified `controlled` corpus package | Workflows that read the controlled corpus |
 | `corpus-real-world` | Verified `real-world` corpus package | Workflows that read the real-world corpus |
 | `corpus-jarvis-scenarios` | Verified `jarvis-scenarios` corpus package | JARVIS census report workflows |
@@ -181,7 +181,7 @@ Author-only export and release-build commands are excluded from packaged reviewe
 
 The release-tested baseline is Linux x86-64 with Docker Engine or Docker Desktop and Compose V2. The report analysis, PostgreSQL service, and Java collection pipeline use images pinned by immutable digest. Locked dependency installation has no permissive fallback. The Dockerfiles and Compose file in core carry the digests.
 
-The reviewer may pull declared images during setup. Once images and selected release components are present, smoke and results reproduction run without network access. The release does not archive OCI images in this version. Apple Silicon through `linux/amd64` emulation is claimed only after a separate compatibility run on the final component set. Native Windows outside WSL2 is not claimed.
+The reviewer may pull declared images during setup. Once images and selected release components are present, smoke and results reproduction need no network. The release does not archive OCI images in this version and claims neither Apple Silicon nor native Windows outside WSL2.
 
 Host-based `uv`, Nix, Java, or Gradle remain developer conveniences and do not appear as primary reviewer prerequisites. The Java collection container executes project builds in a disposable workspace without the Docker socket, host credentials, or writable mounts over the release source. Network access for third-party dependency resolution is isolated to the documented collection workflow.
 
@@ -213,23 +213,23 @@ Release mode is entered only from verified release metadata, not merely because 
 
 The results workflow compares the emitted registered `ArtifactSet` with the published reference manifest. Every report, table, CSV file, and figure is named by declared artifact identity and checked for missing, extra, and changed content.
 
-The accepted artifact-provenance contract already requires byte-identical regeneration when source and data are unchanged. The pinned reviewer environment therefore makes deterministic report outputs, including figures and rendered Markdown, byte-identical or gives them an explicit canonical representation before hashing. A figure count is never evidence of equality. The claims declaration maps report artifacts to paper claims and supplies separate invariant/tolerance checks only for newly collected stochastic data.
+The accepted artifact-provenance contract already requires byte-identical regeneration when source and data are unchanged. The pinned reviewer environment therefore makes deterministic report outputs, including figures and rendered Markdown, byte-identical or gives them an explicit canonical representation before hashing. A figure count is never evidence of equality.
 
-Verification emits JSON for release gating and concise text for reviewers. Both derive from the same results. A non-passing required claim or output kind produces a nonzero exit status.
+Verification emits JSON and concise text for reviewers. Both derive from the same results. A non-passing output kind produces a nonzero exit status.
 
-The claims matrix classifies each edge as direct observation, deterministic transformation, analytic derivation, external published reference, or stochastic collection. In particular, the JARVIS RQ0 comparison records the JARVIS paper/table citation, the two scorecard and twelve census fixture revisions, the two restored semantic corpora, compact value facts, selected raw value logs, CUT-PVC measurements, completion/status evidence, and every rendered RQ0 artifact. `reproduce-results` reruns the report from frozen inputs. It does not claim to repeat the original multi-day JARVIS collection. Reduced and full collection commands name exactly which logs, facts, and database rows they regenerate, and comparisons never present inspection of frozen facts as independent empirical reproduction.
+The paper's tables, figures and macros are these report outputs, so matching every output with the reference reproduces the paper's results. A separate declaration of paper claims with value checks would repeat the reference and has to be kept in step with every report change, so the release has none. Raw evidence that a report does not read is checked separately: the JARVIS value logs against the identities the value facts record, and the CUT-PVC captures against `cut_values.tsv`. `replication/RQ0.md` cites the JARVIS paper and names the fixture revisions, the two corpora, the value facts and logs, the CUT-PVC captures and the census ledger. `reproduce-results` reruns the report from frozen inputs and does not claim to repeat the original JARVIS collection.
 
 ### 9. Requirements and public metadata state measured facts
 
 A release declaration carries stable facts: component roles, workflow dependencies, supported platforms, DOI relationships, creators, licenses, and paper identity. The builder renders `RELEASE.md` with every archive's size and each workflow's archives and total download and unpacked size, and `zenodo.json` from the declaration. Times, peak disk and memory come from one clean run of the final archives and are written into `REQUIREMENTS.md` by hand. A generator or checker for these few numbers would cost more than reading them off the run.
 
-Hand-authored documents explain purpose, limitations, reuse, security, evidence claims, and external references. They describe the release as it is and do not narrate what changed relative to an earlier version or name version numbers, because a reader of the record needs its contents and their use. Zenodo's own version field and the DOI relationships carry the version identity.
+Hand-authored documents explain purpose, limitations, reuse, security, and external references. They describe the release as it is and do not narrate what changed relative to an earlier version or name version numbers, because a reader of the record needs its contents and their use. Zenodo's own version field and the DOI relationships carry the version identity.
 
 The new version DOI is reserved before the final candidate so it can be embedded consistently. The existing version DOI remains cited as version 1. `CITATION.cff` labels version and concept DOI correctly. Publication uploads the validated attempt directory without renaming or recompressing its members.
 
 ### 10. Data reuse and redistribution
 
-`replication/DATA-DICTIONARY.md` is rendered from maintained descriptions of every table, every view a report reads and every result CSV, with types, nullability and corpus coverage read from the restored corpora. A database test fails on a missing or stale description.
+`replication/DATA-DICTIONARY.md` describes every table of the four corpora, every view a report reads and every result CSV, with types, nullability and the corpora that have each table and column. The published corpora do not change within a release, so it is a plain document without a generator or check.
 
 Every shipped project has a third-party record containing origin URL, commit, the license found in its sources or the statement that none was found, retained license file paths and checksums, and owning component. The release ships every analyzed project, as the first version did, so that full collection reruns exactly the measured revisions from the archive. The release verifies the declared records against the packaged bytes and does not build a license classifier. The artifact licenses never cover third-party code: each project remains under its authors' terms, and the bundled EvoSuite jar and JPF sources keep their own license files. The README states this in its license section. The study analyzes public open-source code and involves no human participants, so the release carries no ethics or data-protection statement and no per-file audit record.
 
@@ -273,7 +273,7 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 4. Add embedded per-source provenance and prove report generation from a Git-free fixture release.
 5. Replace shared-root archive layout with unique component wrapper roots, document standard extraction, implement strict manifest preflight, and add the thin root reviewer controller.
 6. Freeze the reviewer containers and move the primary analysis path off host `uv`. Verify smoke and results workflows on clean Linux x86-64.
-7. Define claims, output comparisons, the data dictionary and third-party records. Remove or correct every retired command and unsupported claim.
+7. Define output comparisons, the data dictionary and third-party records. Remove or correct every retired command and unsupported claim.
 8. Reserve a new Zenodo version DOI, build the complete candidate from the four-corpus package and all declared components with that DOI, run the final archives once in a clean workspace, and write the measured times and resources into `REQUIREMENTS.md`. The author reviews the claims, metadata and archive selection.
 9. Upload the release files as a new version and compare their checksums with the candidate. Download core and the smoke archives by version DOI and repeat the smoke test.
 10. If validation fails before publication, discard the candidate and leave version 1 untouched. If a defect is found after publication, preserve that immutable version and publish a corrected successor rather than replacing files.

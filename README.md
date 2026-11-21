@@ -50,13 +50,13 @@ Run every command from the extracted `teralizer/` directory. The smoke test rest
 ./artifact smoke
 ```
 
-With all four `corpus-*` archives extracted, rebuild every report, compare every output with the reference and check the paper's claims. [replication/CLAIMS.md](replication/CLAIMS.md) lists each claim with its inputs, outputs and expected values:
+With all four `corpus-*` archives extracted, rebuild every report and compare every output with the reference, which holds the tables, figures and numbers of the paper:
 
 ```sh
 ./artifact reproduce-results
 ```
 
-`./artifact reproduce-results rq0` does the same for RQ0 alone. Both also check RQ0's file inputs against the raw evidence they were built from, as [replication/RQ0.md](replication/RQ0.md) describes. The reports land in `output/`, and `output/evidence.json` records the verdict on every output, claim and JARVIS input. The services need the network only while Docker pulls and builds their images. A corpus that is already restored and verified is reused by the next command.
+`./artifact reproduce-results rq0` does the same for RQ0 alone. Both also check RQ0's file inputs against the raw evidence they were built from, as [replication/RQ0.md](replication/RQ0.md) describes. The reports land in `output/`, with one Markdown report per research question in `output/reports/`, and `output/evidence.json` records the verdict on every output and JARVIS input. The services need the network only while Docker pulls and builds their images. A corpus that is already restored and verified is reused by the next command.
 
 To browse the databases, start Adminer and open <http://localhost:18080>. The connection details are in [replication/docker-compose.yml](replication/docker-compose.yml). [replication/DATA-DICTIONARY.md](replication/DATA-DICTIONARY.md) describes every table, the views that the reports read, and every result CSV file.
 

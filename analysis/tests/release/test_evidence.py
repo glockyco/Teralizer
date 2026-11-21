@@ -1,44 +1,9 @@
 import json
 from pathlib import Path
 
-from teralizer.eval.evidence import jarvis_values
 from teralizer import cut_pvc
+from teralizer.eval.evidence import jarvis_values
 from teralizer.release import evidence, jarvis, outputs
-
-_CLAIMS = """
-format = "teralizer-claims"
-format_version = 1
-
-[[claim]]
-id = "rq0-share"
-rq = "RQ0"
-statement = "Half of the cases pass."
-evidence = "deterministic transformation"
-reports = ["rq0"]
-
-[[claim.check]]
-kind = "cell"
-report = "rq0"
-table = "cases"
-where = {{ row_key = "all" }}
-column = "share"
-value = "{rq0_value}"
-
-[[claim]]
-id = "rq5-share"
-rq = "RQ5"
-statement = "A quarter of the assertions are excluded."
-evidence = "deterministic transformation"
-reports = ["rq5"]
-
-[[claim.check]]
-kind = "cell"
-report = "rq5"
-table = "outcomes"
-where = {{ row_key = "all" }}
-column = "share"
-value = "0.25"
-"""
 
 
 def _write_report(root: Path, report: str, table: str, share: str) -> None:
@@ -63,81 +28,45 @@ def _full_run(root: Path) -> Path:
     return root
 
 
-def _setup(tmp_path: Path, rq0_value: str = "0.5") -> tuple[Path, Path]:
+def _reference(tmp_path: Path) -> Path:
     reference = tmp_path / "reference.json"
     reference.write_text(json.dumps(outputs.reference(_full_run(tmp_path / "ref"))))
-    claims_path = tmp_path / "claims.toml"
-    claims_path.write_text(_CLAIMS.format(rq0_value=rq0_value))
-    return reference, claims_path
+    return reference
 
 
-def test_run_of_rq0_checks_its_claims_and_the_jarvis_inputs_only(tmp_path: Path):
-    reference, claims_path = _setup(tmp_path)
+def test_run_of_rq0_checks_the_jarvis_inputs(tmp_path: Path):
+    reference = _reference(tmp_path)
     candidate = tmp_path / "candidate"
     _write_report(candidate, "rq0", "cases", "0.5")
-    calls: list[str] = []
 
-    def jarvis_check() -> list[str]:
-        calls.append("jarvis")
-        return []
-
-    verdict = evidence.verify(candidate, reference, claims_path, ["rq0"], jarvis_check)
+    verdict = evidence.verify(candidate, reference, ["rq0"], lambda: [])
 
     assert verdict.passed
-    assert [outcome.claim.id for outcome in verdict.claims] == ["rq0-share"]
-    assert calls == ["jarvis"]
     assert verdict.summary()["jarvis_inputs"] == {"passed": True, "problems": []}
 
 
 def test_run_without_rq0_does_not_check_the_jarvis_inputs(tmp_path: Path):
-    reference, claims_path = _setup(tmp_path)
+    reference = _reference(tmp_path)
     candidate = tmp_path / "candidate"
     _write_report(candidate, "rq5", "outcomes", "0.25")
 
     def jarvis_check() -> list[str]:
         raise AssertionError("RQ5 does not read the JARVIS inputs")
 
-    verdict = evidence.verify(candidate, reference, claims_path, ["rq5"], jarvis_check)
+    verdict = evidence.verify(candidate, reference, ["rq5"], jarvis_check)
 
     assert verdict.passed
     assert verdict.summary()["jarvis_inputs"] is None
 
 
-def test_a_changed_claim_expectation_alone_fails_the_verdict(tmp_path: Path):
-    reference, claims_path = _setup(tmp_path, rq0_value="0.6")
-    candidate = _full_run(tmp_path / "candidate")
-
-    verdict = evidence.verify(candidate, reference, claims_path, None, lambda: [])
-
-    assert all(result.passed for result in verdict.outputs)
-    assert not verdict.passed
-    assert [o.claim.id for o in verdict.claims if not o.passed] == ["rq0-share"]
-
-
 def test_a_jarvis_input_problem_alone_fails_the_verdict(tmp_path: Path):
-    reference, claims_path = _setup(tmp_path)
+    reference = _reference(tmp_path)
     candidate = _full_run(tmp_path / "candidate")
 
-    verdict = evidence.verify(
-        candidate, reference, claims_path, None, lambda: ["census logs differ"]
-    )
+    verdict = evidence.verify(candidate, reference, None, lambda: ["logs differ"])
 
     assert all(result.passed for result in verdict.outputs)
-    assert all(outcome.passed for outcome in verdict.claims)
     assert not verdict.passed
-    assert verdict.summary()["jarvis_inputs"]["passed"] is False
-
-
-def test_an_extra_output_alone_fails_the_verdict(tmp_path: Path):
-    reference, claims_path = _setup(tmp_path)
-    candidate = _full_run(tmp_path / "candidate")
-    _write_report(candidate, "rq9", "extra", "1")
-
-    verdict = evidence.verify(candidate, reference, claims_path, None, lambda: [])
-
-    assert not verdict.passed
-    statuses = {r.identity: r.status for r in verdict.outputs if not r.passed}
-    assert statuses == {"rq9/csv/extra": "extra", "rq9/manifest/provenance": "extra"}
 
 
 def test_value_logs_keep_their_place_below_data_jarvis():

@@ -9,7 +9,7 @@ The published Zenodo artifact describes the retired notebook and two-database wo
 - Keep source, runtime support, registered results, compact inputs, and small backing evidence together in `core`. Publish the large corpus and project families as fine-grained, self-identifying components so each workflow downloads only the data it needs. Core extracts the `teralizer/` workspace tree, each optional archive extracts one unique immutable component subtree, and workflow preflight verifies identities, checksums, and dependencies without merging payload trees.
 - Publish exact, human-readable requirements and one authoritative reviewer route. A replicator can learn download, unpacked, peak-disk, memory, architecture, software, network, and runtime requirements without running project code.
 - Provide a clean, pinned reviewer environment with a setup and smoke path that completes within 30 minutes on the declared baseline, a bounded results-reproduction path, and reduced and full data-collection paths with progress and expected outcomes.
-- Map every supported paper claim to its inputs, command, output, expected comparison, tolerance, and runtime, and name claims that the artifact does not support. Verification covers report text and figure evidence as well as tables and CSV data.
+- Compare every regenerated report output, which carries the paper's tables, figures and numbers, with the reference. Verification covers report text and figure evidence as well as tables and CSV data.
 - Embed release provenance so report regeneration works after packaging removes Git metadata while preserving the exact producing source revisions required by the accepted provenance contract.
 - Document database and result schemas, corpus selection and provenance, third-party project licenses and attribution, redistribution decisions, and the security boundary for executing untrusted project builds.
 - Create a new immutable Zenodo version with version-specific DOI and synchronized landing-page, citation, license, checksum, and paper metadata. The existing published version remains unchanged.
@@ -21,7 +21,7 @@ The published Zenodo artifact describes the retired notebook and two-database wo
 ### New Capabilities
 
 - `replication/artifact-release`: immutable release-set composition, fine-grained archive identity and integrity, exact workflow download requirements, collision-free component extraction, and clean release validation.
-- `replication/artifact-evaluation`: supported reviewer environments, bounded smoke and reproduction workflows, claims-to-evidence verification, clean-machine evidence, and documented reuse and security boundaries.
+- `replication/artifact-evaluation`: supported reviewer environments, bounded smoke and reproduction workflows, output verification, clean-machine evidence, and documented reuse and security boundaries.
 
 ### Modified Capabilities
 

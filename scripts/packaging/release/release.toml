@@ -21,7 +21,7 @@ code_license = "MIT"
 content_license = "CC-BY-4.0"
 repository = "https://github.com/glockyco/Teralizer"
 keywords = ["Test Amplification", "Test Generalization", "Property-Based Testing", "Symbolic Execution"]
-description = "Teralizer transforms conventional unit tests into property-based tests. It uses single-path symbolic analysis to extract path-exact specifications from tests and implementation, so that each generalized test checks its assertions across the whole input partition of their path instead of single input-output pairs. This package holds Teralizer's source, the four evaluation corpora as PostgreSQL dumps, the analyzed projects, the reports with the paper's tables and figures, and a controller that restores the corpora, regenerates every report and checks the paper's claims. RELEASE.md lists the archives that each workflow needs."
+description = "Teralizer transforms conventional unit tests into property-based tests. It uses single-path symbolic analysis to extract path-exact specifications from tests and implementation, so that each generalized test checks its assertions across the whole input partition of their path instead of single input-output pairs. This package holds Teralizer's source, the four evaluation corpora as PostgreSQL dumps, the analyzed projects, the reports with the paper's tables and figures, and a controller that restores the corpora, regenerates every report and compares it with the published results. RELEASE.md lists the archives that each workflow needs."
 
 # Creators of the Zenodo record, in order.
 [[creator]]
@@ -52,7 +52,7 @@ doi = "10.48550/arXiv.2512.14475"
 [[component]]
 id = "core"
 root = "teralizer"
-purpose = "Teralizer source with materialized nested sources, the reviewer controller, runtime definitions, registered reference results, compact report inputs, backing evidence, claims and documentation."
+purpose = "Teralizer source with materialized nested sources, the reviewer controller, runtime definitions, registered reference results, compact report inputs, backing evidence and documentation."
 
 [[component]]
 id = "corpus-controlled"
@@ -112,7 +112,7 @@ id = "inspect"
 command = "artifact preflight"
 components = ["core"]
 network = []
-purpose = "Read the reference results, claims, evidence and documentation without running services."
+purpose = "Read the reference results, evidence and documentation without running services."
 
 [[workflow]]
 id = "smoke"

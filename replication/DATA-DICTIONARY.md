@@ -1,9 +1,7 @@
 # Data dictionary
 
-Generated from `replication/data-dictionary.toml`, the restored corpora and the reference
-result files by
-`uv run --directory analysis python -m teralizer.release data-dictionary`.
-Edit the descriptions there.
+The tables and views of the four published corpora, and the result CSV files of the
+reports.
 
 ## Corpus tables and views
 

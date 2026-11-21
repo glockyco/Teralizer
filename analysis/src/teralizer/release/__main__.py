@@ -11,9 +11,7 @@ uv run --directory analysis python -m teralizer.release declaration [--productio
 uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--real-world-projects DIR] [--third-party-upstream DIR] [--component ID ...] [--production]
 uv run --directory analysis python -m teralizer.release preflight WORKFLOW --workspace DIR [--release-manifest FILE]
 uv run --directory analysis python -m teralizer.release reference-outputs --analysis DIR --out FILE
-uv run --directory analysis python -m teralizer.release verify --analysis DIR --reference FILE [--claims FILE] [--json FILE] [--report ID ...]
-uv run --directory analysis python -m teralizer.release claims-matrix [--check]
-uv run --directory analysis python -m teralizer.release data-dictionary [--check]
+uv run --directory analysis python -m teralizer.release verify --analysis DIR --reference FILE [--json FILE] [--report ID ...]
 
 Write the reference from a run of ./artifact reproduce-results, inside the analysis
 container, because matplotlib chooses axis ticks that differ between that pinned
@@ -279,24 +277,18 @@ def _reference_outputs(analysis: Path, out: Path) -> int:
 
 
 def _verify(
-    repo: Path,
-    analysis: Path,
-    reference: Path,
-    declared: Path | None,
-    output: Path | None,
-    reports: list[str],
+    repo: Path, analysis: Path, reference: Path, output: Path | None, reports: list[str]
 ) -> int:
-    from teralizer.release import claims, evidence
+    from teralizer.release import evidence
 
     try:
         verdict = evidence.verify(
             analysis,
             reference,
-            declared or repo / claims.DEFAULT_CLAIMS,
             reports or None,
             lambda: evidence.release_jarvis_check(repo),
         )
-    except (claims.ClaimsError, OSError, ValueError) as error:
+    except (OSError, ValueError) as error:
         return _report_problems([str(error)], "evidence")
     summary = verdict.summary()
     if output is not None:
@@ -308,15 +300,6 @@ def _verify(
         )
     for failure in summary["outputs"]["failures"]:
         print(f"{failure['status']}: {failure['artifact']}", file=sys.stderr)
-    for outcome in verdict.claims:
-        if not outcome.passed:
-            print(
-                f"FAILED claim {outcome.claim.rq} {outcome.claim.id}", file=sys.stderr
-            )
-            for failure in outcome.failures:
-                print(f"  {failure}", file=sys.stderr)
-    passed_claims = sum(1 for outcome in verdict.claims if outcome.passed)
-    print(f"claims: {passed_claims} of {len(verdict.claims)} pass")
     if verdict.jarvis_problems is not None:
         for problem in verdict.jarvis_problems:
             print(f"JARVIS input: {problem}", file=sys.stderr)
@@ -326,50 +309,6 @@ def _verify(
         )
     print("evidence verified" if verdict.passed else "evidence differs")
     return 0 if verdict.passed else 1
-
-
-def _claims_matrix(repo: Path, check: bool) -> int:
-    from teralizer.release import claims
-
-    target = repo / claims.DEFAULT_MATRIX
-    try:
-        rendered = claims.matrix(claims.load(repo / claims.DEFAULT_CLAIMS))
-    except (claims.ClaimsError, OSError) as error:
-        return _report_problems([str(error)], "claims")
-    if check:
-        if not target.is_file() or target.read_text() != rendered:
-            return _report_problems(
-                [f"{claims.DEFAULT_MATRIX} is not generated from the current claims"],
-                "claims matrix",
-            )
-        print(f"{claims.DEFAULT_MATRIX} is current")
-        return 0
-    target.write_text(rendered)
-    print(f"wrote {claims.DEFAULT_MATRIX}")
-    return 0
-
-
-def _data_dictionary(repo: Path, check: bool) -> int:
-    from teralizer.release import dictionary
-
-    target = repo / dictionary.DEFAULT_RENDERED
-    try:
-        rendered, problems = dictionary.current(repo)
-    except (dictionary.DictionaryError, OSError) as error:
-        return _report_problems([str(error)], "data dictionary")
-    if problems:
-        return _report_problems(problems, "data dictionary")
-    if check:
-        if not target.is_file() or target.read_text() != rendered:
-            return _report_problems(
-                [f"{dictionary.DEFAULT_RENDERED} is not generated from the dictionary"],
-                "data dictionary",
-            )
-        print(f"{dictionary.DEFAULT_RENDERED} is current")
-        return 0
-    target.write_text(rendered)
-    print(f"wrote {dictionary.DEFAULT_RENDERED}")
-    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -467,11 +406,10 @@ def main(argv: list[str] | None = None) -> int:
     reference_command.add_argument("--out", type=Path, required=True)
     verify_command = commands.add_parser(
         "verify",
-        help="compare a report run's outputs, claims and JARVIS inputs with the release",
+        help="compare a report run's outputs and JARVIS inputs with the release",
     )
     verify_command.add_argument("--analysis", type=Path, required=True)
     verify_command.add_argument("--reference", type=Path, required=True)
-    verify_command.add_argument("--claims", type=Path)
     verify_command.add_argument("--json", type=Path, dest="summary")
     verify_command.add_argument(
         "--report",
@@ -479,23 +417,6 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         dest="reports",
         help="verify only this report; repeat for several",
-    )
-    matrix_command = commands.add_parser(
-        "claims-matrix", help="write the claims-to-evidence matrix from the claims"
-    )
-    matrix_command.add_argument(
-        "--check",
-        action="store_true",
-        help="only fail when the committed matrix differs from the claims",
-    )
-    dictionary_command = commands.add_parser(
-        "data-dictionary",
-        help="write the data dictionary from its descriptions and the corpora",
-    )
-    dictionary_command.add_argument(
-        "--check",
-        action="store_true",
-        help="only fail when the committed dictionary differs from the corpora",
     )
     args = parser.parse_args(argv)
 
@@ -506,17 +427,8 @@ def main(argv: list[str] | None = None) -> int:
         return _reference_outputs(args.analysis, args.out)
     if args.command == "verify":
         return _verify(
-            args.repo,
-            args.analysis,
-            args.reference,
-            args.claims,
-            args.summary,
-            args.reports,
+            args.repo, args.analysis, args.reference, args.summary, args.reports
         )
-    if args.command == "claims-matrix":
-        return _claims_matrix(args.repo, args.check)
-    if args.command == "data-dictionary":
-        return _data_dictionary(args.repo, args.check)
     try:
         declared = inventory.load(args.inventory)
     except inventory.InventoryError as error:

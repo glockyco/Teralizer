@@ -54,46 +54,24 @@ On the declared baseline with the release inputs already downloaded, this path S
 - **THEN** the command verifies or reuses compatible state
 - **AND** does not fail merely because its own services or ports are active
 
-### Requirement: Supported paper claims map to executable evidence
+### Requirement: The paper's results come from the compared outputs
 
-The artifact SHALL contain a claims-to-evidence matrix covering every paper claim it represents as supported. Each entry SHALL identify the paper section or research question, semantic corpus inputs, non-database inputs, command, output artifacts, expected values or invariants, comparison rule and tolerance, expected runtime, and whether the workflow regenerates evidence or only inspects it.
+The reference outputs SHALL be the tables, figures, macros and reports the paper uses, so that matching every regenerated output with the reference reproduces the paper's results. The documentation SHALL name where the results of each research question are.
 
-#### Scenario: A reviewer chooses one research question
+#### Scenario: A reviewer checks one research question
 
-- **WHEN** the reviewer follows its matrix entry
-- **THEN** the named command consumes the declared inputs and produces the named evidence
-- **AND** the verification result explains whether the paper claim passed
+- **WHEN** the reviewer opens the regenerated report of that research question
+- **THEN** its tables, figures and numbers are the ones the comparison checked against the reference
 
+### Requirement: JARVIS evidence separates regeneration from collection
 
-### Requirement: Evidence edges declare their method
-
-Each evidence edge SHALL be classified as direct observation, deterministic transformation, analytic derivation, external published reference, or stochastic collection. A report name alone or a statement that differences are expected SHALL NOT substitute for an acceptance rule.
-
-#### Scenario: A claim depends on stochastic collection
-
-- **WHEN** exact reproduction is not expected
-- **THEN** the matrix states the invariant or tolerance that remains meaningful
-- **AND** verification distinguishes an accepted variation from a contradiction of the claim
-
-
-### Requirement: Unsupported paper claims have explicit boundaries
-
-The matrix SHALL list paper claims not supported by the artifact and explain the boundary.
-
-#### Scenario: A claim has no distributable evidence
-
-- **WHEN** legal, ethical, or practical constraints exclude evidence required for a paper claim
-- **THEN** the matrix marks that claim unsupported and states the reason
-
-
-### Requirement: JARVIS claim evidence separates regeneration from collection
-
-For the JARVIS comparison, the matrix SHALL cite the exact external paper/table, identify fixture revisions and run scope, bind the restored JARVIS corpora and non-database evidence to every RQ0 artifact, and distinguish report regeneration from scorecard, census, and CUT-PVC collection. Possession of frozen compact facts SHALL NOT be described as independent repetition of their original collection.
+For the JARVIS comparison, the documentation SHALL cite the external paper, identify the fixture revisions, the restored JARVIS corpora and the non-database evidence of RQ0, and distinguish report regeneration from scorecard, census, and CUT-PVC collection. Possession of frozen compact facts SHALL NOT be described as independent repetition of their original collection.
 
 #### Scenario: A reviewer regenerates reports from frozen JARVIS facts
 
 - **WHEN** the workflow uses frozen compact facts
-- **THEN** the matrix identifies their lineage and does not claim independent repetition of collection
+- **THEN** the documentation identifies their lineage and does not claim independent repetition of collection
+
 ### Requirement: Results reproduction verifies every declared output kind
 
 The results-reproduction workflow SHALL run every registered report through its declared read-only inputs and compare regenerated evidence with the published reference set. Verification SHALL detect missing, extra, and changed report text, tables, machine-readable data, and figure evidence.
@@ -102,7 +80,7 @@ The results-reproduction workflow SHALL run every registered report through its 
 #### Scenario: All deterministic evidence matches
 
 - **WHEN** the registered reports reproduce the canonical reference values and structure
-- **THEN** verification reports every supported claim and output category as passed
+- **THEN** verification reports every output category as passed
 - **AND** exits successfully
 
 ### Requirement: Results comparison verifies content rather than file counts
@@ -112,7 +90,7 @@ For deterministic outputs, the comparison SHALL use byte identity or a documente
 #### Scenario: A figure exists but encodes changed data
 
 - **WHEN** the generated figure count matches but its declared source values differ
-- **THEN** verification fails the associated output and paper claim
+- **THEN** verification fails the associated output
 
 #### Scenario: A rendered report is missing
 
@@ -121,22 +99,21 @@ For deterministic outputs, the comparison SHALL use byte identity or a documente
 
 ### Requirement: Reproduction summaries report every required comparison
 
-The workflow SHALL produce one machine-readable and one human-readable summary that names every paper claim and output category as passed or failed. It SHALL return failure when any required comparison fails.
+The workflow SHALL produce one machine-readable and one human-readable summary that names every output category as passed or failed. It SHALL return failure when any required comparison fails.
 
 #### Scenario: A required comparison fails
 
-- **WHEN** any required paper-claim or output-category comparison fails
+- **WHEN** any output-category comparison fails
 - **THEN** both summaries identify its failure and the workflow returns failure
 
 ### Requirement: Long-running collection has reduced and full paths
 
-Every collection workflow whose full execution exceeds one day or ordinary artifact-review resources SHALL provide a reduced path that exercises the same stages on a declared representative subset and completes within one day on the baseline. Documentation SHALL distinguish the smoke, reduced, and full scopes and SHALL state which paper claims each can and cannot validate.
+Every collection workflow whose full execution exceeds one day or ordinary artifact-review resources SHALL provide a reduced path that exercises the same stages on a declared representative subset and completes within one day on the baseline. Documentation SHALL distinguish the smoke, reduced, and full scopes.
 
 #### Scenario: A reviewer runs the reduced real-world collection
 
 - **WHEN** the reviewer selects the documented subset
 - **THEN** the same production stages execute under the declared reduced scope
-- **AND** the result states which full-study claims the run does not establish
 
 ### Requirement: Collection paths preserve progress and resume completed work
 

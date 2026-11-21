@@ -270,7 +270,7 @@ id = "jarvis-publication"
 location = "external"
 path = "https://doi.org/10.1007/978-3-319-73721-8_19"
 disposition = "retrieval"
-reason = "The JARVIS paper whose Table 2 values RQ0 compares against. The claims matrix cites the table. The release copies only the compared values."
+reason = "The JARVIS paper whose Table 2 values RQ0 compares against. replication/RQ0.md cites it. The release copies only the compared values."
 
 [[input]]
 id = "container-images"
