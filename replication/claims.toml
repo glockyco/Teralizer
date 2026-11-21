@@ -1,0 +1,748 @@
+# Claims-to-evidence matrix for the RQ0 to RQ6 answers of the paper.
+#
+# Each claim names the reports whose registered outputs carry its evidence and the
+# checks that bind every number of the claim to those outputs. Check kinds and the
+# evidence classes are defined in analysis/src/teralizer/release/claims.py, which
+# also reads the corpora and file inputs of each report from the report registry.
+# `python -m teralizer.release claims --analysis analysis` checks every claim
+# against a report run.
+
+format = "teralizer-claims"
+format_version = 1
+
+# RQ0
+
+[[claim]]
+id = "rq0-teralizer-breadth"
+rq = "RQ0"
+statement = "Across the 12 projects of the JARVIS benchmark, Teralizer creates generalized tests for 337 MUTs in 9 projects."
+evidence = "deterministic transformation"
+reports = ["rq0"]
+collection = "Census collection reruns Teralizer on the twelve census fixtures. Completion depends on the host, and the count of generalized MUTs varies with jqwik's random inputs, so a rerun establishes the pipeline path, not the exact counts."
+
+[[claim.check]]
+kind = "macro"
+report = "rq0"
+macro = "TzRqzeroBreadthTeralizerTotalSoundMuts"
+value = "337"
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-breadth-summary"
+where = { project = "commons-*" }
+condition = { column = "sound_muts", op = ">", value = "0" }
+value = 9
+
+[[claim]]
+id = "rq0-jarvis-breadth"
+rq = "RQ0"
+statement = "JARVIS reports successful generalization for 9 MUTs in 2 projects."
+evidence = "external published reference"
+reports = ["rq0"]
+
+[[claim.check]]
+kind = "macro"
+report = "rq0"
+macro = "TzRqzeroBreadthJarvisTotalMuts"
+value = "9"
+
+[[claim.check]]
+kind = "macro"
+report = "rq0"
+macro = "TzRqzeroBreadthPublishedProjects"
+value = "2"
+
+[[claim]]
+id = "rq0-scenario-pvc"
+rq = "RQ0"
+statement = "Among the 10 scenarios that JARVIS successfully generalizes, Teralizer creates PBTs with higher PVC in 4, lower PVC in 3, and fails to create PBTs in 3 scenarios."
+evidence = "deterministic transformation"
+reports = ["rq0"]
+collection = "Scorecard collection and the CUT-PVC capture rerun the two scorecard fixtures. PVC counts depend on jqwik's random inputs, so a rerun can change individual comparisons."
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-table2-comparison"
+value = 10
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-table2-comparison"
+condition = { column = "suite_pvc", op = ">", other = "jarvis_pbt_pvc" }
+value = 4
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-table2-comparison"
+condition = { column = "suite_pvc", op = "<", other = "jarvis_pbt_pvc" }
+value = 3
+
+[[claim.check]]
+kind = "count"
+report = "rq0"
+table = "rq0-table2-comparison"
+condition = { column = "suite_pvc", op = "missing" }
+value = 3
+
+# RQ1
+
+[[claim]]
+id = "rq1-eqbench-gain"
+rq = "RQ1"
+statement = "EqBench-ES projects show the largest mutation-score improvements, 1.22 to 3.93 percentage points or 2.4 to 8.2% relative increase."
+evidence = "deterministic transformation"
+reports = ["rq1"]
+collection = "Controlled collection regenerates the generalized tests with jqwik's random inputs and reruns PIT, so scores vary. The improvement over the initial suite stays positive for every project and strategy."
+
+[[claim.check]]
+kind = "extent"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+where = { row_key = ["eqbench-*:NAIVE_*", "eqbench-*:IMPROVED_*"] }
+column = "absolute_improvement"
+min = "1.22"
+max = "3.93"
+
+[[claim.check]]
+kind = "extent"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+where = { row_key = ["eqbench-*:NAIVE_*", "eqbench-*:IMPROVED_*"] }
+column = "relative_improvement"
+min = "2.4"
+max = "8.2"
+
+[[claim]]
+id = "rq1-commons-es-gain"
+rq = "RQ1"
+statement = "Commons-ES improves by 0.82 to 1.33 percentage points, a 1.4 to 2.3% relative increase."
+evidence = "deterministic transformation"
+reports = ["rq1"]
+
+[[claim.check]]
+kind = "extent"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+where = { row_key = ["commons-utils-es-*:NAIVE_*", "commons-utils-es-*:IMPROVED_*"] }
+column = "absolute_improvement"
+min = "0.82"
+max = "1.33"
+
+[[claim.check]]
+kind = "extent"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+where = { row_key = ["commons-utils-es-*:NAIVE_*", "commons-utils-es-*:IMPROVED_*"] }
+column = "relative_improvement"
+min = "1.4"
+max = "2.3"
+
+[[claim]]
+id = "rq1-commons-developer"
+rq = "RQ1"
+statement = "Commons-Dev shows minimal improvement, 0.05 to 0.07 percentage points, due to its high baseline detection rate of 80.35%."
+evidence = "deterministic transformation"
+reports = ["rq1"]
+
+[[claim.check]]
+kind = "extent"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+where = { row_key = ["commons-utils:NAIVE_*", "commons-utils:IMPROVED_*"] }
+column = "absolute_improvement"
+min = "0.05"
+max = "0.07"
+
+[[claim.check]]
+kind = "cell"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+where = { row_key = "commons-utils:INITIAL" }
+column = "detected_of_covered_pct"
+value = "80.35"
+
+[[claim]]
+id = "rq1-mutation-operators"
+rq = "RQ1"
+statement = "Improved excels at ConditionalsBoundary mutations (+2.55pp), while Naive performs better on Math mutations (+3.99pp versus +3.37pp)."
+evidence = "deterministic transformation"
+reports = ["rq1"]
+
+[[claim.check]]
+kind = "cell"
+report = "rq1"
+table = "tab-detections-per-mutator"
+where = { mutator = "ConditionalsBoundary" }
+column = "detected_diff_improved_200_tries"
+value = "2.55"
+
+[[claim.check]]
+kind = "cell"
+report = "rq1"
+table = "tab-detections-per-mutator"
+where = { mutator = "ConditionalsBoundary" }
+column = "detected_diff_naive_200_tries"
+value = "1.21"
+
+[[claim.check]]
+kind = "cell"
+report = "rq1"
+table = "tab-detections-per-mutator"
+where = { mutator = "Math" }
+column = "detected_diff_naive_200_tries"
+value = "3.99"
+
+[[claim.check]]
+kind = "cell"
+report = "rq1"
+table = "tab-detections-per-mutator"
+where = { mutator = "Math" }
+column = "detected_diff_improved_200_tries"
+value = "3.37"
+
+# RQ2
+
+[[claim]]
+id = "rq2-strategy-comparison"
+rq = "RQ2"
+statement = "On EqBench-ES projects, Naive outperforms Improved. On Commons-ES projects, Improved outperforms Naive in 7 of 9 cases."
+evidence = "deterministic transformation"
+reports = ["rq1"]
+collection = "The comparison rests on score differences of a few tenths of a percentage point, so re-collected scores can reorder individual cases."
+
+[[claim.check]]
+kind = "wins"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+column = "detected_of_covered_pct"
+pairs = [
+    ["eqbench-es-default-1s:NAIVE_10_TRIES", "eqbench-es-default-1s:IMPROVED_10_TRIES"],
+    ["eqbench-es-default-1s:NAIVE_50_TRIES", "eqbench-es-default-1s:IMPROVED_50_TRIES"],
+    ["eqbench-es-default-1s:NAIVE_200_TRIES", "eqbench-es-default-1s:IMPROVED_200_TRIES"],
+    ["eqbench-es-default-10s:NAIVE_10_TRIES", "eqbench-es-default-10s:IMPROVED_10_TRIES"],
+    ["eqbench-es-default-10s:NAIVE_50_TRIES", "eqbench-es-default-10s:IMPROVED_50_TRIES"],
+    ["eqbench-es-default-10s:NAIVE_200_TRIES", "eqbench-es-default-10s:IMPROVED_200_TRIES"],
+    ["eqbench-es-default-60s:NAIVE_10_TRIES", "eqbench-es-default-60s:IMPROVED_10_TRIES"],
+    ["eqbench-es-default-60s:NAIVE_50_TRIES", "eqbench-es-default-60s:IMPROVED_50_TRIES"],
+    ["eqbench-es-default-60s:NAIVE_200_TRIES", "eqbench-es-default-60s:IMPROVED_200_TRIES"],
+]
+value = 9
+
+[[claim.check]]
+kind = "wins"
+report = "rq1"
+table = "tab-mutation-score-improvements"
+column = "detected_of_covered_pct"
+pairs = [
+    ["commons-utils-es-default-1s:IMPROVED_10_TRIES", "commons-utils-es-default-1s:NAIVE_10_TRIES"],
+    ["commons-utils-es-default-1s:IMPROVED_50_TRIES", "commons-utils-es-default-1s:NAIVE_50_TRIES"],
+    ["commons-utils-es-default-1s:IMPROVED_200_TRIES", "commons-utils-es-default-1s:NAIVE_200_TRIES"],
+    ["commons-utils-es-default-10s:IMPROVED_10_TRIES", "commons-utils-es-default-10s:NAIVE_10_TRIES"],
+    ["commons-utils-es-default-10s:IMPROVED_50_TRIES", "commons-utils-es-default-10s:NAIVE_50_TRIES"],
+    ["commons-utils-es-default-10s:IMPROVED_200_TRIES", "commons-utils-es-default-10s:NAIVE_200_TRIES"],
+    ["commons-utils-es-default-60s:IMPROVED_10_TRIES", "commons-utils-es-default-60s:NAIVE_10_TRIES"],
+    ["commons-utils-es-default-60s:IMPROVED_50_TRIES", "commons-utils-es-default-60s:NAIVE_50_TRIES"],
+    ["commons-utils-es-default-60s:IMPROVED_200_TRIES", "commons-utils-es-default-60s:NAIVE_200_TRIES"],
+]
+value = 7
+
+# RQ3
+
+[[claim]]
+id = "rq3-test-counts"
+rq = "RQ3"
+statement = "EvoSuite-generated test suites see near-complete compensation via test suite reduction (1,549 tests added, 1,541 removed). Developer-written tests resist compensation (6 added, 0 removed)."
+evidence = "deterministic transformation"
+reports = ["rq3"]
+
+[[claim.check]]
+kind = "sum"
+report = "rq3"
+table = "tab-tests-per-project"
+where = { project = "*-es-*" }
+column = "added_tests"
+value = "1549"
+
+[[claim.check]]
+kind = "sum"
+report = "rq3"
+table = "tab-tests-per-project"
+where = { project = "*-es-*" }
+column = "removed_tests"
+value = "1541"
+
+[[claim.check]]
+kind = "sum"
+report = "rq3"
+table = "tab-tests-per-project"
+where = { project = "commons-utils" }
+column = "added_tests"
+value = "6"
+
+[[claim.check]]
+kind = "sum"
+report = "rq3"
+table = "tab-tests-per-project"
+where = { project = "commons-utils" }
+column = "removed_tests"
+value = "0"
+
+[[claim]]
+id = "rq3-lines"
+rq = "RQ3"
+statement = "LOC increases by 4.9 to 58.7%. Improved shows larger increases than Naive."
+evidence = "deterministic transformation"
+reports = ["rq3"]
+
+[[claim.check]]
+kind = "extent"
+report = "rq3"
+table = "tab-lines-per-project"
+column = "lines_delta_pct"
+min = "4.9"
+max = "58.7"
+
+[[claim.check]]
+kind = "wins"
+report = "rq3"
+table = "tab-lines-per-project"
+key = ["project", "b_variant"]
+column = "lines_delta_pct"
+pairs = [
+    ["eqbench-es-default-1s/IMPROVED_200_TRIES", "eqbench-es-default-1s/NAIVE_200_TRIES"],
+    ["eqbench-es-default-10s/IMPROVED_200_TRIES", "eqbench-es-default-10s/NAIVE_200_TRIES"],
+    ["eqbench-es-default-60s/IMPROVED_200_TRIES", "eqbench-es-default-60s/NAIVE_200_TRIES"],
+    ["commons-utils-es-default-1s/IMPROVED_200_TRIES", "commons-utils-es-default-1s/NAIVE_200_TRIES"],
+    ["commons-utils-es-default-10s/IMPROVED_200_TRIES", "commons-utils-es-default-10s/NAIVE_200_TRIES"],
+    ["commons-utils-es-default-60s/IMPROVED_200_TRIES", "commons-utils-es-default-60s/NAIVE_200_TRIES"],
+    ["commons-utils/IMPROVED_200_TRIES", "commons-utils/NAIVE_200_TRIES"],
+]
+value = 7
+
+[[claim]]
+id = "rq3-runtime"
+rq = "RQ3"
+statement = "Runtime increases by 9.4 to 2,651.5% across projects. Naive shows larger runtime increases than Improved in 5 of 7 projects."
+evidence = "deterministic transformation"
+reports = ["rq3"]
+collection = "Test runtimes are wall-clock measurements, so re-collected values differ by host and load. The increase stays positive for every project."
+
+[[claim.check]]
+kind = "extent"
+report = "rq3"
+table = "tab-runtime-per-project"
+column = "runtime_delta_pct"
+min = "9.4"
+max = "2651.5"
+
+[[claim.check]]
+kind = "wins"
+report = "rq3"
+table = "tab-runtime-per-project"
+key = ["project", "b_variant"]
+column = "runtime_delta_pct"
+pairs = [
+    ["eqbench-es-default-1s/NAIVE_200_TRIES", "eqbench-es-default-1s/IMPROVED_200_TRIES"],
+    ["eqbench-es-default-10s/NAIVE_200_TRIES", "eqbench-es-default-10s/IMPROVED_200_TRIES"],
+    ["eqbench-es-default-60s/NAIVE_200_TRIES", "eqbench-es-default-60s/IMPROVED_200_TRIES"],
+    ["commons-utils-es-default-1s/NAIVE_200_TRIES", "commons-utils-es-default-1s/IMPROVED_200_TRIES"],
+    ["commons-utils-es-default-10s/NAIVE_200_TRIES", "commons-utils-es-default-10s/IMPROVED_200_TRIES"],
+    ["commons-utils-es-default-60s/NAIVE_200_TRIES", "commons-utils-es-default-60s/IMPROVED_200_TRIES"],
+    ["commons-utils/NAIVE_200_TRIES", "commons-utils/IMPROVED_200_TRIES"],
+]
+value = 5
+
+# RQ4
+
+[[claim]]
+id = "rq4-processing-time"
+rq = "RQ4"
+statement = "Test generalization requires 3.4 to 30.9 hours per project, primarily due to Stage 5 mutation testing for test suite reduction (59.2 to 95.7% of total time)."
+evidence = "deterministic transformation"
+reports = ["rq4"]
+collection = "Stage runtimes are wall-clock measurements on the evaluation host. A rerun on other hardware changes the hours. Stage 5 stays the largest share for every project and strategy."
+
+[[claim.check]]
+kind = "extent"
+report = "rq4"
+table = "tab-teralizer-runtimes"
+column = "hours"
+min = "3.4"
+max = "30.9"
+
+[[claim.check]]
+kind = "extent"
+report = "rq4"
+table = "tab-teralizer-stage-runtimes"
+column = "stage_5_share"
+scale = 100
+min = "59.2"
+max = "95.7"
+
+[[claim]]
+id = "rq4-reduction-volume"
+rq = "RQ4"
+statement = "Reduction filters 21,478 candidate generalizations down to 1,555 retained tests."
+evidence = "deterministic transformation"
+reports = ["rq3", "rq5"]
+
+[[claim.check]]
+kind = "sum"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { level = "Generalization", strategy = ["NAIVE_200_TRIES", "IMPROVED_200_TRIES"] }
+column = "included"
+value = "21478"
+
+[[claim.check]]
+kind = "sum"
+report = "rq3"
+table = "tab-tests-per-project"
+column = "added_tests"
+value = "1555"
+
+[[claim]]
+id = "rq4-pareto"
+rq = "RQ4"
+statement = "Combining short EvoSuite generation with Teralizer generalization achieves better detection-to-runtime ratios than longer EvoSuite generation alone for multiple configurations, and generalization extends the Pareto frontier to detection rates that EvoSuite-only configurations do not reach."
+evidence = "analytic derivation"
+reports = ["rq4"]
+
+[[claim.check]]
+kind = "count"
+report = "rq4"
+table = "tab-pareto-eqbench"
+condition = { column = "teralizer_variant", op = "present" }
+value = 12
+
+[[claim.check]]
+kind = "count"
+report = "rq4"
+table = "tab-pareto-eqbench"
+where = { evosuite_budget = "60s" }
+condition = { column = "teralizer_variant", op = "missing" }
+value = 0
+
+[[claim.check]]
+kind = "count"
+report = "rq4"
+table = "tab-pareto-commons"
+condition = { column = "teralizer_variant", op = "present" }
+value = 8
+
+[[claim.check]]
+kind = "top"
+report = "rq4"
+table = "tab-pareto-eqbench"
+by = "detection_rate"
+present = "teralizer_variant"
+
+[[claim.check]]
+kind = "top"
+report = "rq4"
+table = "tab-pareto-commons"
+by = "detection_rate"
+present = "teralizer_variant"
+
+# RQ5
+
+[[claim]]
+id = "rq5-generalized-assertions"
+rq = "RQ5"
+statement = "Of 28,923 identified assertions, 9,881 to 13,814 (34.2 to 47.8%) are successfully generalized across the three strategies."
+evidence = "deterministic transformation"
+reports = ["rq5"]
+
+[[claim.check]]
+kind = "cell"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { strategy = "All", level = "Assertion" }
+column = "total"
+value = "28923"
+
+[[claim.check]]
+kind = "extent"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { level = "Generalization" }
+column = "included"
+min = "9881"
+max = "13814"
+
+[[claim.check]]
+kind = "extent"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { level = "Generalization" }
+column = "included"
+divide_by = { report = "rq5", table = "tab-exclusions-breakdown", where = { strategy = "All", level = "Assertion" }, column = "total" }
+scale = 100
+min = "34.2"
+max = "47.8"
+
+[[claim]]
+id = "rq5-assertion-exclusions"
+rq = "RQ5"
+statement = "Most exclusions occur at the assertion level, primarily due to static analysis limitations in identifying tested methods (24.7%) and parameter types that symbolic analysis cannot model (15.4%). SPF errors and exceeded analysis limits exclude 5.3% and 4.7% of assertions. Test-level filtering excludes 5.5% of assertions due to non-passing Original tests."
+evidence = "deterministic transformation"
+reports = ["rq5"]
+
+[[claim.check]]
+kind = "cell"
+report = "rq5"
+table = "tab-exclusions-filtering"
+where = { row_key = "Assertion:MissingValue" }
+column = "reject_pct"
+scale = 100
+value = "24.7"
+
+[[claim.check]]
+kind = "cell"
+report = "rq5"
+table = "tab-exclusions-filtering"
+where = { row_key = "Assertion:ParameterType" }
+column = "reject_pct"
+scale = 100
+value = "15.4"
+
+[[claim.check]]
+kind = "sum"
+report = "rq5"
+table = "tab-exclusions-spf-causes"
+where = { group = "SPF exception" }
+column = "of_assertions"
+scale = 100
+value = "5.3"
+
+[[claim.check]]
+kind = "sum"
+report = "rq5"
+table = "tab-exclusions-spf-causes"
+where = { group = "Exceeded analysis limit" }
+column = "of_assertions"
+scale = 100
+value = "4.7"
+
+[[claim.check]]
+kind = "cell"
+report = "rq5"
+table = "tab-exclusions-filtering"
+where = { row_key = "Assertion:ExcludedTest" }
+column = "reject_pct"
+scale = 100
+value = "5.5"
+
+[[claim]]
+id = "rq5-generalized-test-outcomes"
+rq = "RQ5"
+statement = "Naive generalized tests pass in 71.4 to 77.6% of cases, with failures primarily due to TooManyFilterMissesExceptions (16.1 to 21.7%) and inaccurate specifications (6.0 to 6.6%). Improved increases pass rates to 83.8 to 85.2% by reducing filter misses by 46.8 to 58.4%."
+evidence = "deterministic transformation"
+reports = ["rq5"]
+collection = "Filter misses depend on jqwik's random inputs, so re-collected counts vary. Improved stays below Naive in filter misses for every number of tries."
+
+[[claim.check]]
+kind = "extent"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { level = "Generalization", strategy = "NAIVE_*" }
+column = "included_pct"
+scale = 100
+min = "71.4"
+max = "77.6"
+
+[[claim.check]]
+kind = "extent"
+report = "rq5"
+table = "tab-exclusions-test-failures"
+where = { row_key = "NAIVE_*" }
+column = "too_many_filter_misses_pct"
+scale = 100
+min = "16.1"
+max = "21.7"
+
+[[claim.check]]
+kind = "extent"
+report = "rq5"
+table = "tab-exclusions-test-failures"
+where = { row_key = "NAIVE_*" }
+column = ["assertion_failed_pct", "arithmetic_pct"]
+scale = 100
+min = "6.0"
+max = "6.6"
+
+[[claim.check]]
+kind = "extent"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { level = "Generalization", strategy = "IMPROVED_*" }
+column = "included_pct"
+scale = 100
+min = "83.8"
+max = "85.2"
+
+[[claim.check]]
+kind = "reduction"
+report = "rq5"
+table = "tab-exclusions-test-failures"
+column = "too_many_filter_misses"
+pairs = [
+    ["NAIVE_10_TRIES", "IMPROVED_10_TRIES"],
+    ["NAIVE_50_TRIES", "IMPROVED_50_TRIES"],
+    ["NAIVE_200_TRIES", "IMPROVED_200_TRIES"],
+]
+min = "46.8"
+max = "58.4"
+
+# RQ6
+
+[[claim]]
+id = "rq6-applicability"
+rq = "RQ6"
+statement = "Teralizer completes all five processing stages for 85 of the 584 selected RepoReapers projects (14.6%)."
+evidence = "deterministic transformation"
+reports = ["rq6"]
+collection = "Full real-world collection rebuilds 1,161 projects whose builds depend on remote dependency repositories. Projects can complete or fail differently when dependencies have vanished, so a rerun establishes the pipeline path and the share of completing projects, not the exact project set."
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldApplicabilityProjects"
+value = "85"
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldEligibleProjects"
+value = "584"
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldApplicabilityPct"
+value = "14.6%"
+
+[[claim]]
+id = "rq6-inclusion"
+rq = "RQ6"
+statement = "Compared with controlled conditions, test inclusion falls from 83.1% to 52.6%, while assertion inclusion falls from 47.8% to 3.8%."
+evidence = "deterministic transformation"
+reports = ["rq5", "rq6"]
+
+[[claim.check]]
+kind = "cell"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { strategy = "All", level = "Test" }
+column = "included_pct"
+scale = 100
+value = "83.1"
+
+[[claim.check]]
+kind = "cell"
+report = "rq6"
+table = "tab-exclusions-breakdown-extended"
+where = { level = "Test" }
+column = "included_pct"
+scale = 100
+value = "52.6"
+
+[[claim.check]]
+kind = "cell"
+report = "rq5"
+table = "tab-exclusions-breakdown"
+where = { strategy = "All", level = "Assertion" }
+column = "included_pct"
+scale = 100
+value = "47.8"
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldAssertionsIncludedPct"
+value = "3.8%"
+
+[[claim]]
+id = "rq6-project-barriers"
+rq = "RQ6"
+statement = "Proactive filtering leaves 228 projects without a retained test or assertion. Problems in the instrumented build or during SPF execution leave 112 further projects without a usable extracted specification."
+evidence = "deterministic transformation"
+reports = ["rq6"]
+
+[[claim.check]]
+kind = "cell"
+report = "rq6"
+table = "tab-processing-failures"
+where = { row_key = "1 + 2:all tests or assertions excluded due to filter rejections" }
+column = "count"
+value = "228"
+
+[[claim.check]]
+kind = "cell"
+report = "rq6"
+table = "tab-processing-failures"
+where = { row_key = "3:processing failures prevent specification extraction" }
+column = "count"
+value = "112"
+
+[[claim]]
+id = "rq6-widening"
+rq = "RQ6"
+statement = "Widening conservatively refuses 3,298 of 5,356 candidates (61.6%) and contributes to the exclusion of every candidate in 74 projects."
+evidence = "deterministic transformation"
+reports = ["rq6"]
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldWideningRefusals"
+value = "3,298"
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldGeneralizationAttempts"
+value = "5,356"
+
+[[claim.check]]
+kind = "macro"
+report = "rq6"
+macro = "TzRealworldWideningRefusalsPct"
+value = "61.6%"
+
+[[claim.check]]
+kind = "cell"
+report = "rq6"
+table = "tab-processing-failures"
+where = { row_key = "4:widening refusals contribute to exclusion of all generalization attempts" }
+column = "count"
+value = "74"
+
+[[claim]]
+id = "rq6-post-generalization-filtering"
+rq = "RQ6"
+statement = "Among generalized tests that reach post-generalization filtering, inclusion rates are similar in RepoReapers and the controlled projects (79.4% versus 84.0%)."
+evidence = "deterministic transformation"
+reports = ["rq6"]
+
+[[claim.check]]
+kind = "cell"
+report = "rq6"
+table = "rq6_filtering_comparison"
+where = { dataset_key = "realworld" }
+column = "included_share"
+scale = 100
+value = "79.4"
+
+[[claim.check]]
+kind = "cell"
+report = "rq6"
+table = "rq6_filtering_comparison"
+where = { dataset_key = "controlled" }
+column = "included_share"
+scale = 100
+value = "84.0"

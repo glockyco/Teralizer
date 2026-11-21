@@ -272,6 +272,39 @@ def _verify_outputs(analysis: Path, reference: Path, output: Path | None) -> int
     return 0 if summary["passed"] else 1
 
 
+def _claims(
+    repo: Path,
+    analysis: Path,
+    declared: Path | None,
+    output: Path | None,
+    matrix: Path | None,
+) -> int:
+    from teralizer.release import claims
+
+    try:
+        listed = claims.load(declared or repo / claims.DEFAULT_CLAIMS)
+        if matrix is not None:
+            matrix.write_text(claims.matrix(listed))
+        outcomes = claims.verify(listed, claims.Run(analysis))
+    except (claims.ClaimsError, OSError) as error:
+        return _report_problems([str(error)], "claims")
+    result = claims.summary(outcomes)
+    if output is not None:
+        output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    for outcome in outcomes:
+        status = "passed" if outcome.passed else "FAILED"
+        print(f"{status}: {outcome.claim.rq} {outcome.claim.id}")
+        for failure in outcome.failures:
+            print(f"  {failure}")
+    failed = sum(1 for outcome in outcomes if not outcome.passed)
+    print(
+        f"all {len(outcomes)} claims pass"
+        if not failed
+        else f"{failed} of {len(outcomes)} claims fail"
+    )
+    return 0 if not failed else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m teralizer.release")
     parser.add_argument("--repo", type=Path, default=_REPO_ROOT)
@@ -361,6 +394,15 @@ def main(argv: list[str] | None = None) -> int:
     verify_command.add_argument("--analysis", type=Path, required=True)
     verify_command.add_argument("--reference", type=Path, required=True)
     verify_command.add_argument("--json", type=Path, dest="summary")
+    claims_command = commands.add_parser(
+        "claims", help="check the paper's RQ claims against a report run"
+    )
+    claims_command.add_argument("--analysis", type=Path, required=True)
+    claims_command.add_argument("--claims", type=Path)
+    claims_command.add_argument("--json", type=Path, dest="summary")
+    claims_command.add_argument(
+        "--matrix", type=Path, help="also write the claims-to-evidence matrix"
+    )
     args = parser.parse_args(argv)
 
     # Reviewer workspaces have no inventory to load, only release documents.
@@ -370,6 +412,8 @@ def main(argv: list[str] | None = None) -> int:
         return _reference_outputs(args.analysis, args.out)
     if args.command == "verify-outputs":
         return _verify_outputs(args.analysis, args.reference, args.summary)
+    if args.command == "claims":
+        return _claims(args.repo, args.analysis, args.claims, args.summary, args.matrix)
     try:
         declared = inventory.load(args.inventory)
     except inventory.InventoryError as error:
