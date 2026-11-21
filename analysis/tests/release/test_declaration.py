@@ -52,7 +52,7 @@ def test_component_root_must_be_its_own_subtree():
         declaration.parse(document)
 
 
-def test_version_doi_must_not_reuse_the_first_version():
+def test_version_doi_must_not_reuse_an_earlier_version():
     document = _document()
     release = document["release"]
     assert isinstance(release, dict)
@@ -63,8 +63,13 @@ def test_version_doi_must_not_reuse_the_first_version():
 
 
 def test_production_requires_a_reserved_version_doi():
-    release = declaration.load()
+    document = _document()
+    release = document["release"]
+    assert isinstance(release, dict)
+    release["version_doi"] = ""
 
-    problems = declaration.production_problems(release, inventory.load())
+    problems = declaration.production_problems(
+        declaration.parse(document), inventory.load()
+    )
 
     assert "version_doi is not reserved" in problems
