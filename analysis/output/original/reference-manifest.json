@@ -33,6 +33,14 @@
       "target": "md"
     },
     {
+      "digest": "7928502cdc7d2ab90885b52c33808619bab7c7ff198f41e430be127b7749d076",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "dataset",
+      "rule": "run-manifest",
+      "target": "manifest"
+    },
+    {
       "digest": "20cec111b285a70755be83d0e0df3a98e560882bd2b161d3243f5791cfa3ed97",
       "key": "rq0-breadth-summary",
       "path": "build/rq0/rq0-breadth-summary.csv",
@@ -95,6 +103,14 @@
       "report": "rq0",
       "rule": "bytes",
       "target": "md"
+    },
+    {
+      "digest": "fdaac98d94b4b0fe1a1da733b16502d08f12a97f3828af53d9ada460dc5198d0",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "rq0",
+      "rule": "run-manifest",
+      "target": "manifest"
     },
     {
       "digest": "37a4a60d9ce5835f57d92da79ce8bfa84e2286a030e3c1ef50d98a33f3b2621f",
@@ -185,6 +201,14 @@
       "target": "md"
     },
     {
+      "digest": "3e66e8a706e5fdff510aef5672df9d699c15734f4302379661b7ac9d161143c5",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "rq1",
+      "rule": "run-manifest",
+      "target": "manifest"
+    },
+    {
       "digest": "510880d5386d9a9dc65c7830e8c356e6ac5f2f247eac2fdc1d47d2b792a2bfa0",
       "key": "tab-mutation-detection-comparison",
       "path": "build/rq2/tab-mutation-detection-comparison.csv",
@@ -215,6 +239,14 @@
       "report": "rq2",
       "rule": "bytes",
       "target": "md"
+    },
+    {
+      "digest": "5e57c21838820907e212774e34c9f15b9e205181f13959da876b389650a0a0fe",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "rq2",
+      "rule": "run-manifest",
+      "target": "manifest"
     },
     {
       "digest": "f16e0c76805dcac882de77186511da609825459011709022974ee75a1337de3a",
@@ -319,6 +351,14 @@
       "report": "rq3",
       "rule": "image",
       "target": "md"
+    },
+    {
+      "digest": "1f61d2a4a02a4aee19e02d596793ed2bc3fddd3d2095c43b4ac9c6de96877b83",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "rq3",
+      "rule": "run-manifest",
+      "target": "manifest"
     },
     {
       "digest": "414ff714cedf84ebd91d88c268d9c989e96aa37135d4a7683ae26f037789e416",
@@ -489,6 +529,14 @@
       "target": "md"
     },
     {
+      "digest": "1b3ba671dd870a4af07ea1c40f6d74ede658ba474ac431886a6fbf3ef5772e54",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "rq4",
+      "rule": "run-manifest",
+      "target": "manifest"
+    },
+    {
       "digest": "25a19e9a628a339aa43fcd5d0e566a85b9db5a0ca86ff9bd60ea2d2df782c30d",
       "key": "tab-exclusions-breakdown",
       "path": "build/rq5/tab-exclusions-breakdown.csv",
@@ -567,6 +615,14 @@
       "report": "rq5",
       "rule": "bytes",
       "target": "md"
+    },
+    {
+      "digest": "a8c2f0641a67f665957ba29c5fc2e7b75a03cf229f0b7cddc53594092ffcefe7",
+      "key": "provenance",
+      "path": "reports/provenance.json",
+      "report": "rq5",
+      "rule": "run-manifest",
+      "target": "manifest"
     },
     {
       "digest": "bfc3d8fbfff92ccdb148f821761eb5fc6c790d030b797c3c60562cd0c481a15c",
@@ -857,14 +913,14 @@
       "target": "md"
     },
     {
-      "digest": "6c6043e49eff2906e3676f2a7cc86e7085223f3e6bf9e547602291f54b8c3be9",
+      "digest": "f96996771b4b43e1c7c9e94adf3424533cef8c04501cafc10cad8c4586d66b59",
       "key": "provenance",
       "path": "reports/provenance.json",
-      "report": "run",
+      "report": "rq6",
       "rule": "run-manifest",
       "target": "manifest"
     }
   ],
   "format": "teralizer-reference-outputs",
-  "format_version": 1
+  "format_version": 2
 }

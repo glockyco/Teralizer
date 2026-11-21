@@ -2,9 +2,10 @@
 
 A registered report run lists every artifact it emitted in
 ``analysis/reports/provenance.json``. The reference manifest records, for each of
-those artifacts, the comparison rule and the digest of its canonical form.
-Verification compares a new run artifact by artifact and reports missing, extra
-and changed outputs per output kind.
+those artifacts and for each report's entry in that run manifest, the comparison
+rule and the digest of its canonical form. Verification compares a new run
+artifact by artifact and reports missing, extra and changed outputs per output
+kind. A run of some reports compares only those reports.
 
 Rules:
 
@@ -12,8 +13,9 @@ Rules:
   and figure sources are deterministic.
 - ``image``: the file must exist and be a PNG or PDF. Its pixels depend on the
   installed fonts, so the figure's canonical source carries the comparison.
-- ``run-manifest``: the run manifest without the checkout position, which names
-  the commit the run started from rather than anything a report shows.
+- ``run-manifest``: the report's entry in the run manifest without the checkout
+  position, which names the commit the run started from rather than anything a
+  report shows.
 """
 
 from __future__ import annotations
@@ -21,11 +23,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter
+from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-REFERENCE_FORMAT = ("teralizer-reference-outputs", 1)
+REFERENCE_FORMAT = ("teralizer-reference-outputs", 2)
 RUN_MANIFEST = "reports/provenance.json"
 _SIGNATURES = {".png": b"\x89PNG\r\n\x1a\n", ".pdf": b"%PDF-"}
 
@@ -51,18 +54,20 @@ def rule(artifact: Artifact) -> str:
 
 
 def run_artifacts(analysis: Path) -> list[Artifact]:
-    """Every artifact of the run in ``analysis``, plus the run manifest itself."""
+    """Every artifact of the run in ``analysis``, and each report's manifest entry."""
     manifest = json.loads((analysis / RUN_MANIFEST).read_text())
-    artifacts = [
-        Artifact(report, str(item["target"]), str(item["key"]), str(item["path"]))
-        for report, record in sorted(manifest.items())
-        for item in record["artifacts"]
-    ]
-    artifacts.append(Artifact("run", "manifest", "provenance", RUN_MANIFEST))
+    artifacts: list[Artifact] = []
+    for report, record in sorted(manifest.items()):
+        artifacts.extend(
+            Artifact(report, str(item["target"]), str(item["key"]), str(item["path"]))
+            for item in record["artifacts"]
+        )
+        artifacts.append(Artifact(report, "manifest", "provenance", RUN_MANIFEST))
     return artifacts
 
 
-def canonical_digest(path: Path, kind: str) -> str:
+def canonical_digest(analysis: Path, artifact: Artifact, kind: str) -> str:
+    path = analysis / artifact.path
     content = path.read_bytes()
     if kind == "image":
         signature = _SIGNATURES[path.suffix]
@@ -70,10 +75,9 @@ def canonical_digest(path: Path, kind: str) -> str:
             raise ValueError(f"{path} is not a {path.suffix[1:].upper()} file")
         return "image"
     if kind == "run-manifest":
-        document = json.loads(content)
-        for record in document.values():
-            record["run"].pop("source_commit", None)
-        content = json.dumps(document, indent=2, sort_keys=True).encode()
+        record = json.loads(content)[artifact.report]
+        record["run"].pop("source_commit", None)
+        content = json.dumps(record, indent=2, sort_keys=True).encode()
     return hashlib.sha256(content).hexdigest()
 
 
@@ -89,7 +93,7 @@ def reference(analysis: Path) -> dict[str, Any]:
                 "key": artifact.key,
                 "path": artifact.path,
                 "rule": kind,
-                "digest": canonical_digest(analysis / artifact.path, kind),
+                "digest": canonical_digest(analysis, artifact, kind),
             }
         )
     return {
@@ -110,14 +114,30 @@ class Comparison:
         return self.status == "passed"
 
 
-def compare(expected: dict[str, Any], analysis: Path) -> list[Comparison]:
+def compare(
+    expected: dict[str, Any],
+    analysis: Path,
+    reports: Collection[str] | None = None,
+) -> list[Comparison]:
+    """Compare the run in ``analysis`` with the reference, for ``reports`` or all."""
     if (expected.get("format"), expected.get("format_version")) != REFERENCE_FORMAT:
         raise ValueError("unsupported reference manifest format")
     references = {
         f"{item['report']}/{item['target']}/{item['key']}": item
         for item in expected["artifacts"]  # type: ignore[union-attr]
+        if reports is None or item["report"] in reports
     }
-    observed = {artifact.identity: artifact for artifact in run_artifacts(analysis)}
+    if reports is not None:
+        unknown = set(reports) - {str(item["report"]) for item in references.values()}
+        if unknown:
+            raise ValueError(
+                f"the reference has no report {', '.join(sorted(unknown))}"
+            )
+    observed = {
+        artifact.identity: artifact
+        for artifact in run_artifacts(analysis)
+        if reports is None or artifact.report in reports
+    }
     results: list[Comparison] = []
     for identity, item in sorted(references.items()):
         artifact = observed.get(identity)
@@ -126,7 +146,7 @@ def compare(expected: dict[str, Any], analysis: Path) -> list[Comparison]:
             results.append(Comparison(identity, target, "missing"))
             continue
         try:
-            digest = canonical_digest(analysis / artifact.path, str(item["rule"]))
+            digest = canonical_digest(analysis, artifact, str(item["rule"]))
         except ValueError:
             digest = "invalid"
         status = "passed" if digest == item["digest"] else "changed"

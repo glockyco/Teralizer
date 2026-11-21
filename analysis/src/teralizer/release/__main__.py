@@ -270,11 +270,13 @@ def _reference_outputs(analysis: Path, out: Path) -> int:
     return 0
 
 
-def _verify_outputs(analysis: Path, reference: Path, output: Path | None) -> int:
+def _verify_outputs(
+    analysis: Path, reference: Path, output: Path | None, reports: list[str]
+) -> int:
     from teralizer.release import outputs
 
     summary = outputs.summary(
-        outputs.compare(json.loads(reference.read_text()), analysis)
+        outputs.compare(json.loads(reference.read_text()), analysis, reports or None)
     )
     if output is not None:
         output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
@@ -421,6 +423,13 @@ def main(argv: list[str] | None = None) -> int:
     verify_command.add_argument("--analysis", type=Path, required=True)
     verify_command.add_argument("--reference", type=Path, required=True)
     verify_command.add_argument("--json", type=Path, dest="summary")
+    verify_command.add_argument(
+        "--report",
+        action="append",
+        default=[],
+        dest="reports",
+        help="compare only this report; repeat for several",
+    )
     claims_command = commands.add_parser(
         "claims", help="check the paper's RQ claims against a report run"
     )
@@ -438,7 +447,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "reference-outputs":
         return _reference_outputs(args.analysis, args.out)
     if args.command == "verify-outputs":
-        return _verify_outputs(args.analysis, args.reference, args.summary)
+        return _verify_outputs(
+            args.analysis, args.reference, args.summary, args.reports
+        )
     if args.command == "claims":
         return _claims(args.repo, args.analysis, args.claims, args.summary, args.matrix)
     try:

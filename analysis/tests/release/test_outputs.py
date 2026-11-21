@@ -80,5 +80,45 @@ def test_each_output_kind_fails_on_its_own_change(tmp_path: Path):
         ("rq1/md/rq1", "missing"),
         ("rq1/csv/new", "extra"),
         # The run manifest lists the extra artifact, so it changes as well.
-        ("run/manifest/provenance", "changed"),
+        ("rq1/manifest/provenance", "changed"),
     }
+
+
+def _add_report(root: Path, report: str) -> None:
+    (root / f"reports/{report}.md").write_text(f"# {report}\n")
+    manifest = json.loads((root / "reports/provenance.json").read_text())
+    manifest[report] = {
+        "artifacts": [{"target": "md", "key": report, "path": f"reports/{report}.md"}],
+        "run": {"source_commit": "a" * 40},
+    }
+    (root / "reports/provenance.json").write_text(json.dumps(manifest))
+
+
+def test_run_of_one_report_compares_only_that_report(tmp_path: Path):
+    reference_run = _run(tmp_path / "reference")
+    _add_report(reference_run, "rq0")
+    expected = outputs.reference(reference_run)
+    candidate = _run(tmp_path / "candidate")
+
+    assert outputs.summary(outputs.compare(expected, candidate, ["rq1"]))["passed"]
+    failures = outputs.summary(outputs.compare(expected, candidate))["failures"]
+    assert {(item["artifact"], item["status"]) for item in failures} == {
+        ("rq0/md/rq0", "missing"),
+        ("rq0/manifest/provenance", "missing"),
+    }
+
+
+def test_changed_entry_of_a_selected_report_fails(tmp_path: Path):
+    reference_run = _run(tmp_path / "reference")
+    _add_report(reference_run, "rq0")
+    expected = outputs.reference(reference_run)
+    candidate = _run(tmp_path / "candidate")
+    _add_report(candidate, "rq0")
+    manifest = json.loads((candidate / "reports/provenance.json").read_text())
+    manifest["rq0"]["metrics"] = {"value": 1}
+    (candidate / "reports/provenance.json").write_text(json.dumps(manifest))
+
+    failures = outputs.summary(outputs.compare(expected, candidate, ["rq0"]))[
+        "failures"
+    ]
+    assert failures == [{"artifact": "rq0/manifest/provenance", "status": "changed"}]
