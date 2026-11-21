@@ -5,8 +5,10 @@ uv run --directory analysis python -m teralizer.release report-inputs [--json PA
 uv run --directory analysis python -m teralizer.release lineage [--staged DIR]
 uv run --directory analysis python -m teralizer.release source --out DIR
 uv run --directory analysis python -m teralizer.release jarvis-logs --staged DIR [--copy]
+uv run --directory analysis python -m teralizer.release export-real-world --checkouts DIR --evidence DIR --out DIR
+uv run --directory analysis python -m teralizer.release fetch-third-party --out DIR
 uv run --directory analysis python -m teralizer.release declaration [--production]
-uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--component ID ...] [--production]
+uv run --directory analysis python -m teralizer.release build --candidate DIR --evidence DIR --corpus-package DIR [--real-world-projects DIR] [--third-party-upstream DIR] [--component ID ...] [--production]
 uv run --directory analysis python -m teralizer.release preflight WORKFLOW --workspace DIR [--release-manifest FILE]
 uv run --directory analysis python -m teralizer.release reference-outputs --analysis DIR --out FILE
 uv run --directory analysis python -m teralizer.release verify --analysis DIR --reference FILE [--claims FILE] [--json FILE] [--report ID ...]

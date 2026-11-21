@@ -6,7 +6,7 @@ Production corpus data moves through four storage zones. Do not copy production 
 |---|---|---|
 | Source checkout | Corpus declarations, schemas, code, and synthetic fixtures | Git |
 | Author staging | Completed dumps, `manifest.json`, and `checksums.sha256` | Selected external directory |
-| Release staging | Verified archive inputs and generated release archives | `prepare-zenodo-package.sh` output directory |
+| Release staging | Staged evidence and release candidates | Directories given to `python -m teralizer.release build` |
 | Published installation | Immutable archives selected by a version DOI | Zenodo |
 
 The source checkout uses `verification/fixtures/corpus-package/` for synthetic CI input. This fixture is not a production package.
@@ -32,15 +32,18 @@ Set `CORPUS_EXPORT_REPLACE=true` only when a completed checkpoint fails identity
 
 ## Build release archives
 
-Give the release builder the verified external package:
+Give the release builder the staged evidence, the verified external package and the retrieved project inputs. It writes each candidate into a new directory and refuses an existing or partly written one:
 
 ```bash
-CORPUS_PACKAGE_DIR=/external/author-stage/package \
-  ./scripts/packaging/prepare-zenodo-package.sh \
-  --corpus-package /external/author-stage/package
+uv run --directory analysis python -m teralizer.release build \
+  --candidate /external/release/candidates/<name> \
+  --evidence /external/release/staged-evidence \
+  --corpus-package /external/author-stage/package \
+  --real-world-projects /external/release/real-world-projects \
+  --third-party-upstream /external/release/third-party-upstream
 ```
 
-The builder verifies the complete package before it changes release staging. Zenodo is the public authority for production corpus payloads. Publish changed bytes as a new version under concept DOI `10.5281/zenodo.17950380`.
+The commands that stage the evidence and retrieve the project inputs are listed in `analysis/src/teralizer/release/__main__.py`. The builder plans every archive from the release declaration and the inventory in `scripts/packaging/release/` and verifies each archive after writing it. Zenodo is the public authority for production corpus payloads. Publish changed bytes as a new version under concept DOI `10.5281/zenodo.17950380`.
 
 ## Verify and restore
 
