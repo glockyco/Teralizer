@@ -225,7 +225,7 @@ A release declaration carries stable facts: component roles, workflow dependenci
 
 Hand-authored documents explain purpose, limitations, reuse, security, and external references. They describe the release as it is and do not narrate what changed relative to an earlier version or name version numbers, because a reader of the record needs its contents and their use. Zenodo's own version field and the DOI relationships carry the version identity.
 
-The new version DOI is reserved before the final candidate so it can be embedded consistently. The existing version DOI remains cited as version 1. `CITATION.cff` labels version and concept DOI correctly. Publication uploads the validated attempt directory without renaming or recompressing its members.
+The new version DOI is reserved before the final candidate so it can be embedded consistently. The two published versions, `10.5281/zenodo.17950381` and `10.5281/zenodo.18242626`, stay untouched. `CITATION.cff` labels version and concept DOI correctly. Publication uploads the validated attempt directory without renaming or recompressing its members.
 
 ### 10. Data reuse and redistribution
 
@@ -276,4 +276,4 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 7. Define output comparisons, the data dictionary and third-party records. Remove or correct every retired command and unsupported claim.
 8. Reserve a new Zenodo version DOI, build the complete candidate from the four-corpus package and all declared components with that DOI, run the final archives once in a clean workspace, and write the measured times and resources into `REQUIREMENTS.md`. The author reviews the claims, metadata and archive selection.
 9. Upload the release files as a new version and compare their checksums with the candidate. Download core and the smoke archives by version DOI and repeat the smoke test.
-10. If validation fails before publication, discard the candidate and leave version 1 untouched. If a defect is found after publication, preserve that immutable version and publish a corrected successor rather than replacing files.
+10. If validation fails before publication, discard the candidate and leave the published versions untouched. If a defect is found after publication, preserve that immutable version and publish a corrected successor rather than replacing files.

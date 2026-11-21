@@ -19,8 +19,12 @@ authors:
     family-names: Pinzger
     affiliation: University of Klagenfurt
     orcid: https://orcid.org/0000-0002-5536-3859
-doi: 10.5281/zenodo.17950380
+version: "3"
+doi: 10.5281/zenodo.24429456
 identifiers:
+  - type: doi
+    value: 10.5281/zenodo.24429456
+    description: DOI of this version of the replication package
   - type: doi
     value: 10.5281/zenodo.17950380
     description: Concept DOI for all versions of the replication package
@@ -30,9 +34,10 @@ license:
   - MIT
   - CC-BY-4.0
 abstract: >-
-  Source code (Java, Python, and scripts) is licensed under MIT. Data and
-  documentation are licensed under CC BY 4.0. Analyzed projects retain their
-  original licenses.
+  Teralizer's source, the four evaluation corpora as PostgreSQL dumps, the
+  analyzed projects, the reports with the paper's tables and figures, and a
+  controller that restores the corpora, regenerates every report and compares
+  it with the published results.
 references:
   - type: article
     title: 'Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests'
@@ -41,6 +46,8 @@ references:
         family-names: Glock
       - given-names: Clemens
         family-names: Bauer
+      - given-names: Christian
+        family-names: Macho
       - given-names: Martin
         family-names: Pinzger
     identifiers:

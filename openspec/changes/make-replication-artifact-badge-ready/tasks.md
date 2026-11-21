@@ -81,9 +81,9 @@ Dropped: a dedicated release-candidate CI job, a machine-readable acceptance rec
 
 ## 8. Build and publish the immutable version
 
-- [ ] 8.1 Create a draft successor under Zenodo concept DOI `10.5281/zenodo.17950380`, reserve its version DOI, and put it into `release.toml` and `CITATION.cff` before the final build.
+- [x] 8.1 Create a draft successor under Zenodo concept DOI `10.5281/zenodo.17950380`, reserve its version DOI, and put it into `release.toml` and `CITATION.cff` before the final build. Draft 24429456 reserved `10.5281/zenodo.24429456` as the third version.
 - [ ] 8.2 Build the final release from a clean checkout and the four-corpus package with every component, then run 7.2 on it.
 - [ ] 8.3 Review `RELEASE.md`, `zenodo.json`, and the README with the author.
 - [ ] 8.4 Upload the release files to the draft and compare the checksums Zenodo reports with `checksums.sha256`.
-- [ ] 8.5 After explicit approval, publish the new version without modifying version DOI `10.5281/zenodo.18242626`.
+- [ ] 8.5 After explicit approval, publish the new version without modifying the published versions `10.5281/zenodo.17950381` and `10.5281/zenodo.18242626`.
 - [ ] 8.6 Download core and the two JARVIS corpus archives by the new version DOI and repeat the smoke test.

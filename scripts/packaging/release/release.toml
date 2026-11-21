@@ -11,12 +11,12 @@
 [release]
 name = "teralizer-replication"
 # Zenodo's version field. Public prose does not repeat it.
-version = "2.0.0"
+version = "3"
 title = "Replication package for: Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests"
 concept_doi = "10.5281/zenodo.17950380"
-# Reserved on the Zenodo draft before the final build. Empty only in development.
-version_doi = ""
-previous_version_dois = ["10.5281/zenodo.18242626"]
+# Reserved on the Zenodo draft before the final build.
+version_doi = "10.5281/zenodo.24429456"
+previous_version_dois = ["10.5281/zenodo.17950381", "10.5281/zenodo.18242626"]
 code_license = "MIT"
 content_license = "CC-BY-4.0"
 repository = "https://github.com/glockyco/Teralizer"

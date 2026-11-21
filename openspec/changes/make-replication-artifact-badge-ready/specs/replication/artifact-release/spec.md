@@ -186,11 +186,11 @@ Each public release SHALL use a version-specific persistent DOI and SHALL also r
 
 Publishing a revision SHALL create a new archival version. It SHALL NOT alter the bytes or claims of an existing published DOI.
 
-#### Scenario: The v7 corpus release supersedes the first artifact
+#### Scenario: The v7 corpus release supersedes the earlier versions
 
 - **WHEN** the revised artifact is published
 - **THEN** it receives a new version DOI under the existing concept DOI
-- **AND** the first version remains retrievable and unchanged
+- **AND** the earlier versions remain retrievable and unchanged
 
 #### Scenario: Citation metadata labels an identifier
 
