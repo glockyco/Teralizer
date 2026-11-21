@@ -132,10 +132,10 @@ def build_candidate(
     partial = candidate.with_name(candidate.name + ".partial")
     if partial.exists():
         raise BuildError(f"remove the failed candidate first: {partial}")
+    provenance.require_clean(repo)
     work = partial / "work"
     work.mkdir(parents=True)
 
-    provenance.require_clean(repo)
     revision = subprocess.run(
         ["git", "-C", str(repo), "rev-parse", "HEAD"],
         capture_output=True,

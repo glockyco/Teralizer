@@ -203,7 +203,7 @@ def _build(
     production: bool,
     real_world: Path | None,
 ) -> int:
-    from teralizer.release import build, declaration
+    from teralizer.release import build, declaration, provenance
 
     release = declaration.load()
     if production:
@@ -224,7 +224,7 @@ def _build(
             components=selected,
             real_world=real_world,
         )
-    except build.BuildError as error:
+    except (build.BuildError, provenance.ProvenanceError) as error:
         return _report_problems([str(error)], "build")
     for item in built:
         print(f"{item.path.name}\t{item.bytes}\t{item.unpacked_bytes}\t{item.sha256}")
