@@ -79,6 +79,11 @@ jarvis_run() {
   DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
   source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
   source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
+  if [[ -n "$compose_file" ]]; then
+    # The pipeline service connects as the collection role, so it must own the database.
+    ensure_collect_role || exit 1
+    export TERALIZER_SCRATCH_OWNER="$COLLECT_DB_USER"
+  fi
   SUPERVISOR_LOCK_DIR="$data_root/.teralizer-run.lock"
   supervisor_install_traps
 
@@ -122,7 +127,8 @@ jarvis_run() {
     database_exists=$(teralizer_psql -d postgres -tA \
       -c "SELECT 1 FROM pg_database WHERE datname = '$JARVIS_DB_NAME'") || exit 1
     if [[ "$database_exists" != 1 ]]; then
-      teralizer_psql -v ON_ERROR_STOP=1 -d postgres -c "CREATE DATABASE $JARVIS_DB_NAME;" || exit 1
+      teralizer_psql -v ON_ERROR_STOP=1 -d postgres \
+        -c "CREATE DATABASE $JARVIS_DB_NAME OWNER $COLLECT_DB_USER;" || exit 1
     fi
   fi
 

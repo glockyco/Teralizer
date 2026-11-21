@@ -504,11 +504,16 @@ supervisor_install_traps
 if [[ "$USE_DOCKER" == "yes" ]]; then
     echo "Ensuring PostgreSQL is running..."
     docker compose -f "$COMPOSE_FILE" up -d --wait postgres
-    if [[ "$(docker compose -f "$COMPOSE_FILE" exec -T postgres \
-        psql -U "${REPLICATION_DB_USER:-teralizer}" -d postgres -tA \
+    # The pipeline service connects as the collection role, so that role owns the
+    # scratch database. Role and database are set up by the server's superuser.
+    export TERALIZER_PSQL_TRANSPORT=compose TERALIZER_COMPOSE_FILE="$COMPOSE_FILE"
+    DB_USER="${REPLICATION_DB_USER:-teralizer}"
+    source "$REPO_ROOT/scripts/lib/db-lifecycle.sh"
+    ensure_collect_role
+    if [[ "$(teralizer_psql -d postgres -tA \
         -c "SELECT 1 FROM pg_database WHERE datname = '$SCRATCH_DB'" 2>/dev/null)" != 1 ]]; then
-        docker compose -f "$COMPOSE_FILE" exec -T postgres \
-            createdb -U "${REPLICATION_DB_USER:-teralizer}" "$SCRATCH_DB"
+        teralizer_psql -v ON_ERROR_STOP=1 -d postgres \
+            -c "CREATE DATABASE $SCRATCH_DB OWNER $COLLECT_DB_USER;"
     fi
 else
     source "$REPO_ROOT/scripts/lib/db-lifecycle.sh"

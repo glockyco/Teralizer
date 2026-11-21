@@ -90,7 +90,7 @@ The reduced scopes are:
 
 Full collection runs all configurations. For `controlled`, it generates tests before generalizing them. For `real-world`, it needs the full project-source component instead of the sample component.
 
-Collection builds and runs third-party code in Docker and needs network access to resolve its dependencies. Controlled collection has no per-config wall cap by default. Real-world collection uses the cap given in [the replication runner's help](replication/scripts/run.sh).
+Collection builds and runs third-party code in Docker and needs network access to resolve its dependencies. The pipeline container works on copies below `state/`, sees the configurations read-only, has no Docker socket and no more than 8 GB of memory, and connects to PostgreSQL as a role that owns only the scratch databases, so the code it runs cannot change the restored corpora. Controlled collection has no per-config wall cap by default. Real-world collection uses the cap given in [the replication runner's help](replication/scripts/run.sh).
 
 Working copies and pipeline data go under `state/collect/` by default. Reduced and full real-world runs have separate directories and scratch databases. Each collection prints the location of its ledger and logs, or writes the pipeline log to the terminal. It reports the scratch database name and leaves the published corpus databases unchanged.
 

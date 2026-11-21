@@ -73,8 +73,10 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ${REPLICATION_DB_USER:-teralizer}
-      DB_PASSWORD: ${REPLICATION_DB_PASSWORD:-teralizer}
+      # The service builds and runs third-party projects, so it connects as a role that
+      # owns only the scratch databases, which scripts/lib/db-lifecycle.sh creates.
+      DB_USER: ${REPLICATION_COLLECT_DB_USER:-teralizer_collect}
+      DB_PASSWORD: ${REPLICATION_COLLECT_DB_PASSWORD:-teralizer-collect}
       DATA_DIR: /app/data
     volumes:
       # Packaged runs mount disposable working copies instead of checkout projects and data.
