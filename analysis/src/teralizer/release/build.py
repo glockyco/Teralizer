@@ -118,22 +118,26 @@ def _release_identity(declaration: Declaration, revision: str) -> dict[str, str]
 
 def _readme(declaration: Declaration, component_id: str) -> bytes:
     component = declaration.component(component_id)
-    workflows = [
-        workflow.id
-        for workflow in declaration.workflows
-        if component_id in workflow.components
-    ]
+    version_doi = declaration.version_doi or "reserved before publication"
     lines = [
         f"# {component.id}",
         "",
         component.purpose,
         "",
-        f"Release: {declaration.title}, concept DOI {declaration.concept_doi}.",
+        f"Release: {declaration.title}, version {declaration.version}, "
+        f"version DOI {version_doi}, concept DOI {declaration.concept_doi}.",
         f"Extract this archive into the same directory as the core archive. It writes only {component.root}/.",
-        f"Workflows that use it: {', '.join(workflows)}.",
+        "",
+        "Workflows that use it, with every component they need:",
+        "",
+    ]
+    for workflow in declaration.workflows:
+        if component_id in workflow.components:
+            lines.append(f"- `./{workflow.command}`: {', '.join(workflow.components)}")
+    lines += [
         "",
         "The standalone release-manifest.json lists every archive of this release and its checksum.",
-        "The core archive holds the complete instructions, licenses and citation.",
+        "The core archive holds the complete instructions, licenses and citation, starting at teralizer/README.md.",
         "",
     ]
     return "\n".join(lines).encode()
