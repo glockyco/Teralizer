@@ -16,7 +16,8 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from teralizer.release.archive import Entry, safe_name
+from teralizer.release import realworld
+from teralizer.release.archive import Entry, link_stays_inside, safe_name
 from teralizer.release.declaration import Declaration
 from teralizer.release.inventory import Inventory
 
@@ -64,6 +65,8 @@ class Sources:
     corpus_package: Path
     # A checkout whose ambient project and fixture roots hold the measured inputs.
     checkout: Path
+    # Output of `python -m teralizer.release export-real-world`, if built.
+    real_world: Path | None = None
 
 
 @dataclass
@@ -83,6 +86,10 @@ class ComponentPlan:
                 executable=bool(mode & stat.S_IXUSR),
             )
         )
+        self.inputs.add(input_id)
+
+    def add_link(self, input_id: str, relative: str, target: str) -> None:
+        self.entries.append(Entry(name=f"{self.root}/{relative}", link=target))
         self.inputs.add(input_id)
 
 
@@ -194,7 +201,54 @@ def build(
                 path.relative_to(sources.checkout).as_posix(),
                 path,
             )
+    if sources.real_world is not None:
+        _plan_real_world(sources, plans)
     return [plans[component.id] for component in declaration.components]
+
+
+def _plan_real_world(sources: Sources, plans: dict[str, ComponentPlan]) -> None:
+    """Every exported project into the full component, the sample into its own.
+
+    Both components read the same exported files, so a sample project's members
+    equal its members in the full component by construction.
+    """
+    assert sources.real_world is not None
+    exported = sources.real_world / "projects"
+    mapped = [
+        project.name
+        for project in realworld.checkout_map(sources.evidence / realworld.CHECKOUT_MAP)
+    ]
+    present = sorted(path.name for path in exported.iterdir())
+    if present != sorted(mapped):
+        missing = sorted(set(mapped) - set(present))
+        extra = sorted(set(present) - set(mapped))
+        raise PlanError(
+            f"exported projects differ from the checkout map: "
+            f"missing {missing[:5]}, extra {extra[:5]}"
+        )
+    sample = set(realworld.sample(sources.source / realworld.SAMPLE_LIST))
+    unknown = sorted(sample - set(present))
+    if unknown:
+        raise PlanError(f"sample projects without an export: {unknown[:5]}")
+
+    targets = [("projects-real-world-full", "reporeapers-project-checkouts", None)]
+    targets.append(("projects-real-world-sample", "reporeapers-project-sample", sample))
+    for name in present:
+        project_root = f"projects/{name}"
+        for path in realworld.tree_files(exported / name):
+            relative = f"{project_root}/{path.relative_to(exported / name).as_posix()}"
+            target = os.readlink(path) if path.is_symlink() else None
+            if target is not None and not link_stays_inside(
+                relative, target, project_root
+            ):
+                raise PlanError(f"link {relative} -> {target} leaves {project_root}")
+            for component, input_id, members in targets:
+                if members is not None and name not in members:
+                    continue
+                if target is None:
+                    plans[component].add(input_id, relative, path)
+                else:
+                    plans[component].add_link(input_id, relative, target)
 
 
 def _source_input(inventory: Inventory, relative: str) -> str:

@@ -123,6 +123,7 @@ def build_candidate(
     corpus_package: Path,
     candidate: Path,
     components: Iterable[str],
+    real_world: Path | None = None,
 ) -> list[BuiltArchive]:
     """Build the selected components and the release files into ``candidate``."""
     selected = list(components)
@@ -142,10 +143,15 @@ def build_candidate(
         check=True,
     ).stdout.strip()
     nested, _ = source.materialize(repo, revision, work / "source")
-    sources = plan.Sources(work / "source", evidence, corpus_package, repo)
-    plans = {
-        item.component: item for item in plan.build(declaration, inventory, sources)
-    }
+    sources = plan.Sources(
+        work / "source", evidence, corpus_package, repo, real_world=real_world
+    )
+    try:
+        plans = {
+            item.component: item for item in plan.build(declaration, inventory, sources)
+        }
+    except plan.PlanError as error:
+        raise BuildError(str(error)) from error
     problems = plan.validate(plans.values(), inventory, required=selected)
     if problems:
         raise BuildError("invalid plan:\n" + "\n".join(problems))

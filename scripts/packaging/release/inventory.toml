@@ -231,7 +231,7 @@ path = "test-generalization-dev/projects/github_com_*"
 selector = "real-world-git-revisions"
 disposition = "payload"
 component = "projects-real-world-full"
-reason = "Real-world project sources exported from each recorded Git revision, every project as in the first version. Each keeps its own license, and the third-party records state where none was found."
+reason = "Every real-world project as the pipeline's checkout wrote it: the recorded revision replayed through MeasuredCheckout.java with the evaluation host's checkout settings, and the deviations that real-world-checkout-deviations.tsv declares. Each project keeps its own license, and the third-party records state where none was found."
 
 [[input]]
 id = "reporeapers-project-sample"
@@ -240,7 +240,7 @@ path = "test-generalization-dev/projects/github_com_*"
 selector = "real-world-sample"
 disposition = "payload"
 component = "projects-real-world-sample"
-reason = "The declared reduced real-world subset. It is the one deliberate overlap: every sample project must equal its copy in projects-real-world-full."
+reason = "The projects that real-world-sample.txt lists, from the same export. It is the one deliberate overlap: every sample project equals its copy in projects-real-world-full."
 
 [[input]]
 id = "reporeapers-run-artifacts"

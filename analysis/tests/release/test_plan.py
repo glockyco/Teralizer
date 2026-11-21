@@ -1,7 +1,10 @@
 import json
+import os
+from dataclasses import replace
 from pathlib import Path
 
-from teralizer.release import declaration, inventory, plan
+import pytest
+from teralizer.release import declaration, inventory, plan, realworld
 
 
 def _write(path: Path, content: str = "x\n") -> None:
@@ -100,3 +103,63 @@ def test_validation_reports_payload_inputs_without_members(tmp_path: Path):
     assert not any(
         "owned by" in problem or "outside" in problem for problem in problems
     )
+
+
+def _real_world(tmp_path: Path, *, link: str = "pom.xml") -> plan.Sources:
+    sources = _sources(tmp_path)
+    names = ["github_com_a_one", "github_com_b_two"]
+    _write(
+        sources.evidence / realworld.CHECKOUT_MAP,
+        "project\trevision\torigin\n"
+        + "".join(
+            f"{name}\t{'0' * 40}\thttps://example.org/{name}\n" for name in names
+        ),
+    )
+    _write(sources.source / realworld.SAMPLE_LIST, "github_com_b_two\n")
+    exported = tmp_path / "exported"
+    for name in names:
+        _write(exported / "projects" / name / "pom.xml")
+        # Top-level data/ is project content in an export, not pipeline output.
+        _write(exported / "projects" / name / "data/input.csv")
+        os.symlink(link, exported / "projects" / name / "alias.xml")
+    return replace(sources, real_world=exported)
+
+
+def test_real_world_sample_members_equal_their_full_members(tmp_path: Path):
+    plans = {
+        item.component: item
+        for item in plan.build(
+            declaration.load(), inventory.load(), _real_world(tmp_path)
+        )
+    }
+
+    def members(component: str) -> set[tuple[str, object]]:
+        root = plans[component].root + "/"
+        return {
+            (entry.name.removeprefix(root), entry.link or entry.source)
+            for entry in plans[component].entries
+        }
+
+    full = members("projects-real-world-full")
+    sample = members("projects-real-world-sample")
+    assert sample < full
+    assert {name.split("/")[1] for name, _ in sample} == {"github_com_b_two"}
+    data = "projects/github_com_a_one/data/input.csv"
+    assert (data, tmp_path / "exported" / data) in full
+    assert ("projects/github_com_b_two/alias.xml", "pom.xml") in sample
+
+
+def test_real_world_links_must_stay_inside_their_project(tmp_path: Path):
+    sources = _real_world(tmp_path, link="../github_com_a_one/pom.xml")
+
+    with pytest.raises(plan.PlanError, match="leaves projects/"):
+        plan.build(declaration.load(), inventory.load(), sources)
+
+
+def test_exports_must_match_the_checkout_map(tmp_path: Path):
+    sources = _real_world(tmp_path)
+    assert sources.real_world is not None
+    _write(sources.real_world / "projects/github_com_c_unmapped/pom.xml")
+
+    with pytest.raises(plan.PlanError, match="extra \\['github_com_c_unmapped'\\]"):
+        plan.build(declaration.load(), inventory.load(), sources)

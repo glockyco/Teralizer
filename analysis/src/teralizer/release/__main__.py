@@ -153,6 +153,26 @@ def _jarvis_logs(repo: Path, staged: Path, copy: bool) -> int:
     return 0
 
 
+def _export_real_world(repo: Path, checkouts: Path, evidence: Path, out: Path) -> int:
+    from teralizer.release import realworld
+
+    runner = realworld.MeasuredCheckoutRunner(repo)
+    try:
+        count = realworld.export(
+            checkouts,
+            evidence / realworld.CHECKOUT_MAP,
+            repo / realworld.DEVIATIONS,
+            out,
+            runner,
+        )
+    except realworld.ExportError as error:
+        return _report_problems([str(error)], "export")
+    finally:
+        runner.close()
+    print(f"exported {count} projects as their measured checkouts held them to {out}")
+    return 0
+
+
 def _declaration(
     declared: inventory.Inventory, path: Path | None, production: bool
 ) -> int:
@@ -181,6 +201,7 @@ def _build(
     corpus_package: Path,
     components: list[str] | None,
     production: bool,
+    real_world: Path | None,
 ) -> int:
     from teralizer.release import build, declaration
 
@@ -201,6 +222,7 @@ def _build(
             corpus_package=corpus_package,
             candidate=candidate,
             components=selected,
+            real_world=real_world,
         )
     except build.BuildError as error:
         return _report_problems([str(error)], "build")
@@ -286,6 +308,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     logs.add_argument("--staged", type=Path, required=True)
     logs.add_argument("--copy", action="store_true")
+    export_command = commands.add_parser(
+        "export-real-world",
+        help="export every real-world project at the revision its run measured",
+    )
+    export_command.add_argument(
+        "--checkouts", type=Path, required=True, help="directory of the Git checkouts"
+    )
+    export_command.add_argument("--evidence", type=Path, required=True)
+    export_command.add_argument("--out", type=Path, required=True)
     declaration_command = commands.add_parser(
         "declaration", help="validate the release declaration against the inventory"
     )
@@ -301,6 +332,11 @@ def main(argv: list[str] | None = None) -> int:
     build_command.add_argument("--candidate", type=Path, required=True)
     build_command.add_argument("--evidence", type=Path, required=True)
     build_command.add_argument("--corpus-package", type=Path, required=True)
+    build_command.add_argument(
+        "--real-world-projects",
+        type=Path,
+        help="output of export-real-world, for the real-world project components",
+    )
     build_command.add_argument(
         "--component",
         action="append",
@@ -349,6 +385,8 @@ def main(argv: list[str] | None = None) -> int:
         return _source(declared, args.repo, args.revision, args.out)
     if args.command == "jarvis-logs":
         return _jarvis_logs(args.repo, args.staged, args.copy)
+    if args.command == "export-real-world":
+        return _export_real_world(args.repo, args.checkouts, args.evidence, args.out)
     if args.command == "declaration":
         return _declaration(declared, args.declaration, args.production)
     if args.command == "build":
@@ -360,6 +398,7 @@ def main(argv: list[str] | None = None) -> int:
             args.corpus_package,
             args.components,
             args.production,
+            args.real_world_projects,
         )
     return _report_inputs(declared, args.repo, args.output)
 

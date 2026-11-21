@@ -62,12 +62,12 @@ purpose = "Sources of the controlled projects, including the EvoSuite tests the 
 [[component]]
 id = "projects-real-world-sample"
 root = "teralizer/components/projects-real-world-sample"
-purpose = "Sources of the reduced real-world project sample."
+purpose = "Sources of the 100 real-world projects of the reduced collection, at the revisions the evaluation measured."
 
 [[component]]
 id = "projects-real-world-full"
 root = "teralizer/components/projects-real-world-full"
-purpose = "Sources of every redistributable real-world project, and retrieval records for the others."
+purpose = "Sources of every real-world project, at the revisions the evaluation measured."
 
 [[component]]
 id = "projects-jarvis-scoreboard"
@@ -131,7 +131,7 @@ id = "collect-real-world-full"
 command = "artifact collect-full real-world"
 components = ["core", "projects-real-world-full"]
 network = ["setup", "collection"]
-purpose = "Run the Teralizer pipeline on every real-world project into a scratch database, retrieving projects whose sources the release cannot ship."
+purpose = "Run the Teralizer pipeline on every real-world project into a scratch database."
 
 [[workflow]]
 id = "collect-jarvis-scoreboard"
