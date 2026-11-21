@@ -153,6 +153,21 @@ def _jarvis_logs(repo: Path, staged: Path, copy: bool) -> int:
     return 0
 
 
+def _fetch_third_party(repo: Path, out: Path) -> int:
+    from teralizer.release import thirdparty
+
+    try:
+        revisions = thirdparty.upstream_revisions(
+            thirdparty.declared(repo / thirdparty.SOURCES),
+            thirdparty.upstream_pins(repo / thirdparty.UPSTREAM_PINS),
+        )
+        count = thirdparty.fetch_upstream(revisions, out)
+    except thirdparty.ThirdPartyError as error:
+        return _report_problems([str(error)], "third-party")
+    print(f"fetched {count} files of {len(revisions)} upstream revisions to {out}")
+    return 0
+
+
 def _export_real_world(repo: Path, checkouts: Path, evidence: Path, out: Path) -> int:
     from teralizer.release import realworld
 
@@ -202,6 +217,7 @@ def _build(
     components: list[str] | None,
     production: bool,
     real_world: Path | None,
+    upstream: Path | None,
 ) -> int:
     from teralizer.release import build, declaration, provenance
 
@@ -223,6 +239,7 @@ def _build(
             candidate=candidate,
             components=selected,
             real_world=real_world,
+            upstream=upstream,
         )
     except (build.BuildError, provenance.ProvenanceError) as error:
         return _report_problems([str(error)], "build")
@@ -350,6 +367,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     export_command.add_argument("--evidence", type=Path, required=True)
     export_command.add_argument("--out", type=Path, required=True)
+    fetch_command = commands.add_parser(
+        "fetch-third-party",
+        help="download the upstream LICENSE and NOTICE files the release retains",
+    )
+    fetch_command.add_argument("--out", type=Path, required=True)
     declaration_command = commands.add_parser(
         "declaration", help="validate the release declaration against the inventory"
     )
@@ -369,6 +391,11 @@ def main(argv: list[str] | None = None) -> int:
         "--real-world-projects",
         type=Path,
         help="output of export-real-world, for the real-world project components",
+    )
+    build_command.add_argument(
+        "--third-party-upstream",
+        type=Path,
+        help="output of fetch-third-party, for the project components",
     )
     build_command.add_argument(
         "--component",
@@ -431,6 +458,8 @@ def main(argv: list[str] | None = None) -> int:
         return _jarvis_logs(args.repo, args.staged, args.copy)
     if args.command == "export-real-world":
         return _export_real_world(args.repo, args.checkouts, args.evidence, args.out)
+    if args.command == "fetch-third-party":
+        return _fetch_third_party(args.repo, args.out)
     if args.command == "declaration":
         return _declaration(declared, args.declaration, args.production)
     if args.command == "build":
@@ -443,6 +472,7 @@ def main(argv: list[str] | None = None) -> int:
             args.components,
             args.production,
             args.real_world_projects,
+            args.third_party_upstream,
         )
     return _report_inputs(declared, args.repo, args.output)
 

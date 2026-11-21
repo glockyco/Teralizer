@@ -16,7 +16,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from teralizer.release import realworld
+from teralizer.release import realworld, thirdparty
 from teralizer.release.archive import Entry, link_stays_inside, safe_name
 from teralizer.release.declaration import Declaration
 from teralizer.release.inventory import Inventory
@@ -47,6 +47,13 @@ CONTROLLED_PROJECTS = (
 )
 SCOREBOARD_FIXTURES = ("commons-lang-2017-02-01", "commons-math-2017-02-01")
 CENSUS_FIXTURE_PATTERN = "*-2017-02-01-census"
+# The upstream LICENSE and NOTICE files that fetch-third-party stages for the
+# projects whose payload does not carry them, one inventory input per component.
+UPSTREAM_INPUTS = {
+    "projects-controlled": "upstream-licenses-controlled",
+    "projects-jarvis-scoreboard": "upstream-licenses-scoreboard",
+    "projects-jarvis-census": "upstream-licenses-census",
+}
 
 
 class PlanError(ValueError):
@@ -67,6 +74,8 @@ class Sources:
     checkout: Path
     # Output of `python -m teralizer.release export-real-world`, if built.
     real_world: Path | None = None
+    # Output of `python -m teralizer.release fetch-third-party`, if staged.
+    upstream: Path | None = None
 
 
 @dataclass
@@ -203,6 +212,15 @@ def build(
             )
     if sources.real_world is not None:
         _plan_real_world(sources, plans)
+    if sources.upstream is not None:
+        entries = thirdparty.declared(sources.source / thirdparty.SOURCES)
+        pins = thirdparty.upstream_pins(sources.source / thirdparty.UPSTREAM_PINS)
+        for component, input_id in UPSTREAM_INPUTS.items():
+            files = thirdparty.planned_upstream(
+                component, entries, pins, sources.upstream
+            )
+            for relative, path in sorted(files.items()):
+                plans[component].add(input_id, relative, path)
     return [plans[component.id] for component in declaration.components]
 
 

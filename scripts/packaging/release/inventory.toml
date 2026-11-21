@@ -279,6 +279,33 @@ path = "registry images named by Dockerfile and Compose files"
 disposition = "retrieval"
 reason = "Base and service images. The release pins each by digest and ships the Dockerfiles and Compose files in the source tree instead of image archives."
 
+[[input]]
+id = "upstream-licenses-controlled"
+location = "external"
+path = "https://raw.githubusercontent.com/apache/<repository>/<revision>/{LICENSE,NOTICE}*"
+selector = "commons-utils origins in third-party.toml at the revisions of third-party-upstream.tsv"
+disposition = "payload"
+component = "projects-controlled"
+reason = "The Apache License and NOTICE files of the Apache Commons repositories that commons-utils takes its classes from. The project carries no license file, and the Apache License requires both with redistributed code."
+
+[[input]]
+id = "upstream-licenses-scoreboard"
+location = "external"
+path = "https://raw.githubusercontent.com/apache/<repository>/<revision>/{LICENSE,NOTICE}*"
+selector = "scorecard fixtures in third-party.toml at their pinned revisions"
+disposition = "payload"
+component = "projects-jarvis-scoreboard"
+reason = "The Apache License and NOTICE files of the two scorecard fixtures' upstream revisions. The fixture payload is the POM and the sources, which carry neither."
+
+[[input]]
+id = "upstream-licenses-census"
+location = "external"
+path = "https://raw.githubusercontent.com/apache/<repository>/<revision>/{LICENSE,NOTICE}*"
+selector = "census fixtures in third-party.toml at their pinned revisions"
+disposition = "payload"
+component = "projects-jarvis-census"
+reason = "The Apache License and NOTICE files of the twelve census fixtures' upstream revisions. The fixture payload is the POM and the sources, which carry neither."
+
 # --------------------------------------------------------------------------------
 # Ambient checkout paths
 # --------------------------------------------------------------------------------

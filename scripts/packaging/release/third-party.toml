@@ -1,0 +1,167 @@
+# Origins of the shipped projects that the real-world checkout map does not cover.
+#
+# The release builder combines each entry with the license that licensee detects
+# in the packaged files and writes the third-party record of every project into
+# its component. `upstream` names the repositories whose LICENSE and NOTICE files
+# the release retains next to the projects, at `revision` or, where the project
+# records none, at the revision the fetch pinned in third-party-upstream.tsv.
+
+format = "teralizer-third-party-sources"
+format_version = 1
+
+[[project]]
+component = "projects-controlled"
+paths = [
+    "projects/EqBench",
+    "projects/eqbench-es-default-1s",
+    "projects/eqbench-es-default-10s",
+    "projects/eqbench-es-default-60s",
+]
+origin = "https://github.com/glockyco/EqBench.git"
+revision = "de19c3efd11f9b66bd13ce4704169efc73bdaaf3"
+note = "Fork of https://github.com/shrBadihi/EqBench with the EqBench programs as one Maven project. The generated tests under src/test of the -es- projects were produced by EvoSuite for this study."
+
+[[project]]
+component = "projects-controlled"
+paths = [
+    "projects/commons-utils",
+    "projects/commons-utils-es-default-1s",
+    "projects/commons-utils-es-default-10s",
+    "projects/commons-utils-es-default-60s",
+]
+origin = "https://github.com/apache"
+license = "Apache-2.0"
+license_evidence = "Apache Commons origin of every class in export.csv, and the Apache license header in all of them but one"
+upstream = [
+    "commons-bcel", "commons-codec", "commons-collections", "commons-compress",
+    "commons-configuration", "commons-geometry", "commons-imaging", "commons-io",
+    "commons-jcs", "commons-jexl", "commons-jxpath", "commons-lang", "commons-math",
+    "commons-net", "commons-numbers", "commons-rng", "commons-validator",
+]
+note = "Utility classes and their tests from the Apache Commons repositories that export.csv lists, fetched from their default branches without a recorded revision. The generated tests in the -es- projects were produced by EvoSuite for this study."
+
+[[project]]
+component = "projects-jarvis-scoreboard"
+paths = ["data/jarvis-scoreboard/fixtures/commons-lang-2017-02-01"]
+origin = "https://github.com/apache/commons-lang.git"
+revision = "857e0de49293083aae6d3e6c6b76ec0755b1d0fa"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-lang"]
+
+[[project]]
+component = "projects-jarvis-scoreboard"
+paths = ["data/jarvis-scoreboard/fixtures/commons-math-2017-02-01"]
+origin = "https://github.com/apache/commons-math.git"
+revision = "657b1b49da5ea1593dd7f950eae99a88a8ada87a"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-math"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-math-2017-02-01-census"]
+origin = "https://github.com/apache/commons-math.git"
+revision = "657b1b49da5ea1593dd7f950eae99a88a8ada87a"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-math"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-lang-2017-02-01-census"]
+origin = "https://github.com/apache/commons-lang.git"
+revision = "857e0de49293083aae6d3e6c6b76ec0755b1d0fa"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-lang"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-cli-2017-02-01-census"]
+origin = "https://github.com/apache/commons-cli.git"
+revision = "b486fbd33d9350b5faf27662f18841ae89128910"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-cli"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-codec-2017-02-01-census"]
+origin = "https://github.com/apache/commons-codec.git"
+revision = "1a4d9cc2572d220664f1b7c377cd318cd253052e"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-codec"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-collections-2017-02-01-census"]
+origin = "https://github.com/apache/commons-collections.git"
+revision = "3c1867e231093319b1bbbe5b0362d4063517cf24"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-collections"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-configuration-2017-02-01-census"]
+origin = "https://github.com/apache/commons-configuration.git"
+revision = "98ae727a34e9460ef625bc072cbbd7f2b0471127"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-configuration"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-csv-2017-02-01-census"]
+origin = "https://github.com/apache/commons-csv.git"
+revision = "b1e5d93a2f5309102bf09d4e2b8b9eb15ef3fc8b"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-csv"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-email-2017-02-01-census"]
+origin = "https://github.com/apache/commons-email.git"
+revision = "edcd565ab2e77f0ac8c95fa7200ff1a1be7f8e0c"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-email"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-io-2017-02-01-census"]
+origin = "https://github.com/apache/commons-io.git"
+revision = "54631643211e2dc29beaecc30e4eedf2928738d7"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-io"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-jexl-2017-02-01-census"]
+origin = "https://github.com/apache/commons-jexl.git"
+revision = "b212a407b74687c1f861dd0cb5cff90b9da32082"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-jexl"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-pool-2017-02-01-census"]
+origin = "https://github.com/apache/commons-pool.git"
+revision = "6a088d1b8a4aa343362cdf4e749b7c5fca38971b"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-pool"]
+
+[[project]]
+component = "projects-jarvis-census"
+paths = ["data/jarvis-census/fixtures/commons-text-2017-02-01-census"]
+origin = "https://github.com/apache/commons-text.git"
+revision = "d24d8b257135e06fe89d6569a897c44e4466281a"
+license = "Apache-2.0"
+license_evidence = "LICENSE.txt of the upstream revision"
+upstream = ["commons-text"]

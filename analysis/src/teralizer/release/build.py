@@ -16,7 +16,15 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from teralizer.release import archive, documents, plan, provenance, source
+from teralizer.release import (
+    archive,
+    documents,
+    plan,
+    provenance,
+    realworld,
+    source,
+    thirdparty,
+)
 from teralizer.release.declaration import Declaration
 from teralizer.release.inventory import Inventory
 
@@ -47,6 +55,46 @@ def _sha256(path: Path) -> str:
         while chunk := stream.read(1024 * 1024):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _third_party(
+    component_id: str, root: str, entries: list[archive.Entry], sources: plan.Sources
+) -> bytes:
+    """The third-party records of a project component."""
+    prefix = root + "/"
+    members = {
+        entry.name.removeprefix(prefix): entry.source
+        for entry in entries
+        if entry.source is not None
+    }
+    real_world = component_id in ALTERNATIVE_SCOPES
+    origins: dict[str, tuple[str, str]] = {}
+    if real_world:
+        assert sources.real_world is not None
+        mapped = realworld.checkout_map(sources.evidence / realworld.CHECKOUT_MAP)
+        origins = {
+            f"projects/{project.name}": (project.origin, project.revision)
+            for project in mapped
+        }
+    base = sources.real_world if real_world else sources.checkout
+    assert base is not None
+    roots = {
+        thirdparty.project_root(path)
+        for path in members
+        if not path.startswith(thirdparty.UPSTREAM_DIRECTORY + "/")
+    }
+    try:
+        return thirdparty.component_records(
+            component_id,
+            members,
+            {project: base / project for project in roots},
+            origins,
+            thirdparty.declared(sources.source / thirdparty.SOURCES),
+            thirdparty.upstream_pins(sources.source / thirdparty.UPSTREAM_PINS),
+            sources.upstream,
+        )
+    except thirdparty.ThirdPartyError as error:
+        raise BuildError(str(error)) from error
 
 
 def _canonical(document: object) -> bytes:
@@ -124,6 +172,7 @@ def build_candidate(
     candidate: Path,
     components: Iterable[str],
     real_world: Path | None = None,
+    upstream: Path | None = None,
 ) -> list[BuiltArchive]:
     """Build the selected components and the release files into ``candidate``."""
     selected = list(components)
@@ -144,7 +193,12 @@ def build_candidate(
     ).stdout.strip()
     nested, _ = source.materialize(repo, revision, work / "source")
     sources = plan.Sources(
-        work / "source", evidence, corpus_package, repo, real_world=real_world
+        work / "source",
+        evidence,
+        corpus_package,
+        repo,
+        real_world=real_world,
+        upstream=upstream,
     )
     try:
         plans = {
@@ -216,6 +270,22 @@ def build_candidate(
                 provenance_section["corpus_package_entry"] = plan.corpus_entry(
                     corpus_package, component.corpus
                 )
+            else:
+                entries.append(
+                    archive.Entry(
+                        f"{component.root}/{thirdparty.RECORDS}",
+                        content=_third_party(
+                            component_id, component.root, entries, sources
+                        ),
+                    )
+                )
+                licenses = [
+                    {
+                        "scope": "analyzed projects, each under its authors' terms",
+                        "license": "per project in third-party.json",
+                        "file": f"{component.root}/{thirdparty.RECORDS}",
+                    }
+                ]
         requires = [] if component_id == "core" else ["core"]
         incompatible = [
             scope

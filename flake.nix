@@ -51,6 +51,9 @@
             pkgs.postgresql_17
             pkgs.uv
             pkgs.git-lfs
+            # The release builder identifies the license of every shipped project
+            # with GitHub's detector instead of a classifier of its own.
+            pkgs.licensee
             pkgs.lefthook
           ];
 
