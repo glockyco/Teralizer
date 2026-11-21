@@ -56,9 +56,9 @@ source: [`_effects`](https://github.com/glockyco/Teralizer/blob/50f2262d6d5a9f01
 | EqBench-ES (10 s) | Improved (200 tries) | 16.70 | 139.64 | 0.56 | 155.77 | +139.08 | +832.9% |
 | EqBench-ES (60 s) | Naive (200 tries) | 18.21 | 221.07 | 0.76 | 238.52 | +220.31 | +1210.0% |
 | EqBench-ES (60 s) | Improved (200 tries) | 18.21 | 124.68 | 0.69 | 142.20 | +123.99 | +681.0% |
-| Commons-ES (1 s) | Naive (200 tries) | 4.31 | 114.42 | 0.09 | 118.64 | +114.33 | +2651.5% |
-| Commons-ES (1 s) | Improved (200 tries) | 4.31 | 29.49 | 0.14 | 33.66 | +29.35 | +680.5% |
-| Commons-ES (10 s) | Naive (200 tries) | 7.40 | 148.54 | 0.14 | 155.80 | +148.40 | +2005.2% |
+| Commons-ES (1 s) | Naive (200 tries) | 4.31 | 114.42 | 0.09 | 118.64 | +114.33 | +2651.4% |
+| Commons-ES (1 s) | Improved (200 tries) | 4.31 | 29.49 | 0.14 | 33.66 | +29.34 | +680.5% |
+| Commons-ES (10 s) | Naive (200 tries) | 7.40 | 148.54 | 0.14 | 155.80 | +148.40 | +2005.1% |
 | Commons-ES (10 s) | Improved (200 tries) | 7.40 | 71.50 | 0.21 | 78.70 | +71.30 | +963.3% |
 | Commons-ES (60 s) | Naive (200 tries) | 6.30 | 122.11 | 0.07 | 128.34 | +122.04 | +1936.2% |
 | Commons-ES (60 s) | Improved (200 tries) | 6.30 | 28.07 | 0.08 | 34.29 | +27.99 | +444.1% |

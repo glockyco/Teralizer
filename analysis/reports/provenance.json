@@ -68,9 +68,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2184,9 +2184,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2473,9 +2473,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2618,9 +2618,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2745,9 +2745,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2968,9 +2968,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -3010,7 +3010,7 @@
         "version": "0.1.0"
       },
       "tab-teralizer-runtimes": {
-        "commit": "a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764",
+        "commit": "df09e0646161116deb0c8700e21cc45a5440e125",
         "dirty": false,
         "module": "teralizer.eval.reports.rq4_efficiency_evosuite",
         "qualname": "_fetch_project_runtimes",
@@ -3025,7 +3025,7 @@
           "eqbench-es-1s",
           "eqbench-es-60s"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/a421ce6ab66c4d6666716bc8acb3c5a9ab0d7764/analysis/src/teralizer/eval/reports/rq4_efficiency_evosuite.py#L254",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/df09e0646161116deb0c8700e21cc45a5440e125/analysis/src/teralizer/eval/reports/rq4_efficiency_evosuite.py#L257",
         "value": "Total Teralizer runtime per project across all generalization strategies.",
         "version": "0.1.0"
       },
@@ -3160,9 +3160,9 @@
     },
     "metrics": {},
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "tab-exclusions-breakdown": {
@@ -6281,9 +6281,9 @@
       }
     },
     "run": {
-      "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
+      "derived_view_revision": "c783999d9c0bd624918664aa40891ffea74e8401d90ca18cb9ac28b9d8e2f7e2",
       "dirty": false,
-      "source_commit": "ef18c45a176b472ac1ac216b3c635ff6a0add474"
+      "source_commit": "df09e0646161116deb0c8700e21cc45a5440e125"
     },
     "tables": {
       "rq6_assertion_type_rejections": {
