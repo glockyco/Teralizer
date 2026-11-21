@@ -17,9 +17,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PLAN="$1"
-SOURCE_CACHE="$2"
-WORK="$3"
-RAW="$4"
+# Maven runs the tests inside each checkout, so the agent needs absolute paths.
+mkdir -p "$2" "$3" "$4"
+SOURCE_CACHE="$(cd "$2" && pwd)"
+WORK="$(cd "$3" && pwd)"
+RAW="$(cd "$4" && pwd)"
 AGENT_JAR="$ROOT/tools/cut-pvc-capture/target/cut-pvc-capture-1.0.jar"
 
 # shellcheck source=scripts/lib/jarvis-pins.sh
@@ -42,8 +44,6 @@ for pin in "commons-lang|$LANG_REPO|$LANG_REF|$LANG_SHA" "commons-math|$MATH_REP
     echo "[cut-pvc] test-compiling $project (once)"
     (cd "$WORK/$project" && mvn -q test-compile -Drat.skip=true -Danimal.sniffer.skip=true)
 done
-
-mkdir -p "$RAW"
 
 # Plan lines: slug <TAB> project <TAB> caller <TAB> tests(;) <TAB> agent-targets(;)
 while IFS=$'\t' read -r slug project caller tests targets; do
