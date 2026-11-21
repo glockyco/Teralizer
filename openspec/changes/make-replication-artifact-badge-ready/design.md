@@ -185,6 +185,19 @@ The reviewer may pull declared images during setup. Once images and selected rel
 
 Host-based `uv`, Nix, Java, or Gradle remain developer conveniences and do not appear as primary reviewer prerequisites. The Java collection container executes project builds in a disposable workspace without the Docker socket, host credentials, or writable mounts over the release source. Network access for third-party dependency resolution is isolated to the documented collection workflow.
 
+Every collection path runs its Java, Gradle and Maven steps in the pinned pipeline image through Compose: controlled and real-world collection, the JARVIS scorecard and census, and the CUT-PVC capture. Shell orchestration stays on the host and reaches the database through the Compose service, the corpus registry through the analysis service, and the pipeline through one-off containers named after the Compose project. Before a run, `artifact` copies the selected projects or fixtures from their component into the workspace's state directory, and the pipeline container mounts only that copy, its data directory and the core configurations. Components therefore stay unchanged, and `clean` removes the copies with the rest of the state.
+
+Reduced collection covers one bounded unit per corpus. The recorded pipeline times on the evaluation host set the scope:
+
+| Corpus | Reduced scope | Recorded time |
+|---|---|---|
+| `controlled` | commons-utils with its developer tests, generalization only | 3.4 h |
+| `real-world` | the 100-project sample | 2.3 h |
+| `jarvis-scenarios` | both scorecard fixtures, the same as full, and the CUT-PVC capture | about 10 min |
+| `jarvis-benchmark` | the commons-cli and commons-csv census fixtures | about 4 min |
+
+Full collection runs every configuration of the corpus. Each EqBench ES configuration took 31 to 37 hours and each Commons ES configuration 10 to 12 hours, the full real-world set 25.6 hours and the full census 2.2 hours.
+
 ### 7. Release provenance replaces Git only in verified packaged mode
 
 Release assembly runs in a clean Git checkout and materializes `release-provenance.json`. For every source file that can produce a report artifact, it records repository-relative path, SHA-256, last-changing commit, source repository, and resolvable source URL template. The file itself is included in the core component manifest.
