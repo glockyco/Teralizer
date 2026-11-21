@@ -232,19 +232,36 @@ def test_checkout_of_another_origin_fails(tmp_path: Path):
         )
 
 
-def _jdk() -> bool:
-    # macOS ships a javac stub that only asks to install Java.
+_REPOSITORY = Path(__file__).resolve().parents[3]
+
+
+def _measured_checkout_available() -> bool:
+    """Whether the JDK and the Gradle build of nix develop are present.
+
+    macOS ships a javac stub that only asks to install Java, and the Gradle build
+    needs the nested JPF sources, which the analysis CI job does not check out.
+    """
     javac = shutil.which("javac")
-    return javac is not None and subprocess.run([javac, "-version"]).returncode == 0
+    if javac is None or subprocess.run([javac, "-version"]).returncode != 0:
+        return False
+    resolved = subprocess.run(
+        ["./gradlew", "-q", "measuredCheckoutClasspath"],
+        cwd=_REPOSITORY,
+        capture_output=True,
+    )
+    return resolved.returncode == 0
 
 
-@pytest.mark.skipif(not _jdk(), reason="needs the JDK of nix develop")
+@pytest.mark.skipif(
+    not _measured_checkout_available(),
+    reason="needs the JDK and the Gradle build of nix develop",
+)
 def test_measured_checkout_converts_like_the_pipeline_clone(tmp_path: Path):
     # JGit converts every lone LF, also in files that already contain CRLF, where
     # Git keeps the bytes. The measured checkouts show the JGit behavior.
     mixed = b"a\r\nb\nc\n"
     repo, revision = _repository(tmp_path, [("100644", mixed, b"Mixed.java")])
-    runner = realworld.MeasuredCheckoutRunner(Path(__file__).resolve().parents[3])
+    runner = realworld.MeasuredCheckoutRunner(_REPOSITORY)
     try:
         files = {f.path: f for f in runner.files(repo, revision)}
     finally:
