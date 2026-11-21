@@ -110,7 +110,7 @@ docker images --format "{{.Repository}}:{{.Tag}}\t{{.Size}}" 2>/dev/null | while
     image=$(echo "$line" | cut -f1)
     size=$(echo "$line" | cut -f2)
     case "$image" in
-        postgres:17.1|adminer:4.8.1|gradle:6.9.1-jdk8)
+        postgres:17.10|adminer:4.8.1|gradle:6.9.1-jdk8)
             echo "| $image | $size |"
             ;;
         *teralizer*|*analysis*|*replication*)

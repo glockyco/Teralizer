@@ -1,7 +1,7 @@
 # Replication package Docker composition for Teralizer.
 #
 # Services:
-#   postgres  - PostgreSQL 17.1 database (port 5432)
+#   postgres  - PostgreSQL 17.10, the version that wrote the corpus dumps (port 5432)
 #   adminer   - Database web UI (port 18080)
 #   teralizer - Java pipeline for data collection (on-demand)
 #   verify    - Output comparison tool (on-demand)
@@ -24,7 +24,7 @@
 
 services:
   postgres:
-    image: postgres:17.1
+    image: postgres:17.10@sha256:7958605b474b3d264a969cb3a123d6aa00ad1e1fe9da8a69984dabb704d93317
     shm_size: 512m
     environment:
       POSTGRES_USER: ${REPLICATION_DB_USER:-teralizer}
@@ -66,7 +66,7 @@ services:
           memory: 2G
 
   adminer:
-    image: adminer:4.8.1
+    image: adminer:4.8.1@sha256:34d37131366c5aa84e1693dbed48593ed6f95fb450b576c1a7a59d3a9c9e8802
     ports:
       - "127.0.0.1:${REPLICATION_ADMINER_PORT:-18080}:8080"
     environment:

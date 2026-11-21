@@ -103,8 +103,8 @@ Time estimates are based on evaluation hardware. Actual times may vary based on 
 
 | Component | Version | Container |
 |-----------|---------|-----------|
-| PostgreSQL | 17.1 | postgres |
-| Python | 3.11 | analysis |
+| PostgreSQL | 17.10 | postgres |
+| Python | 3.13 | analysis |
 | Adminer | 4.8.1 | adminer |
 | JDK | 8 | teralizer (pipeline only) |
 | Maven | 3.9.8 | teralizer (pipeline only) |
