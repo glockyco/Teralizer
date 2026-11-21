@@ -1,20 +1,26 @@
-"""JARVIS value-log lineage for the release.
+"""JARVIS value lineage for the release.
 
 `jarvis-value-facts.json` binds the value logs it was built from by count, bytes
 and an aggregate checksum. The release copies exactly those logs into core at
 their repository-relative paths, so the facts can be regenerated and checked from
 the release alone.
+
+`cut_values.tsv` is the aggregate of the raw CUT-PVC captures, which the release
+carries in data/cut-pvc-capture/raw, so the release checks it by aggregating them
+again.
 """
 
 from __future__ import annotations
 
 import json
 import shutil
+import tempfile
 from collections.abc import Iterable
 from pathlib import Path
 
 from sqlalchemy.engine import Connection
 
+from teralizer import cut_pvc
 from teralizer.eval.evidence import jarvis_values
 from teralizer.eval.reports.rq0_jarvis import CENSUS_VARIANT
 from teralizer.jarvis_scoreboard import (
@@ -24,6 +30,8 @@ from teralizer.jarvis_scoreboard import (
 )
 
 FACTS = Path("analysis/data/report-inputs/jarvis-value-facts.json")
+CUT_VALUES = Path("analysis/data/jarvis-cut-values/cut_values.tsv")
+CUT_CAPTURE = Path("data/cut-pvc-capture/raw")
 
 
 # A corpus records each value log either by its repository-relative path or by the
@@ -86,3 +94,15 @@ def verify(selection: dict[str, list[str]], staged: Path, facts: Path) -> list[s
                 f"{key}: staged logs {observed} differ from recorded {recorded}"
             )
     return problems
+
+
+def cut_value_problems(repo: Path) -> list[str]:
+    """Aggregate the retained raw captures and compare them with `cut_values.tsv`."""
+    values = cut_pvc.load_capture(repo / CUT_CAPTURE)
+    if values.empty:
+        return [f"{CUT_CAPTURE} holds no capture"]
+    with tempfile.TemporaryDirectory() as scratch:
+        aggregate = cut_pvc.write_cut_values(values, Path(scratch) / "cut_values.tsv")
+        if aggregate.read_bytes() != (repo / CUT_VALUES).read_bytes():
+            return [f"{CUT_VALUES} differs from the aggregate of {CUT_CAPTURE}"]
+    return []

@@ -319,7 +319,7 @@ def _verify(
             print(f"JARVIS input: {problem}", file=sys.stderr)
         print(
             "JARVIS inputs: "
-            + ("match the facts" if not verdict.jarvis_problems else "differ")
+            + ("match their raw evidence" if not verdict.jarvis_problems else "differ")
         )
     print("evidence verified" if verdict.passed else "evidence differs")
     return 0 if verdict.passed else 1

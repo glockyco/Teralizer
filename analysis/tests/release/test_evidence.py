@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from teralizer.eval.evidence import jarvis_values
+from teralizer import cut_pvc
 from teralizer.release import evidence, jarvis, outputs
 
 _CLAIMS = """
@@ -167,3 +168,21 @@ def test_a_changed_value_log_differs_from_the_recorded_identity(tmp_path: Path):
     assert jarvis.verify(selection, tmp_path, facts) == []
     log.write_text("parameter\tvalue\nx\t2\n")
     assert len(jarvis.verify(selection, tmp_path, facts)) == 1
+
+
+def test_cut_values_must_be_the_aggregate_of_the_retained_captures(tmp_path: Path):
+    capture = tmp_path / jarvis.CUT_CAPTURE / "isascii/CharUtils.isAscii.tsv"
+    capture.parent.mkdir(parents=True)
+    capture.write_text("ch=a\nch=b\nch=a\n")
+    values = tmp_path / jarvis.CUT_VALUES
+    cut_pvc.write_cut_values(
+        cut_pvc.load_capture(tmp_path / jarvis.CUT_CAPTURE), values
+    )
+
+    assert jarvis.cut_value_problems(tmp_path) == []
+    capture.write_text("ch=a\nch=c\n")
+    assert len(jarvis.cut_value_problems(tmp_path)) == 1
+    capture.unlink()
+    assert jarvis.cut_value_problems(tmp_path) == [
+        f"{jarvis.CUT_CAPTURE} holds no capture"
+    ]

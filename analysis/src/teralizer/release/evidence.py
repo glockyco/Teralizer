@@ -1,9 +1,11 @@
 """One verdict on a report run: its outputs, the paper's claims and the JARVIS inputs.
 
 The verifier compares every output of the run with the reference manifest, checks
-every claim whose reports the run built, and, when the run includes RQ0, checks that
-the JARVIS value logs in the release are the logs the compact JARVIS facts were built
-from. RQ0 reads only those facts, so a changed log would otherwise pass unnoticed.
+every claim whose reports the run built, and, when the run includes RQ0, checks
+RQ0's file inputs against the raw evidence in the release: the JARVIS value logs
+must be the logs the compact JARVIS facts were built from, and the CUT-PVC captures
+must aggregate to `cut_values.tsv`. RQ0 reads only the compact files, so a changed
+raw file would otherwise pass unnoticed.
 
 A run of selected reports is checked for those reports only. The verdict passes when
 all three parts pass.
@@ -73,7 +75,7 @@ def verify(
 
 
 def release_jarvis_check(repo: Path) -> list[str]:
-    """Compare the value logs in ``repo`` with the identities the facts record."""
+    """Compare the value logs and CUT-PVC captures in ``repo`` with RQ0's inputs."""
     from contextlib import ExitStack
 
     from teralizer import corpora
@@ -83,4 +85,6 @@ def release_jarvis_check(repo: Path) -> list[str]:
         _, scenarios = stack.enter_context(corpora.open_corpus("jarvis-scenarios"))
         _, benchmark = stack.enter_context(corpora.open_corpus("jarvis-benchmark"))
         selection = jarvis.selected_value_logs(scenarios, benchmark)
-    return jarvis.verify(selection, repo, repo / jarvis.FACTS)
+    return jarvis.verify(
+        selection, repo, repo / jarvis.FACTS
+    ) + jarvis.cut_value_problems(repo)
