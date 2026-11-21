@@ -53,7 +53,7 @@
 ## 5. Freeze the reviewer runtime and keep the controller thin
 
 - [ ] 5.1 Pin every reviewer base and service image by digest, pin locked dependency resolution, remove permissive fallbacks, and record image architecture and provenance. Publish Dockerfiles and digest references; do not add an OCI archive in this release.
-- [ ] 5.2 Make the analysis image run every report and verifier without host Python, `uv`, Nix, Git history, or a writable source tree. Expose only declared component, output, and disposable state mounts.
+- [x] 5.2 Make the analysis image run every report and verifier without host Python, `uv`, Nix, Git history, or a writable source tree. Expose only declared component, output, and disposable state mounts.
 - [ ] 5.3 Fix Compose service and container-name disagreements, use service discovery instead of author deployment names, and prove corpus restore, preparation, analysis, and report-role checks under an arbitrary Compose project name.
 - [ ] 5.4 Confine third-party Maven and Gradle execution to disposable scratch state with resource limits, no author credentials, no Docker socket, and no writable mount over immutable release components.
 - [ ] 5.5 Add the root `artifact` controller with `preflight`, `smoke`, `reproduce-results`, `collect-reduced`, `collect-full`, and `clean`. Limit it to component checks, working-directory resolution, sequencing existing helpers, diagnostics, and summaries; add no status store, service manager, restorer, report registry, or checkpoint model.
