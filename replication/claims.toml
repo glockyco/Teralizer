@@ -326,7 +326,7 @@ value = 7
 [[claim]]
 id = "rq3-runtime"
 rq = "RQ3"
-statement = "Runtime increases by 9.4 to 2,651.5% across projects. Naive generally shows larger runtime increases than Improved, in 5 of 7 projects."
+statement = "Runtime increases by 9.4 to 2,651.4% across projects. Naive generally shows larger runtime increases than Improved, in 5 of 7 projects."
 evidence = "deterministic transformation"
 reports = ["rq3"]
 collection = "Test runtimes are wall-clock measurements, so re-collected values differ by host and load. The increase stays positive for every project."
@@ -337,7 +337,7 @@ report = "rq3"
 table = "tab-runtime-per-project"
 column = "runtime_delta_pct"
 min = "9.4"
-max = "2651.5"
+max = "2651.4"
 
 [[claim.check]]
 kind = "wins"
