@@ -339,8 +339,9 @@ def matrix(claims: Sequence[Claim]) -> str:
     from teralizer.eval.registry import get
 
     lines = [
-        "| Claim | RQ | Statement | Evidence | Corpora | File inputs | Regenerate with |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Claim | RQ | Statement | Evidence | Mode | Corpora | File inputs "
+        "| Regenerate with | New collection |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for claim in claims:
         corpora: set[str] = set()
@@ -354,9 +355,17 @@ def matrix(claims: Sequence[Claim]) -> str:
         command = "<br>".join(
             f"`python -m teralizer.eval {report}`" for report in claim.reports
         )
+        # A published value is carried as frozen input, so results reproduction
+        # inspects it, while it regenerates everything computed from a corpus.
+        mode = (
+            "inspection"
+            if claim.evidence == "external published reference"
+            else "regeneration"
+        )
         lines.append(
             f"| `{claim.id}` | {claim.rq} | {claim.statement} | {claim.evidence} | "
-            f"{', '.join(sorted(corpora))} | {'<br>'.join(sorted(files)) or 'none'} | "
-            f"{command} |"
+            f"{mode} | {', '.join(sorted(corpora))} | "
+            f"{'<br>'.join(sorted(files)) or 'none'} | {command} | "
+            f"{claim.collection or 'No invariant declared.'} |"
         )
     return "\n".join(lines) + "\n"
