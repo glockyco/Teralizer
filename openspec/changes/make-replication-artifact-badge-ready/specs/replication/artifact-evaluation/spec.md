@@ -148,54 +148,30 @@ Both reduced and full paths SHALL record progress, per-item outcomes, resumable 
 - **THEN** its ledger and checkpoints preserve those outcomes
 - **AND** rerunning continues from the first incomplete unit
 
-### Requirement: Release acceptance executes the archive as a stranger would
+### Requirement: The final archives pass one clean run before publication
 
-Before publication eligibility, automated release acceptance SHALL start from staged downloadable archives in a new filesystem location, with empty service volumes and no access to the source checkout, author databases, author host, package-builder state, or undeclared credentials. Source-level tests or a run from the repository checkout SHALL NOT count as release acceptance.
+Before publication, the final release archives SHALL be extracted with standard ZIP tooling into a new directory, with empty service volumes, on the release-tested baseline. Smoke, all-report reproduction with the evidence verifier, and cleanup SHALL pass there. Source-level tests or a run from the repository checkout SHALL NOT replace this run.
 
 #### Scenario: Source tests pass but the archive omits a required file
 
-- **WHEN** the clean acceptance run extracts and verifies the staged archives
-- **THEN** it fails naming the missing packaged input
-- **AND** the release is ineligible for publication
+- **WHEN** the clean run extracts the final archives and runs the reviewer commands
+- **THEN** a missing packaged input fails a command
+- **AND** the release is not published until a rebuilt candidate passes
 
-#### Scenario: Analysis attempts an author-only connection
+### Requirement: Reuse paths are documented
 
-- **WHEN** a packaged report resolves a private database or host dependency
-- **THEN** clean acceptance fails before the release is published
+The artifact SHALL document how to query the published data, what each table, report view and result column means, and how to run Teralizer on a new project in scratch state.
 
+#### Scenario: A researcher runs Teralizer on a new Java project
 
-### Requirement: Clean archive acceptance exercises the complete reviewer workflow
-
-Acceptance SHALL extract the documented archive combination with standard ZIP tooling, run preflight, complete Getting Started, reproduce all registered reports through read-only connections, verify the claims summary, test cleanup, and prove that the primary reviewer workflow remains usable without network access after declared setup dependencies are present.
-
-#### Scenario: The archive reproduces all supported claims
-
-- **WHEN** clean acceptance completes every declared checkpoint
-- **THEN** its record binds the passing evidence to the exact release manifest and environment
-
-
-### Requirement: Archive acceptance records its exact release and environment
-
-The acceptance record SHALL identify the release manifest checksum, host and container architecture, image digests, measured times and peak resources, commands, and results.
-
-#### Scenario: Archive acceptance completes on the baseline
-
-- **WHEN** the clean archive acceptance run records its result
-- **THEN** the record names the exact release manifest, architectures, image digests, timings, peak resources, commands, and outcomes
-
-### Requirement: Reuse and untrusted-code boundaries are documented and enforced
-
-The artifact SHALL document how to inspect and query the published data, interpret database and result schemas, add a project, define a project configuration, run Teralizer on new inputs, add or modify a report, and export evidence. Each reuse path SHALL identify stable interfaces and distinguish them from release-only internals.
-
-#### Scenario: A researcher adds a new Java project
-
-- **WHEN** they follow the reuse documentation using a supported project shape
-- **THEN** the artifact validates its configuration and runs it in scratch state without modifying a published corpus
+- **WHEN** they follow the documentation with a supported project shape
+- **THEN** the run uses its own scratch state and leaves the published corpora unchanged
 
 #### Scenario: A user inspects a result column
 
-- **WHEN** they consult the packaged data documentation
-- **THEN** they can determine the column's meaning, unit, null semantics, and provenance without reading implementation code
+- **WHEN** they consult the packaged data dictionary
+- **THEN** they can determine the column's meaning, unit and null semantics without reading implementation code
+
 ### Requirement: Untrusted project builds execute within a disposable boundary
 
 The artifact SHALL treat third-party project builds as untrusted execution. Collection SHALL run them in a disposable boundary without author credentials, Docker socket access, or writable mounts over the packaged source. Documentation SHALL state network use, writable state, resource limits, cleanup, and the risk of executing project build logic.

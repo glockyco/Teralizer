@@ -162,32 +162,23 @@ The release SHALL NOT require complete author working run roots when selected so
 
 - **WHEN** a required lineage link is available only through an undeclared author path or stale marker
 - **THEN** release validation rejects that substitute
-### Requirement: Public requirements and metadata state exact release facts
+### Requirement: Public requirements state the release's measured facts
 
-The release SHALL provide one authoritative reviewer entry point and a dedicated requirements document readable without executing artifact code. Together they SHALL state exact download and unpacked sizes, peak free-disk requirement and scope, memory, CPU architecture, supported hosts, required host software, network use, setup and results-reproduction time, reduced and full collection times, archive combinations per workflow, and cleanup effects.
+The release SHALL provide one reviewer entry point and a requirements document readable without executing artifact code. Together with the release summary they SHALL state, for each workflow, what a reader needs to judge feasibility before download. Archive sizes come from the release build, and times and resources from the clean run of the final archives.
 
 #### Scenario: A reader evaluates feasibility before download
 
-- **WHEN** the reader opens the release landing page or packaged requirements document
-- **THEN** they can determine every archive, resource, architecture, network, and time requirement for the chosen workflow without running the artifact
-
-### Requirement: Human-readable release requirements agree with verified manifests
-
-Human-readable values SHALL be generated or checked against verified release and corpus manifests. Placeholders such as "manifest-derived", commands needed to discover basic requirements, and release values copied from a superseded version SHALL make release validation fail.
-
-#### Scenario: A documented size is stale
-
-- **WHEN** a documented archive or peak-disk value differs from the verified manifests
-- **THEN** release validation fails naming the document, field, expected value, and observed value
+- **WHEN** the reader opens the release summary or the packaged requirements document
+- **THEN** they find the workflow's archives, download and unpacked sizes, free disk, memory, CPU architecture, supported hosts, host software, network use, run time and cleanup effects without running the artifact
 
 ### Requirement: Public metadata agrees with the packaged release
 
-The Zenodo description, citation metadata, badge claims, paper link, licenses, archive inventory, commands, and database terminology SHALL agree with the packaged documentation before publication.
+The Zenodo description, citation metadata, paper link, licenses, archive inventory and commands SHALL agree with the packaged documentation before publication.
 
 #### Scenario: Public instructions name a retired command
 
 - **WHEN** packaged or Zenodo instructions refer to an interface absent from the release
-- **THEN** release validation fails before publication
+- **THEN** the release is corrected before publication
 
 ### Requirement: A release is immutable and version-addressable
 
@@ -208,22 +199,21 @@ Publishing a revision SHALL create a new archival version. It SHALL NOT alter th
 
 ### Requirement: Distribution rights and third-party provenance are explicit
 
-The release SHALL contain a top-level license map covering source code, authored data and documentation, and third-party materials. Every shipped project SHALL be listed with its origin URL, immutable source revision, the license found in its sources or the statement that none was found, and its retained license files. The artifact licenses SHALL NOT cover third-party project code, and the notice SHALL state that each analyzed project remains under its authors' terms.
+The README SHALL state the licenses of authored code and of authored data and documentation, and that bundled third-party tools and analyzed projects keep their own licenses. Every shipped project SHALL be listed with its origin URL, immutable source revision, the license found in its sources or the statement that none was found, and its retained license files. The artifact licenses SHALL NOT cover third-party code.
 
 #### Scenario: A shipped project has a license
 
 - **WHEN** a project archive contains a project whose sources carry a license
-- **THEN** its component manifest and third-party notice identify the origin, revision, license, attribution, and retained license text
+- **THEN** its third-party record identifies the origin, revision, license and retained license text
 
 #### Scenario: A shipped project has no license
 
 - **WHEN** a project archive contains a project whose sources carry no license file
 - **THEN** its third-party record states that no license was found
-- **AND** the notice states that the project remains under its authors' terms and is included only to reproduce the study
 
-### Requirement: Shared reuse and licensing guidance is complete in core
+### Requirement: Shared guidance is complete in core
 
-The release SHALL document the corpus selection source, whether human-participant or sensitive data is present, and ethical or legal constraints relevant to reuse. Core SHALL own shared schema, provenance, citation, and licensing guidance.
+Core SHALL own the shared schema, provenance, citation, licensing and corpus selection guidance.
 
 #### Scenario: A user downloads only core
 

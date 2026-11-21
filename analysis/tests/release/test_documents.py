@@ -71,41 +71,9 @@ def _release_manifest() -> dict[str, object]:
     }
 
 
-def _acceptance(outcome: str = "passed") -> dict[str, object]:
-    return {
-        "format": "teralizer-acceptance-record",
-        "format_version": 1,
-        "release_manifest_sha256": _SHA,
-        "release": dict(_RELEASE),
-        "environment": {
-            "host_architecture": "x86_64",
-            "container_architecture": "amd64",
-            "os": "Ubuntu 24.04",
-            "docker": "27.0",
-            "images": [{"reference": "postgres:17.1", "digest": "sha256:" + _SHA}],
-        },
-        "steps": [
-            {
-                "workflow": "smoke",
-                "components": ["core"],
-                "command": "artifact smoke",
-                "network": False,
-                "outcome": outcome,
-                "wall_seconds": 12.5,
-                "peak_memory_bytes": 1024,
-                "peak_disk_bytes": {"workspace": 2048},
-            }
-        ],
-        "cleanup": {"command": "artifact clean", "outcome": "passed", "remaining": []},
-        "result": outcome,
-    }
-
-
 def test_valid_documents_pass():
     documents.validate_component_manifest(_component())
     documents.validate_release_manifest(_release_manifest())
-    documents.validate_acceptance_record(_acceptance())
-    documents.validate_acceptance_record(_acceptance("failed"))
 
 
 def test_payload_outside_the_component_root_is_rejected():
@@ -136,14 +104,6 @@ def test_workflow_cannot_need_a_component_the_release_lacks():
 
     with pytest.raises(documents.DocumentError, match="not in the release"):
         documents.validate_release_manifest(manifest)
-
-
-def test_acceptance_result_must_follow_from_its_steps():
-    record = _acceptance("failed")
-    record["result"] = "passed"
-
-    with pytest.raises(documents.DocumentError, match="result must be failed"):
-        documents.validate_acceptance_record(record)
 
 
 def test_other_format_versions_are_rejected():

@@ -1,12 +1,10 @@
-"""The three public document formats of a release.
+"""The two public document formats of a release.
 
 - The release manifest catalogs every archive of one release with its checksum and
   workflow relationships. It lives beside the archives, never inside one, because an
   archive cannot contain its own checksum.
 - The component manifest identifies one archive's payload, release and
   dependencies, so an archive opened alone still says what it is.
-- The acceptance record binds a clean acceptance run to the exact release manifest
-  and environment it exercised.
 
 Each document carries its format name and version. Readers reject other versions.
 """
@@ -20,7 +18,6 @@ from teralizer.release.archive import link_stays_inside
 
 RELEASE_MANIFEST = ("teralizer-release-manifest", 1)
 COMPONENT_MANIFEST = ("teralizer-component-manifest", 1)
-ACCEPTANCE_RECORD = ("teralizer-acceptance-record", 1)
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT = re.compile(r"^[0-9a-f]{40}$")
@@ -234,93 +231,4 @@ def validate_release_manifest(document: object) -> Mapping[str, object]:
         _text(workflow, "command", where)
         unknown = sorted(set(_texts(workflow, "components", where)) - components)
         _require(not unknown, f"{where}: components {unknown} are not in the release")
-    return root
-
-
-def validate_acceptance_record(document: object) -> Mapping[str, object]:
-    root = _mapping(document, "acceptance record")
-    _format(root, ACCEPTANCE_RECORD)
-    _keys(
-        root,
-        {
-            "format",
-            "format_version",
-            "release_manifest_sha256",
-            "release",
-            "environment",
-            "steps",
-            "cleanup",
-            "result",
-        },
-        "acceptance record",
-    )
-    _sha256(root, "release_manifest_sha256", "acceptance record")
-    _release_identity(root["release"], "acceptance record.release")
-    environment = _mapping(root["environment"], "environment")
-    _keys(
-        environment,
-        {"host_architecture", "container_architecture", "os", "docker", "images"},
-        "environment",
-    )
-    for key in ("host_architecture", "container_architecture", "os", "docker"):
-        _text(environment, key, "environment")
-    for index, item in enumerate(_sequence(environment["images"], "images")):
-        image = _mapping(item, f"images[{index}]")
-        _keys(image, {"reference", "digest"}, f"images[{index}]")
-        _text(image, "reference", f"images[{index}]")
-        digest = _text(image, "digest", f"images[{index}]")
-        _require(digest.startswith("sha256:"), f"images[{index}].digest must be sha256")
-    outcomes = []
-    for index, item in enumerate(_sequence(root["steps"], "steps")):
-        where = f"steps[{index}]"
-        step = _mapping(item, where)
-        _keys(
-            step,
-            {
-                "workflow",
-                "components",
-                "command",
-                "network",
-                "outcome",
-                "wall_seconds",
-                "peak_memory_bytes",
-                "peak_disk_bytes",
-            },
-            where,
-        )
-        _text(step, "workflow", where)
-        _texts(step, "components", where)
-        _text(step, "command", where)
-        _require(isinstance(step["network"], bool), f"{where}.network must be boolean")
-        outcome = _text(step, "outcome", where)
-        _require(
-            outcome in ("passed", "failed"), f"{where}.outcome must be passed or failed"
-        )
-        outcomes.append(outcome)
-        _require(
-            isinstance(step["wall_seconds"], (int, float))
-            and step["wall_seconds"] >= 0,
-            f"{where}.wall_seconds must be a non-negative number",
-        )
-        _count(step, "peak_memory_bytes", where)
-        disk = _mapping(step["peak_disk_bytes"], f"{where}.peak_disk_bytes")
-        for scope in disk:
-            _count(disk, scope, f"{where}.peak_disk_bytes")
-    cleanup = _mapping(root["cleanup"], "cleanup")
-    _keys(cleanup, {"command", "outcome", "remaining"}, "cleanup")
-    _text(cleanup, "command", "cleanup")
-    _require(
-        cleanup["outcome"] in ("passed", "failed"),
-        "cleanup.outcome must be passed or failed",
-    )
-    _texts(cleanup, "remaining", "cleanup")
-    result = _text(root, "result", "acceptance record")
-    expected = (
-        "passed"
-        if outcomes
-        and all(outcome == "passed" for outcome in outcomes)
-        and cleanup["outcome"] == "passed"
-        else "failed"
-    )
-    _require(result == expected, f"result must be {expected} given the step outcomes")
     return root
