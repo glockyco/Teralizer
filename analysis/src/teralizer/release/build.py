@@ -176,10 +176,15 @@ def _summary(declaration: Declaration, built: Sequence[BuiltArchive]) -> bytes:
         if not set(workflow.components) <= included:
             continue
         archives = "<br>".join(f"`{filenames[c]}`" for c in workflow.components)
+        commands = "<br>".join(
+            f"`./{command}`"
+            for command in (workflow.command, workflow.full_command)
+            if command is not None
+        )
         download = sum(by_component[c].bytes for c in workflow.components)
         unpacked = sum(by_component[c].unpacked_bytes for c in workflow.components)
         lines.append(
-            f"| {workflow.purpose} | `./{workflow.command}` | {archives} "
+            f"| {workflow.purpose} | {commands} | {archives} "
             f"| {_size(download)} | {_size(unpacked)} |"
         )
     lines += [
