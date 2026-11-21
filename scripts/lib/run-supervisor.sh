@@ -109,8 +109,13 @@ ensure_postgres_up() {
   if teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
     return 0
   fi
-  # Only the Docker transport has a server this repository knows how to start. A native
-  # server is owned by the host, so guessing at a start command would hide the real fault.
+  if [[ "$TERALIZER_PSQL_TRANSPORT" == compose ]]; then
+    docker compose -f "${TERALIZER_COMPOSE_FILE:?}" up -d --wait postgres || return 1
+    if teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+  # A native server is owned by the host. Guessing at a start command would hide the fault.
   if [[ "$TERALIZER_PSQL_TRANSPORT" != docker ]]; then
     echo "Postgres at $(teralizer_psql_target) is not reachable." >&2
     return 1

@@ -10,8 +10,8 @@
 #   JARVIS_PREPARE_FLAG     flag passed to the fixture prep script ("" or "--census")
 #   JARVIS_DEFAULT_CONFIGS  array of configs to run when none are given on the command line
 #
-# The DB/data targets are fixed by the wrapper (not read from the ambient environment), because
-# .env may pin DB_NAME to another corpus (e.g. postgres_timeout_retry) for unrelated work.
+# The wrapper chooses scratch defaults rather than borrowing an unrelated DB_NAME.
+# JARVIS_DATA_ROOT moves the host data tree. TERALIZER_COMPOSE_FILE selects Compose.
 
 # Measurement configs legitimately run for an hour or more with PIT enabled, so there is no
 # default wall cap. JARVIS_PROJECT_TIMEOUT (seconds) opts in once a measured distribution
@@ -19,19 +19,7 @@
 # never leaves an orphaned pipeline JVM behind.
 JARVIS_PROJECT_TIMEOUT="${JARVIS_PROJECT_TIMEOUT:-0}"
 
-source "$ROOT_DIR/scripts/lib/psql.sh"
-
 jarvis_run() {
-  local registered_database
-  registered_database=$("$ROOT_DIR/scripts/corpus-registry" get "$JARVIS_CORPUS_ID" database) || exit $?
-  echo "==> Corpus: $JARVIS_CORPUS_ID (registered endpoint: $registered_database)"
-
-  source "$ROOT_DIR/scripts/lib/db-guard.sh"
-  DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
-  source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
-  source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
-  supervisor_install_traps
-
   local reset_db=false prepare_fixtures=false no_reduction=false reduction_only=false
   local -a configs=()
   local arg config
@@ -44,7 +32,7 @@ jarvis_run() {
       -h|--help)
         echo "Usage: $(basename "$0") [--reset-db] [--prepare-fixtures] [--no-reduction] [--reduction-only] [config ...]"
         echo "  --reset-db           drop and recreate $JARVIS_DB_NAME before running"
-        echo "  --prepare-fixtures   (re)materialize the $JARVIS_LABEL fixtures first"
+        echo "  --prepare-fixtures   (re)materialize the $JARVIS_LABEL fixtures first (local only)"
         echo "  --no-reduction       skip the reduction phase (Stage 5: mutation + coverage)"
         echo "                       and run only a fast Stage 4 applicability pass"
         echo "  --reduction-only     resume the reduction phase (Stage 5) with PIT enabled over the"
@@ -55,6 +43,12 @@ jarvis_run() {
       *) configs+=("$arg") ;;
     esac
   done
+
+  local compose_file="${TERALIZER_COMPOSE_FILE:-}"
+  if [[ -n "$compose_file" && "$prepare_fixtures" == true ]]; then
+    echo "--prepare-fixtures is not available in Compose mode. Use the packaged fixtures." >&2
+    exit 1
+  fi
 
   if [[ "$no_reduction" == true && "$reduction_only" == true ]]; then
     echo "--no-reduction and --reduction-only are mutually exclusive" >&2
@@ -71,9 +65,26 @@ jarvis_run() {
     fi
   done
 
+  local data_root="${JARVIS_DATA_ROOT:-$ROOT_DIR}"
+  if [[ -n "$compose_file" ]]; then
+    export TERALIZER_PSQL_TRANSPORT=compose
+    export TERALIZER_COLLECT_DATA="${TERALIZER_COLLECT_DATA:-$data_root/data}"
+    # Use the Compose service role, not credentials from a development shell.
+    local DB_USER="${REPLICATION_DB_USER:-teralizer}"
+  fi
+  local registered_database
+  registered_database=$("$ROOT_DIR/scripts/corpus-registry" get "$JARVIS_CORPUS_ID" database) || exit $?
+  echo "==> Corpus: $JARVIS_CORPUS_ID (registered endpoint: $registered_database)"
+  source "$ROOT_DIR/scripts/lib/db-guard.sh"
+  DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
+  source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+  source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
+  SUPERVISOR_LOCK_DIR="$data_root/.teralizer-run.lock"
+  supervisor_install_traps
+
   # Keep attempts separate from the pipeline's database evidence so an early process failure is
   # still attributable to its config and a stale marker cannot describe a later failed run.
-  local data_dir_abs="$ROOT_DIR/$JARVIS_DATA_DIR"
+  local data_dir_abs="$data_root/$JARVIS_DATA_DIR"
   local log_dir="$data_dir_abs/run-logs"
   local status_tsv="$data_dir_abs/status.tsv"
   local complete_marker="$data_dir_abs/complete"
@@ -90,7 +101,13 @@ jarvis_run() {
 
   # A failed BUILD_PROJECT_GENERALIZED drops its cleanup task, leaving uncompilable generated
   # tests that break the next build. Always clear them. The pipeline regenerates from scratch.
-  find "$ROOT_DIR/$JARVIS_DATA_DIR/fixtures" -name '_*Generalized*_Test.java' -delete 2>/dev/null || true
+  if [[ -n "$compose_file" ]]; then
+    # The pipeline runs as root, so clean up its generated files inside the container.
+    docker compose -f "$compose_file" run --rm -T --no-deps teralizer \
+      find "/app/$JARVIS_DATA_DIR/fixtures" -name '_*Generalized*_Test.java' -delete
+  else
+    find "$data_dir_abs/fixtures" -name '_*Generalized*_Test.java' -delete 2>/dev/null || true
+  fi
 
   if [[ "$reset_db" == true ]]; then
     echo "==> Resetting database $JARVIS_DB_NAME"
@@ -100,6 +117,13 @@ jarvis_run() {
     rm -rf "$log_dir" "$status_tsv"
     mkdir -p "$log_dir"
     printf 'config\texit_code\tlog\n' > "$status_tsv"
+  elif [[ -n "$compose_file" ]]; then
+    local database_exists
+    database_exists=$(teralizer_psql -d postgres -tA \
+      -c "SELECT 1 FROM pg_database WHERE datname = '$JARVIS_DB_NAME'") || exit 1
+    if [[ "$database_exists" != 1 ]]; then
+      teralizer_psql -v ON_ERROR_STOP=1 -d postgres -c "CREATE DATABASE $JARVIS_DB_NAME;" || exit 1
+    fi
   fi
 
   # High-water task id so the post-run check sees only this invocation's tasks (keeps incremental
@@ -111,16 +135,20 @@ jarvis_run() {
   fi
 
   local gradle_failed=false
-  local config_name log log_abs rc
+  local config_name log log_abs rc container_name
+  local gradlew="$ROOT_DIR/gradlew"
+  if [[ -n "$compose_file" ]]; then
+    gradlew=./gradlew
+  fi
   for config in "${configs[@]}"; do
     config_name="${config##*/}"
     config_name="${config_name%.conf}"
     log="$JARVIS_DATA_DIR/run-logs/$config_name.log"
-    log_abs="$ROOT_DIR/$log"
+    log_abs="$data_root/$log"
     echo "==> Running $config (DB_NAME=$JARVIS_DB_NAME DATA_DIR=$JARVIS_DATA_DIR)"
     # Build the run command as an array so an empty flag set never trips set -u on bash 3.2.
     local -a run_cmd=(
-      "$ROOT_DIR/gradlew" run
+      "$gradlew" run
       -Dteralizer.config="$config"
       -Dteralizer.database.name="$JARVIS_DB_NAME"
       -Dteralizer.data-dir="$JARVIS_DATA_DIR"
@@ -140,7 +168,15 @@ jarvis_run() {
       )
     fi
     run_cmd+=(--no-daemon)
-    supervised_run "$log_abs" "$JARVIS_PROJECT_TIMEOUT" "${run_cmd[@]}"
+    if [[ -n "$compose_file" ]]; then
+      container_name="${COMPOSE_PROJECT_NAME:-teralizer}-collect-${JARVIS_LABEL}-${config_name}"
+      container_name="${container_name//[^a-zA-Z0-9_.-]/-}"
+      supervised_container_run "$container_name" "$JARVIS_PROJECT_TIMEOUT" \
+        docker compose -f "$compose_file" run --rm -T --name "$container_name" \
+        teralizer "${run_cmd[@]}" > "$log_abs" 2>&1
+    else
+      supervised_run "$log_abs" "$JARVIS_PROJECT_TIMEOUT" "${run_cmd[@]}"
+    fi
     rc="$SUPERVISED_RC"
     printf '%s\t%s\t%s\n' "$config_name" "$rc" "$log" >> "$status_tsv"
     if [[ "$rc" -eq 124 ]]; then
@@ -188,5 +224,5 @@ jarvis_run() {
   fi
   touch "$complete_marker"
   echo "$JARVIS_LABEL run complete: no pipeline breakage (${jpf_excluded} per-assertion JPF exclusions)."
-  echo "Run ledger: $JARVIS_DATA_DIR/status.tsv   Logs: $JARVIS_DATA_DIR/run-logs/   Completion: $JARVIS_DATA_DIR/complete"
+  echo "Run ledger: $status_tsv   Logs: $log_dir/   Completion: $complete_marker"
 }

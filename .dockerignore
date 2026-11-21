@@ -1,6 +1,10 @@
 .env
 .env.*
 
+components
+output
+state
+
 build
 !build/generated-src
 

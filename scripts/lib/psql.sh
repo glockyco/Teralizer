@@ -9,7 +9,8 @@
 # Transport is decided once, at source time. A psql on PATH talks to the server directly.
 # Without one, the client inside the container is borrowed, which is the only option on a
 # host whose PostgreSQL lives in Docker and has no client installed alongside it. Set
-# TERALIZER_PSQL_TRANSPORT to `native` or `docker` to decide instead of being detected.
+# TERALIZER_PSQL_TRANSPORT to `native`, `docker`, or `compose` to choose explicitly.
+# The Compose transport requires TERALIZER_COMPOSE_FILE.
 
 TERALIZER_PG_CONTAINER="${TERALIZER_PG_CONTAINER:-postgres-teralizer}"
 
@@ -28,6 +29,9 @@ teralizer_psql() {
       -p "${DB_PORT:-5432}" \
       -U "${DB_USER:-postgres}" \
       "$@"
+  elif [[ "$TERALIZER_PSQL_TRANSPORT" == compose ]]; then
+    docker compose -f "${TERALIZER_COMPOSE_FILE:?}" exec -T postgres \
+      psql -U "${DB_USER:-teralizer}" "$@"
   else
     docker exec -i "$TERALIZER_PG_CONTAINER" psql -U "${DB_USER:-postgres}" "$@"
   fi
@@ -38,6 +42,8 @@ teralizer_psql() {
 teralizer_psql_target() {
   if [[ "$TERALIZER_PSQL_TRANSPORT" == native ]]; then
     printf '%s:%s' "${DB_HOST:-localhost}" "${DB_PORT:-5432}"
+  elif [[ "$TERALIZER_PSQL_TRANSPORT" == compose ]]; then
+    printf 'Compose project %s service postgres' "${COMPOSE_PROJECT_NAME:-teralizer}"
   else
     printf 'container %s' "$TERALIZER_PG_CONTAINER"
   fi

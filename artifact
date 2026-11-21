@@ -6,8 +6,12 @@
 #   ./artifact smoke                     Restore the two JARVIS corpora and check RQ0
 #   ./artifact reproduce-results [rq0]   Rebuild the reports and compare them with
 #                                        the reference, all of them or RQ0 only
+#   ./artifact collect-reduced CORPUS    Run the reduced test generalization scope
+#   ./artifact collect-full CORPUS       Run every configuration of the corpus
 #   ./artifact clean                     Remove the services, their volumes, and
 #                                        the output and state directories
+#
+# CORPUS is controlled, real-world, jarvis-scenarios, or jarvis-benchmark.
 #
 # Run it from the extracted release. The release manifest is read from
 # ../release-manifest.json, next to the downloaded archives, unless
@@ -21,15 +25,19 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 RELEASE_MANIFEST="${TERALIZER_RELEASE_MANIFEST:-$ROOT/../release-manifest.json}"
 export TERALIZER_OUTPUT="${TERALIZER_OUTPUT:-$ROOT/output}"
 export TERALIZER_STATE="${TERALIZER_STATE:-$ROOT/state}"
+# Bind sources are passed as absolute paths because Compose is in replication/.
+[[ "$TERALIZER_OUTPUT" == /* || "$TERALIZER_OUTPUT" == ?:/* ]] || TERALIZER_OUTPUT="$PWD/$TERALIZER_OUTPUT"
+[[ "$TERALIZER_STATE" == /* || "$TERALIZER_STATE" == ?:/* ]] || TERALIZER_STATE="$PWD/$TERALIZER_STATE"
 export TERALIZER_UID="${TERALIZER_UID:-$(id -u)}"
 export TERALIZER_GID="${TERALIZER_GID:-$(id -g)}"
-COMPOSE=(docker compose -f "$ROOT/replication/docker-compose.yml")
+COMPOSE_FILE="$ROOT/replication/docker-compose.yml"
+COMPOSE=(docker compose -f "$COMPOSE_FILE")
 REFERENCE=analysis/output/original/reference-manifest.json
 JARVIS_CORPORA=(jarvis-scenarios jarvis-benchmark)
 ALL_CORPORA=(controlled real-world jarvis-scenarios jarvis-benchmark)
 
 usage() {
-    sed -n '2,16p' "$0" | sed -E 's/^# ?//'
+    sed -n '2,20p' "$0" | sed -E 's/^# ?//'
 }
 
 step() {
@@ -125,6 +133,160 @@ verify() {
         --reference "$REFERENCE" --json /output/verify-outputs.json "$@"
 }
 
+copy_collection_tree() (
+    local source="$1" target="$2" name parent temp
+    [[ -d "$target" ]] && exit 0
+    [[ -d "$source" ]] || fail "collection input is missing: $source"
+    name="${target##*/}"
+    parent="${target%/*}"
+    mkdir -p "$parent"
+    # An interrupted copy must not be mistaken for a project's working copy on resume.
+    temp=$(mktemp -d "$parent/.copy.XXXXXX")
+    trap 'rm -rf "$temp"' EXIT
+    cp -pR "$source" "$temp/$name"
+    mv "$temp/$name" "$target"
+)
+
+collect() {
+    local scope="$1" corpus="$2" component workspace="$2" source project
+    local sample="" jarvis_data="" runner="$ROOT/replication/scripts/run.sh"
+    local scratch ledger logs stop_file="" rc=0
+    local -a selected=()
+    case "$corpus" in
+        controlled)
+            component=controlled
+            scratch=scratch_replication_controlled
+            # Controlled configs run for hours. Real-world keeps the runner's 1800 s default.
+            export REPLICATION_PROJECT_TIMEOUT="${REPLICATION_PROJECT_TIMEOUT:-0}"
+            if [[ "$scope" == reduced ]]; then
+                selected=(commons-utils)
+            fi
+            ;;
+        real-world)
+            component="real-world-$scope"
+            scratch=scratch_replication_real_world
+            if [[ "$scope" == reduced ]]; then
+                # A reduced working copy must never supply bytes to a full run.
+                component=real-world-sample
+                workspace=real-world-sample
+                scratch=scratch_replication_real_world_sample
+                sample="$ROOT/project-configs/replication/real-world-sample.txt"
+            fi
+            ;;
+        jarvis-scenarios)
+            # The scorecard uses this runner. CUT-PVC capture is a separate stage.
+            component=jarvis-scoreboard
+            jarvis_data=data/jarvis-scoreboard
+            runner="$ROOT/scripts/run-jarvis-scoreboard.sh"
+            scratch=scratch_jarvis_scoreboard
+            ;;
+        jarvis-benchmark)
+            component=jarvis-census
+            jarvis_data=data/jarvis-census
+            runner="$ROOT/scripts/run-jarvis-census.sh"
+            scratch=scratch_jarvis_census
+            if [[ "$scope" == reduced ]]; then
+                selected=(commons-cli-2017-02-01-census commons-csv-2017-02-01-census)
+            fi
+            ;;
+        *)
+            fail "unknown corpus '$corpus'. Choose controlled, real-world, jarvis-scenarios, or jarvis-benchmark"
+            ;;
+    esac
+
+    preflight "collect-$component"
+    start_database
+
+    local collection_root="$TERALIZER_STATE/collect/$workspace"
+    local component_root="$ROOT/components/projects-$component"
+    export TERALIZER_COMPOSE_FILE="$COMPOSE_FILE"
+    export TERALIZER_COLLECT_PROJECTS="$collection_root/projects"
+    export TERALIZER_COLLECT_DATA="$collection_root/data"
+    export TERALIZER_PSQL_TRANSPORT=compose
+    export JARVIS_DATA_ROOT="$collection_root"
+    export REPLICATION_PROJECTS_ROOT="$collection_root"
+    export REPLICATION_RUN_STATE_DIR="$collection_root/run-state"
+    mkdir -p "$TERALIZER_COLLECT_PROJECTS" "$TERALIZER_COLLECT_DATA"
+
+    step "Preparing working copies in $collection_root"
+    local relative=projects
+    if [[ -n "$jarvis_data" ]]; then
+        relative="$jarvis_data/fixtures"
+    fi
+    if [[ -n "$sample" ]]; then
+        while IFS=$' \t\r' read -r project || [[ -n "$project" ]]; do
+            [[ -n "$project" ]] || continue
+            # Let the runner report all missing sample directories or configs.
+            if [[ -d "$component_root/$relative/$project" ]]; then
+                copy_collection_tree "$component_root/$relative/$project" "$collection_root/$relative/$project"
+            fi
+        done < "$sample"
+    elif [[ ${#selected[@]} -gt 0 ]]; then
+        for project in "${selected[@]}"; do
+            copy_collection_tree "$component_root/$relative/$project" "$collection_root/$relative/$project"
+        done
+    else
+        for source in "$component_root/$relative/"*; do
+            copy_collection_tree "$source" "$collection_root/$relative/${source##*/}"
+        done
+    fi
+
+    if [[ -n "$jarvis_data" ]]; then
+        export JARVIS_DATA_DIR="$jarvis_data"
+        export JARVIS_SCRATCH_DB="$scratch"
+        ledger="$collection_root/$jarvis_data/status.tsv"
+        logs="$collection_root/$jarvis_data/run-logs"
+        local -a args=(--reset-db)
+        if [[ ${#selected[@]} -gt 0 ]]; then
+            for project in "${selected[@]}"; do
+                args+=("project-configs/jarvis-scoreboard/$project.conf")
+            done
+        fi
+        "$runner" "${args[@]}" || rc=$?
+    else
+        export REPLICATION_SCRATCH_DB="$scratch"
+        export REPLICATION_DATA_DIR="data/replication-$corpus"
+        ledger="$REPLICATION_RUN_STATE_DIR/status.tsv"
+        stop_file="$REPLICATION_RUN_STATE_DIR/STOP"
+        logs="terminal output"
+        local -a args=(--corpus "$corpus" --docker --yes)
+        if [[ "$corpus" == controlled ]]; then
+            ledger="$REPLICATION_RUN_STATE_DIR"
+            if [[ "$scope" == full ]]; then
+                "$runner" "${args[@]}" --phase generation || rc=$?
+            else
+                args+=(--time dev --project commons-utils)
+            fi
+            if [[ $rc -eq 0 ]]; then
+                "$runner" "${args[@]}" --phase generalization || rc=$?
+            fi
+        elif [[ -n "$sample" ]]; then
+            "$runner" "${args[@]}" --sample "$sample" || rc=$?
+        else
+            "$runner" "${args[@]}" || rc=$?
+        fi
+    fi
+    printf '\nWorking copies and pipeline data: %s\nRun ledger: %s\nLogs: %s\nScratch database: %s (Compose project %s)\n' \
+        "$collection_root" "$ledger" "$logs" "$scratch" "${COMPOSE_PROJECT_NAME:-teralizer}"
+    if [[ -n "$stop_file" ]]; then
+        printf 'Pause at a config boundary: touch "%s"\n' "$stop_file"
+        if [[ $rc -eq 75 ]]; then
+            printf 'Collection paused. To resume, run ./artifact collect-%s %s again.\n' "$scope" "$corpus"
+            return 0
+        fi
+    fi
+    return "$rc"
+}
+
+clean_collection() (
+    local collection_root="$TERALIZER_STATE/collect"
+    [[ -d "$collection_root" && ! -L "$collection_root" ]] || exit 0
+    # The pipeline may have written files as root. Remove them through the same image.
+    export TERALIZER_COLLECT_PROJECTS="$collection_root"
+    export TERALIZER_COLLECT_DATA="$collection_root"
+    "${COMPOSE[@]}" run --rm -T --no-deps teralizer find /app/data -mindepth 1 -delete
+)
+
 command="${1:-}"
 [[ $# -gt 0 ]] && shift
 case "$command" in
@@ -166,8 +328,13 @@ case "$command" in
                 ;;
         esac
         ;;
+    collect-reduced|collect-full)
+        [[ $# -eq 1 ]] || fail "$command requires one corpus"
+        collect "${command#collect-}" "$1"
+        ;;
     clean)
         [[ $# -eq 0 ]] || fail "clean takes no arguments"
+        clean_collection
         step "Removing the services and volumes of ${COMPOSE_PROJECT_NAME:-teralizer}"
         "${COMPOSE[@]}" down --volumes --remove-orphans
         step "Removing $TERALIZER_OUTPUT and $TERALIZER_STATE"

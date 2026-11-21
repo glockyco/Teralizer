@@ -77,8 +77,9 @@ services:
       DB_PASSWORD: ${REPLICATION_DB_PASSWORD:-teralizer}
       DATA_DIR: /app/data
     volumes:
-      - ../projects:/app/projects
-      - teralizer-data:/app/data
+      # Packaged runs mount disposable working copies instead of checkout projects and data.
+      - ${TERALIZER_COLLECT_PROJECTS:-../projects}:/app/projects
+      - ${TERALIZER_COLLECT_DATA:-teralizer-data}:/app/data
       - ../project-configs:/app/project-configs:ro
     depends_on:
       postgres:

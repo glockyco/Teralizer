@@ -74,26 +74,27 @@ uv run --directory analysis python -m teralizer.eval dataset --targets md
 
 ## Run test generalization
 
-Install the project-source archives for the selected corpus before running the pipeline. Pipeline runs build and execute external project code, download dependencies, and write generalized tests, logs, run state, and scratch-database results. Keep these runs separate from the published measurement databases.
-
-Start with a subset of the real-world corpus:
+Extract the project-source component for the collection you want, then run:
 
 ```sh
-./replication/scripts/run.sh --corpus real-world --count 5
+./artifact collect-reduced <corpus>
+./artifact collect-full <corpus>
 ```
 
-To run the full real-world corpus, omit `--count`. The controlled corpus needs test generation followed by generalization:
+The reduced scopes are:
 
-```sh
-./replication/scripts/run.sh --corpus controlled --phase generation
-./replication/scripts/run.sh --corpus controlled --phase generalization
-```
+- `controlled` generalizes the Commons Utils developer tests without generating tests first.
+- `real-world` runs the projects listed in the [released sample](project-configs/replication/real-world-sample.txt).
+- `jarvis-scenarios` runs both scorecard fixtures.
+- `jarvis-benchmark` runs the Commons CLI and Commons CSV census fixtures.
 
-Runs resume from saved progress. Resource limits and external project dependencies can change the results. See the runner's help for selection and execution options:
+Full collection runs all configurations. For `controlled`, it generates tests before generalizing them. For `real-world`, it needs the full project-source component instead of the sample component.
 
-```sh
-./replication/scripts/run.sh --help
-```
+Collection builds and runs third-party code in Docker and needs network access to resolve its dependencies. Controlled collection has no per-config wall cap by default. Real-world collection uses the cap given in [the replication runner's help](replication/scripts/run.sh).
+
+Working copies and pipeline data go under `state/collect/` by default. Reduced and full real-world runs have separate directories and scratch databases. Each collection prints the location of its ledger and logs, or writes the pipeline log to the terminal. It reports the scratch database name and leaves the published corpus databases unchanged.
+
+To pause a controlled or real-world run, `touch <state>/STOP` at the exact stop path printed by the runner. The active configuration finishes before the runner stops. Run the same command again to resume from the ledger. JARVIS runs start over with an empty scratch database and ledger each time.
 
 ## Development
 

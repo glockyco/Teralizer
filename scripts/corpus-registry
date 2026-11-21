@@ -3,19 +3,24 @@ set -euo pipefail
 
 CORPUS_REGISTRY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+corpus_registry_query() {
+  if [[ -n "${TERALIZER_COMPOSE_FILE:-}" ]]; then
+    docker compose -f "$TERALIZER_COMPOSE_FILE" run --rm -T analysis -m teralizer.corpora "$@"
+  else
+    uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" python -m teralizer.corpora "$@"
+  fi
+}
+
 corpus_registry_get() {
-  uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" \
-    python -m teralizer.corpora get "$1" "$2"
+  corpus_registry_query get "$1" "$2"
 }
 
 corpus_registry_export() {
   local assignments
-  assignments="$(uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" \
-    python -m teralizer.corpora export "$1")" || return
+  assignments="$(corpus_registry_query export "$1")" || return
   eval "$assignments"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  exec uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" \
-    python -m teralizer.corpora "$@"
+  corpus_registry_query "$@"
 fi

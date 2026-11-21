@@ -4,15 +4,18 @@
 # Supports both the primary dataset (EqBench + Commons Utils) and extended
 # dataset (RepoReapers) with flexible selection options.
 #
-# Runs are resumable. State lives in REPLICATION_RUN_STATE_DIR when set, or in
-# replication/run-state/<dataset> for extended runs and
-# replication/run-state/primary-<phase> for primary runs. Each attempted config
-# writes a done-marker and a status.tsv row. The ledger records "-" for log path
-# because the runner leaves Gradle output visible in the terminal rather than
-# capturing it to a per-config file.
+# Runs are resumable. The ledger lives under REPLICATION_RUN_STATE_DIR when set.
+# Otherwise the runner uses replication/run-state/real-world or
+# replication/run-state/controlled-<phase>. Packaged controlled runs keep one
+# ledger per phase under the shared state directory.
+# Each attempted config writes a done marker and a status.tsv row. The ledger
+# records "-" for log path because Gradle prints directly to the terminal.
+# REPLICATION_PROJECTS_ROOT moves the directory containing projects/ (default:
+# the repository root).
 #
-# Graceful pause: touch <state-dir>/STOP. The in-flight config finishes, the file
-# is consumed, and relaunching resumes from the next missing done-marker.
+# Graceful pause: touch the STOP path printed at startup. The in-flight config
+# finishes, the file is consumed, and the runner exits 75. Relaunching resumes
+# from the next missing done-marker.
 #
 # Per-project wall cap: REPLICATION_PROJECT_TIMEOUT seconds (default 1800).
 # Set it to 0 to disable the cap. A capped config is ledgered as exit 124.
@@ -32,19 +35,22 @@
 # USAGE:
 #   ./run.sh --corpus <controlled|real-world> [options]
 #
-# PRIMARY DATASET OPTIONS:
-#   --phase <generation|generalization>  Pipeline phase (required for primary)
+# CONTROLLED CORPUS OPTIONS:
+#   --phase <generation|generalization>  Pipeline phase (required for controlled)
 #   --time <1s|10s|60s|dev>              Time variant (default: all)
 #   --project <eqbench|commons-utils>    Specific project (default: both)
 #
-# EXTENDED DATASET OPTIONS:
+# REAL-WORLD CORPUS OPTIONS:
 #   --start N       Start from project N (default: 1)
 #   --count N       Number of projects (default: all)
+#   --sample FILE   Use exactly the projects listed in FILE, one name per line.
+#                   Cannot be combined with --start or --count.
 #
 # GENERAL OPTIONS:
-#   --docker        Run via Docker (default if in replication/)
+#   --docker        Run via Docker (default when the Compose file is available)
 #   --local         Run locally (requires Java, Gradle, PostgreSQL)
 #   --dry-run       Show what would be run without executing
+#   --yes           Skip the confirmation for long runs
 #   --help          Show this help message
 #
 # EXAMPLES:
@@ -71,11 +77,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-
 ROOT_DIR="$REPO_ROOT"
 # shellcheck source=scripts/lib/run-supervisor.sh
 source "$REPO_ROOT/scripts/lib/run-supervisor.sh"
-supervisor_install_traps
 # Default configuration
 CORPUS_ID=""
 DATASET=""
@@ -84,9 +88,15 @@ TIME_VARIANT=""
 PROJECT_FILTER=""
 START=1
 COUNT=""
+SAMPLE_FILE=""
+RANGE_SELECTED=false
 USE_DOCKER="auto"
 DRY_RUN=false
+ASSUME_YES=false
 PROJECT_TIMEOUT="${REPLICATION_PROJECT_TIMEOUT:-1800}"
+PROJECTS_ROOT="${REPLICATION_PROJECTS_ROOT:-$REPO_ROOT}"
+[[ "$PROJECTS_ROOT" == /* || "$PROJECTS_ROOT" == ?:/* ]] || PROJECTS_ROOT="$PWD/$PROJECTS_ROOT"
+COMPOSE_FILE="${TERALIZER_COMPOSE_FILE:-$SCRIPT_DIR/../docker-compose.yml}"
 
 # Colors
 RED='\033[0;31m'
@@ -121,10 +131,16 @@ while [[ $# -gt 0 ]]; do
             ;;
         --start)
             START="$2"
+            RANGE_SELECTED=true
             shift 2
             ;;
         --count)
             COUNT="$2"
+            RANGE_SELECTED=true
+            shift 2
+            ;;
+        --sample)
+            SAMPLE_FILE="${2:?--sample requires a file}"
             shift 2
             ;;
         --docker)
@@ -137,6 +153,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry-run)
             DRY_RUN=true
+            shift
+            ;;
+        --yes)
+            ASSUME_YES=true
             shift
             ;;
         --help|-h)
@@ -185,6 +205,16 @@ if [[ -n "$PHASE" && "$PHASE" != "generation" && "$PHASE" != "generalization" ]]
     exit 1
 fi
 
+if [[ -n "$SAMPLE_FILE" && ( "$DATASET" != extended || "$RANGE_SELECTED" == true ) ]]; then
+    echo "--sample is for real-world runs and cannot be combined with --start or --count" >&2
+    exit 1
+fi
+
+if [[ -n "$SAMPLE_FILE" && ! -r "$SAMPLE_FILE" ]]; then
+    echo "Cannot read sample list: $SAMPLE_FILE" >&2
+    exit 1
+fi
+
 if ! [[ "$PROJECT_TIMEOUT" =~ ^[0-9]+$ ]]; then
     echo -e "${RED}Error: REPLICATION_PROJECT_TIMEOUT must be a non-negative integer${NC}"
     exit 1
@@ -192,7 +222,7 @@ fi
 
 # Determine Docker usage
 if [[ "$USE_DOCKER" == "auto" ]]; then
-    if [[ -f "$SCRIPT_DIR/../docker-compose.yml" ]]; then
+    if [[ -f "$COMPOSE_FILE" ]]; then
         USE_DOCKER="yes"
     else
         USE_DOCKER="no"
@@ -205,9 +235,13 @@ if [[ "$DATASET" == "primary" ]]; then
     state_scope="$CORPUS_ID-$PHASE"
 fi
 RUN_STATE_DIR="${REPLICATION_RUN_STATE_DIR:-$REPO_ROOT/replication/run-state/$state_scope}"
+if [[ -n "${TERALIZER_COLLECT_DATA:-}" && "$DATASET" == primary ]]; then
+    # Generation and generalization share config names, not done markers.
+    RUN_STATE_DIR="$RUN_STATE_DIR/$PHASE"
+fi
 DONE_DIR="$RUN_STATE_DIR/done"
 STATUS_TSV="$RUN_STATE_DIR/status.tsv"
-STOP_FILE="$RUN_STATE_DIR/STOP"
+STOP_FILE="${REPLICATION_RUN_STATE_DIR:-$RUN_STATE_DIR}/STOP"
 
 get_project_path() {
     local conf="$1"
@@ -219,7 +253,7 @@ project_abs_for_config() {
     local project_path
     project_path=$(get_project_path "$conf")
     [[ -n "$project_path" ]] || return 0
-    printf '%s/%s\n' "$REPO_ROOT" "$project_path"
+    printf '%s/%s\n' "$PROJECTS_ROOT" "$project_path"
 }
 
 # Build list of configs
@@ -270,24 +304,49 @@ else
         exit 1
     fi
 
-    # Helper: check if project directory exists
-    project_exists() {
-        local conf="$1"
-        local project_path
-        project_path=$(get_project_path "$conf")
-        [[ -n "$project_path" && -d "$REPO_ROOT/$project_path" ]]
-    }
+    # Newline delimiters match whole project names, including on Bash 3.2.
+    sample_projects=$'\n'
+    seen_projects=$'\n'
+    if [[ -n "$SAMPLE_FILE" ]]; then
+        while IFS=$' \t\r' read -r project || [[ -n "$project" ]]; do
+            if [[ -n "$project" ]]; then
+                sample_projects+="$project"$'\n'
+            fi
+        done < "$SAMPLE_FILE"
+    fi
 
     # Get sorted list of project configs that have existing project directories
     all_configs=()
     skipped=0
     while IFS= read -r conf; do
-        if project_exists "$conf"; then
+        project_path=$(get_project_path "$conf")
+        project="${project_path#projects/}"
+        if [[ -n "$SAMPLE_FILE" ]]; then
+            [[ "$sample_projects" == *$'\n'"$project"$'\n'* && -n "$project" ]] || continue
+            seen_projects+="$project"$'\n'
+        fi
+        if [[ -n "$project_path" && -d "$PROJECTS_ROOT/$project_path" ]]; then
             all_configs+=("$conf")
         else
             skipped=$((skipped + 1))
         fi
     done < <(find "$CONFIG_DIR" -name "project-*.conf" | sort -V)
+
+    if [[ -n "$SAMPLE_FILE" ]]; then
+        invalid_sample=false
+        while IFS= read -r project; do
+            [[ -n "$project" ]] || continue
+            if [[ "$seen_projects" != *$'\n'"$project"$'\n'* ]]; then
+                echo "Sample project '$project' has no config in $CONFIG_DIR" >&2
+                invalid_sample=true
+            fi
+            if [[ ! -d "$PROJECTS_ROOT/projects/$project" ]]; then
+                echo "Sample project '$project' has no directory in $PROJECTS_ROOT/projects" >&2
+                invalid_sample=true
+            fi
+        done <<<"$sample_projects"
+        [[ "$invalid_sample" == false ]] || exit 1
+    fi
 
     if [[ $skipped -gt 0 ]]; then
         echo -e "${YELLOW}Note: Skipped $skipped configs (project directories not found)${NC}"
@@ -361,11 +420,16 @@ echo -e "Scratch:    ${CYAN}$SCRATCH_DB${NC}"
 [[ -n "$PHASE" ]] && echo -e "Phase:      ${CYAN}$PHASE${NC}"
 [[ -n "$TIME_VARIANT" ]] && echo -e "Time:       ${CYAN}$TIME_VARIANT${NC}"
 [[ -n "$PROJECT_FILTER" ]] && echo -e "Project:    ${CYAN}$PROJECT_FILTER${NC}"
-[[ "$DATASET" == "extended" ]] && echo -e "Range:      ${CYAN}$START to $((START + ${#configs[@]} - 1))${NC}"
+if [[ -n "$SAMPLE_FILE" ]]; then
+    echo -e "Sample:     ${CYAN}$SAMPLE_FILE${NC}"
+elif [[ "$DATASET" == "extended" ]]; then
+    echo -e "Range:      ${CYAN}$START to $((START + ${#configs[@]} - 1))${NC}"
+fi
 echo -e "Configs:    ${CYAN}${#configs[@]}${NC}"
 echo -e "Est. time:  ${CYAN}$(estimate_runtime)${NC}"
 echo -e "Mode:       ${CYAN}$([ "$USE_DOCKER" == "yes" ] && echo "Docker" || echo "Local")${NC}"
 echo -e "State dir:  ${CYAN}$RUN_STATE_DIR${NC}"
+echo -e "Stop file:  ${CYAN}$STOP_FILE${NC}"
 if [[ "$PROJECT_TIMEOUT" -eq 0 ]]; then
     echo -e "Wall cap:   ${CYAN}disabled${NC}"
 else
@@ -383,7 +447,7 @@ fi
 
 # Confirm if long-running
 runtime_estimate=$(estimate_runtime)
-if [[ "$runtime_estimate" == *"h"* ]]; then
+if [[ "$ASSUME_YES" == false && "$runtime_estimate" == *"h"* ]]; then
     echo -e "${YELLOW}This will take a long time. Continue? (y/N)${NC}"
     read -r -n 1 reply
     echo
@@ -402,35 +466,48 @@ run_config() {
         # Translate host path to container path
         # Host: /path/to/repo/project-configs/... -> Container: /app/project-configs/...
         local container_conf="${conf/$REPO_ROOT\/project-configs//app/project-configs}"
-        local container_name="teralizer-replication-${CORPUS_ID}-${name}"
+        local container_name="${COMPOSE_PROJECT_NAME:-teralizer}-collect-${CORPUS_ID}-${name}"
         container_name="${container_name//[^a-zA-Z0-9_.-]/-}"
         supervised_container_run "$container_name" "$PROJECT_TIMEOUT" \
-            docker compose -f "$SCRIPT_DIR/../docker-compose.yml" run --rm \
+            docker compose -f "$COMPOSE_FILE" run --rm -T \
             --name "$container_name" teralizer \
             ./gradlew run -Dteralizer.config="$container_conf" \
             -Dteralizer.database.name="$SCRATCH_DB" \
             -Dteralizer.data-dir="/app/$RUN_DATA_DIR" --no-daemon
         return "$SUPERVISED_RC"
     else
+        local path_overrides=() assignment
+        if [[ "$PROJECTS_ROOT" != "$REPO_ROOT" ]]; then
+            # EqBench configs explicitly set source and report paths under projects/.
+            while IFS= read -r assignment; do
+                path_overrides+=("-Dteralizer.project.${assignment%%=*}=$PROJECTS_ROOT/${assignment#*=}")
+            done < <(sed -n 's/^[[:space:]]*\([a-z-]*-path\)[[:space:]]*=[[:space:]]*"\(projects\/[^"]*\)".*/\1=\2/p' "$conf")
+        fi
         supervised_run "-" "$PROJECT_TIMEOUT" \
             ./gradlew run -Dteralizer.config="$conf" \
             -Dteralizer.database.name="$SCRATCH_DB" \
-            -Dteralizer.data-dir="$RUN_DATA_DIR" --no-daemon
+            -Dteralizer.data-dir="$RUN_DATA_DIR" ${path_overrides[@]+"${path_overrides[@]}"} --no-daemon
         return "$SUPERVISED_RC"
     fi
 }
 
 cd "$REPO_ROOT"
+if [[ "$PROJECTS_ROOT" != "$REPO_ROOT" ]]; then
+    SUPERVISOR_LOCK_DIR="$PROJECTS_ROOT/.teralizer-run.lock"
+    if [[ "$USE_DOCKER" == yes ]]; then
+        export TERALIZER_COLLECT_PROJECTS="$PROJECTS_ROOT/projects"
+    fi
+fi
+supervisor_install_traps
 
 # Ensure the selected scratch database exists without replacing resumable state.
 if [[ "$USE_DOCKER" == "yes" ]]; then
     echo "Ensuring PostgreSQL is running..."
-    docker compose -f "$SCRIPT_DIR/../docker-compose.yml" up -d postgres
-    sleep 3
-    if [[ "$(docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
+    docker compose -f "$COMPOSE_FILE" up -d --wait postgres
+    if [[ "$(docker compose -f "$COMPOSE_FILE" exec -T postgres \
         psql -U "${REPLICATION_DB_USER:-teralizer}" -d postgres -tA \
         -c "SELECT 1 FROM pg_database WHERE datname = '$SCRATCH_DB'" 2>/dev/null)" != 1 ]]; then
-        docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
+        docker compose -f "$COMPOSE_FILE" exec -T postgres \
             createdb -U "${REPLICATION_DB_USER:-teralizer}" "$SCRATCH_DB"
     fi
 else
@@ -445,7 +522,6 @@ fi
 # Process configs
 mkdir -p "$DONE_DIR"
 [[ -f "$STATUS_TSV" ]] || printf 'config-name\texit_code\tlog\n' > "$STATUS_TSV"
-rm -f "$STOP_FILE"
 
 succeeded=0
 failed=0
@@ -499,7 +575,10 @@ for ((i=0; i<${#configs[@]}; i++)); do
     echo ""
 done
 
-[[ "$stopped" == true ]] && echo "STOP file honored at a config boundary. Relaunch resumes from $RUN_STATE_DIR."
+if [[ "$stopped" == true ]] || supervisor_stop_requested "$STOP_FILE"; then
+    stopped=true
+    echo "STOP file honored at a config boundary. Relaunch resumes from $RUN_STATE_DIR."
+fi
 
 # Summary
 echo "=========================================="
@@ -511,3 +590,6 @@ echo "Capped:    $capped"
 echo "Skipped:   $skipped"
 echo "Total:     ${#configs[@]}"
 echo "Ledger:    $STATUS_TSV"
+if [[ "$stopped" == true ]]; then
+    exit 75
+fi
