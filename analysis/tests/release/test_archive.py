@@ -78,6 +78,20 @@ def test_duplicate_names_are_refused(tmp_path: Path):
         archive.write(tmp_path / "a.zip", entries)
 
 
+def test_non_ascii_member_names_verify(tmp_path: Path):
+    # UTF-8 continuation bytes from 0x80 to 0x9F occur in many scripts, and some
+    # Info-ZIP builds list them as "?".
+    entries = [
+        archive.Entry(f"{_ROOT}/p/日本.txt", content=b"x"),
+        archive.Entry(f"{_ROOT}/p/Ä£°åÓï.txt", content=b"y"),
+    ]
+    members = archive.write(tmp_path / "a.zip", entries)
+
+    assert archive.verify(tmp_path / "a.zip", _ROOT, members) == []
+    (problem,) = archive.verify(tmp_path / "a.zip", _ROOT, members[1:])
+    assert problem.startswith(f"a.zip: unexpected member {_ROOT}/p/")
+
+
 def test_link_members_round_trip_through_unzip(tmp_path: Path):
     entries = [
         archive.Entry(f"{_ROOT}/p/target.txt", content=b"target\n"),

@@ -159,22 +159,34 @@ def _read_chunks(source: Path) -> Iterable[bytes]:
             yield chunk
 
 
+def _listed(name: str) -> bytes:
+    return bytes(b"?"[0] if 0x7F <= byte <= 0x9F else byte for byte in name.encode())
+
+
 def verify(path: Path, root: str, expected: Iterable[Member]) -> list[str]:
     """Check an archive against its planned members through an independent reader."""
     unzip = shutil.which("unzip")
     if unzip is None:
         raise ArchiveError("Info-ZIP unzip is required to verify archives")
     problems: list[str] = []
-    tested = subprocess.run([unzip, "-tqq", str(path)], capture_output=True, text=True)
+    tested = subprocess.run(
+        [unzip, "-tqq", str(path)], capture_output=True, text=True, errors="replace"
+    )
     if tested.returncode != 0:
         problems.append(f"{path.name}: integrity test failed: {tested.stdout.strip()}")
     listing = subprocess.run(
-        [unzip, "-Z1", str(path)], capture_output=True, text=True, check=True
-    ).stdout.splitlines()
+        [unzip, "-Z1", str(path)], capture_output=True, check=True
+    ).stdout.split(b"\n")[:-1]
 
     planned = {member.name: member for member in expected}
+    # Some Info-ZIP builds print the bytes 0x7F to 0x9F of a name as "?", which
+    # also hits UTF-8 continuation bytes. A listed name matches its member in
+    # either form.
+    by_listing = {_listed(name): name for name in planned}
+    by_listing |= {name.encode(): name for name in planned}
     seen: set[str] = set()
-    for name in listing:
+    for raw in listing:
+        name = by_listing.get(raw, raw.decode("utf-8", "surrogateescape"))
         if name in seen:
             problems.append(f"{path.name}: duplicate member {name}")
         seen.add(name)
