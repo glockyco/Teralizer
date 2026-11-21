@@ -6,24 +6,11 @@
 #   teralizer - Java pipeline for data collection (on-demand)
 #   analysis  - Reports and release checks on the mounted release (on-demand)
 #
-# Usage:
-#   # Restore the corpora of the extracted corpus components
-#   docker compose up -d postgres adminer
-#   ./scripts/import-databases.sh --force jarvis-benchmark jarvis-scenarios
-#   # Open http://localhost:18080 for Adminer
-#
-#   # Build every report into ../output and compare it with the reference
-#   docker compose run --rm analysis -m teralizer.eval all \
-#       --targets md,figures,latex,csv --output-root /output
-#   docker compose run --rm analysis -m teralizer.release verify-outputs \
-#       --analysis /output \
-#       --reference analysis/output/original/reference-manifest.json
-#
-#   # Run pipeline on subset (via run.sh script)
-#   ./scripts/run.sh --corpus real-world --count 5
-#
-#   # Tear down
-#   docker compose down -v
+# The root ./artifact command runs these services for every reviewer workflow.
+
+# The default project name, so that every command in this workspace addresses the
+# same services and volumes. COMPOSE_PROJECT_NAME overrides it.
+name: teralizer
 
 services:
   postgres:

@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# Reviewer commands for the Teralizer replication package.
+#
+# Usage:
+#   ./artifact preflight [WORKFLOW]      Check the host and the extracted components
+#   ./artifact smoke                     Restore the two JARVIS corpora and check RQ0
+#   ./artifact reproduce-results [rq0]   Rebuild the reports and compare them with
+#                                        the reference, all of them or RQ0 only
+#   ./artifact clean                     Remove the services, their volumes, and
+#                                        the output and state directories
+#
+# Run it from the extracted release. The release manifest is read from
+# ../release-manifest.json, next to the downloaded archives, unless
+# TERALIZER_RELEASE_MANIFEST names another file. COMPOSE_PROJECT_NAME (default
+# teralizer) separates this workspace's services and volumes from others.
+# TERALIZER_OUTPUT and TERALIZER_STATE move the output and state directories.
+
+set -euo pipefail
+
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+RELEASE_MANIFEST="${TERALIZER_RELEASE_MANIFEST:-$ROOT/../release-manifest.json}"
+export TERALIZER_OUTPUT="${TERALIZER_OUTPUT:-$ROOT/output}"
+export TERALIZER_STATE="${TERALIZER_STATE:-$ROOT/state}"
+export TERALIZER_UID="${TERALIZER_UID:-$(id -u)}"
+export TERALIZER_GID="${TERALIZER_GID:-$(id -g)}"
+COMPOSE=(docker compose -f "$ROOT/replication/docker-compose.yml")
+REFERENCE=analysis/output/original/reference-manifest.json
+JARVIS_CORPORA=(jarvis-scenarios jarvis-benchmark)
+ALL_CORPORA=(controlled real-world jarvis-scenarios jarvis-benchmark)
+
+usage() {
+    sed -n '2,16p' "$0" | sed -E 's/^# ?//'
+}
+
+step() {
+    printf '\n== %s\n' "$*"
+}
+
+fail() {
+    printf 'artifact: %s\n' "$*" >&2
+    exit 1
+}
+
+analysis() {
+    "${COMPOSE[@]}" run --rm -T analysis "$@"
+}
+
+# Host prerequisites that no container can check. Every problem is listed
+# before the command stops.
+host_problems() {
+    local problems=() arch version major minor
+    if ! command -v docker >/dev/null 2>&1; then
+        problems+=("Docker is not installed or not on PATH")
+    elif ! docker info >/dev/null 2>&1; then
+        problems+=("the Docker daemon does not answer; start Docker and retry")
+    else
+        # The Compose plugin from 2.3 on reads the project name from the file.
+        if ! version=$(docker compose version --short 2>/dev/null); then
+            problems+=("the Docker Compose plugin is missing; install Compose V2 or later")
+        else
+            IFS=. read -r major minor _ <<<"${version#v}"
+            if (( major < 2 || (major == 2 && minor < 3) )); then
+                problems+=("Docker Compose $version found; this release needs 2.3 or later")
+            fi
+        fi
+        arch=$(docker info --format '{{.Architecture}}')
+        if [[ "$arch" != x86_64 ]]; then
+            printf 'note: Docker runs on %s; the release is tested on x86_64\n' "$arch" >&2
+        fi
+    fi
+    if [[ ! -f "$RELEASE_MANIFEST" ]]; then
+        problems+=("release manifest not found at $RELEASE_MANIFEST; place release-manifest.json next to the extracted teralizer/ directory or set TERALIZER_RELEASE_MANIFEST")
+    fi
+    if [[ ${#problems[@]} -gt 0 ]]; then
+        printf 'preflight: %s\n' "${problems[@]}" >&2
+        return 1
+    fi
+}
+
+preflight() {
+    local workflow="$1"
+    step "Preflight for $workflow"
+    host_problems || exit 1
+    mkdir -p "$TERALIZER_OUTPUT" "$TERALIZER_STATE"
+    # The component check runs in the analysis image, so the image is built first.
+    "${COMPOSE[@]}" build -q analysis
+    "${COMPOSE[@]}" run --rm -T --no-deps \
+        -v "$(cd "$(dirname "$RELEASE_MANIFEST")" && pwd -P)/$(basename "$RELEASE_MANIFEST"):/release-manifest.json:ro" \
+        analysis -m teralizer.release preflight "$workflow" \
+        --workspace / --release-manifest /release-manifest.json
+}
+
+start_database() {
+    step "Starting PostgreSQL"
+    "${COMPOSE[@]}" up -d --wait postgres
+}
+
+# A corpus that is already restored and passes the report-role check is reused.
+# Any other state is replaced from its component.
+restore() {
+    local corpus_id
+    for corpus_id in "$@"; do
+        step "Corpus $corpus_id"
+        if analysis -m teralizer.corpora verify-corpus "$corpus_id" >/dev/null 2>&1; then
+            printf 'reusing the restored and verified corpus %s\n' "$corpus_id"
+        else
+            "$ROOT/replication/scripts/import-databases.sh" --force "$corpus_id"
+        fi
+    done
+}
+
+# The output directory holds one run. A new run starts from an empty one, so
+# no file of an earlier run can pass for a result of this one.
+build_reports() {
+    local report="$1"
+    step "Building report $report into $TERALIZER_OUTPUT"
+    find "$TERALIZER_OUTPUT" -mindepth 1 -delete
+    analysis -m teralizer.eval "$report" --targets md,figures,latex,csv --output-root /output
+}
+
+verify() {
+    step "Comparing the outputs with the reference"
+    # "$@" rather than an array: macOS's bash 3.2 rejects an empty array under set -u.
+    analysis -m teralizer.release verify-outputs --analysis /output \
+        --reference "$REFERENCE" --json /output/verify-outputs.json "$@"
+}
+
+command="${1:-}"
+[[ $# -gt 0 ]] && shift
+case "$command" in
+    preflight)
+        [[ $# -le 1 ]] || fail "preflight takes at most one workflow"
+        preflight "${1:-inspect}"
+        ;;
+    smoke)
+        [[ $# -eq 0 ]] || fail "smoke takes no arguments"
+        started=$SECONDS
+        preflight smoke
+        start_database
+        restore "${JARVIS_CORPORA[@]}"
+        build_reports rq0
+        verify --report rq0
+        printf '\nsmoke passed in %d min\n' $(( (SECONDS - started + 59) / 60 ))
+        ;;
+    reproduce-results)
+        case "${1:-}" in
+            "")
+                preflight reproduce-all
+                start_database
+                restore "${ALL_CORPORA[@]}"
+                build_reports all
+                verify
+                step "Checking the paper's claims"
+                analysis -m teralizer.release claims --analysis /output \
+                    --json /output/claims.json
+                ;;
+            rq0)
+                preflight reproduce-rq0
+                start_database
+                restore "${JARVIS_CORPORA[@]}"
+                build_reports rq0
+                verify --report rq0
+                ;;
+            *)
+                fail "reproduce-results takes no argument or rq0"
+                ;;
+        esac
+        ;;
+    clean)
+        [[ $# -eq 0 ]] || fail "clean takes no arguments"
+        step "Removing the services and volumes of ${COMPOSE_PROJECT_NAME:-teralizer}"
+        "${COMPOSE[@]}" down --volumes --remove-orphans
+        step "Removing $TERALIZER_OUTPUT and $TERALIZER_STATE"
+        rm -rf "$TERALIZER_OUTPUT" "$TERALIZER_STATE"
+        ;;
+    -h|--help|help)
+        usage
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
+esac

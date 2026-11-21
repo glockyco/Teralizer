@@ -2,109 +2,35 @@
 
 ## Download
 
-Download archives from Zenodo: [10.5281/zenodo.17950380](https://doi.org/10.5281/zenodo.17950380). The DOI resolves to the latest version.
+Download from Zenodo, [10.5281/zenodo.17950380](https://doi.org/10.5281/zenodo.17950380), into an empty directory:
 
-The Package contents section of README.md says which archives to download.
+- `release-manifest.json` and `checksums.sha256`,
+- `teralizer-replication-core.zip`,
+- the further archives of your workflow, which the release summary lists. The smoke test needs `teralizer-replication-corpus-jarvis-scenarios.zip` and `teralizer-replication-corpus-jarvis-benchmark.zip`.
 
-## Unpack
+The DOI resolves to the latest version. [REQUIREMENTS.md](REQUIREMENTS.md) lists the prerequisites.
 
-```bash
-unzip teralizer-core.zip
-cd teralizer-core
-```
-
-The quick-start script will automatically extract sibling archives.
-
-## Prerequisites
-
-Verify your system meets the requirements:
+## Check and extract
 
 ```bash
-./replication/scripts/preflight-check.sh
+sha256sum --check --ignore-missing checksums.sha256
+unzip teralizer-replication-core.zip
+unzip teralizer-replication-corpus-jarvis-scenarios.zip
+unzip teralizer-replication-corpus-jarvis-benchmark.zip
 ```
 
-All checks should pass before proceeding.
+On macOS, `shasum -a 256 --check --ignore-missing checksums.sha256` does the same check. Core extracts to `teralizer/`, and every other archive to its own directory below `teralizer/components/`, so the order of extraction does not matter. Keep `release-manifest.json` next to `teralizer/`, where the reviewer commands look for it.
 
-See [REQUIREMENTS.md](REQUIREMENTS.md) for detailed requirements.
-
-## Quick Start
-
-Run from the repository root:
+## Check the installation
 
 ```bash
-./replication/quick-start.sh
+cd teralizer
+./artifact preflight smoke
+./artifact smoke
 ```
 
-This script:
-1. Extracts sibling archives, if they are present.
-2. Verifies the installed corpus component.
-3. Starts PostgreSQL and Adminer.
-4. Imports and verifies each registered corpus.
+Preflight checks Docker, Compose and every file of the components that the smoke test needs, and it lists all problems at once. The smoke test builds the analysis image, restores the two JARVIS corpora, rebuilds the RQ0 report and compares it with the reference. It ends with `smoke passed`.
 
-When complete, open http://localhost:18080 in your browser to inspect the
-imported databases with Adminer.
+If an extraction was interrupted or preflight reports changed files, delete that component's directory, `teralizer/` for core or `teralizer/components/<component>/` for any other, check the archive against `checksums.sha256` and extract it again.
 
-## Verification Checkpoints
-
-### Checkpoint 1: Services Running
-
-```bash
-docker compose -f replication/docker-compose.yml ps
-```
-
-PostgreSQL and Adminer should be running. The quick-start script starts only
-these services. Run analysis separately at the later checkpoints.
-
-### Checkpoint 2: Database Populated
-
-```bash
-./replication/scripts/verify-results.sh
-```
-
-The command inventories the server and verifies every published semantic corpus id against its registered physical database, project count, checked inputs, and derived-view revision.
-
-### Checkpoint 3: Evaluation CLI Works
-
-From the repository root, build the dataset report against the imported database:
-
-```bash
-cd analysis
-uv run python -m teralizer.eval dataset --targets md
-cd ..
-```
-
-**Expected**: The command completes without errors and writes the rendered report
-to `analysis/reports/dataset.md`.
-
-### Checkpoint 4: Reproduce the Reports
-
-Run the verification wrapper to build every registered report:
-
-```bash
-./replication/scripts/run-analysis.sh verify
-```
-
-**Expected**:
-- All reports complete without errors
-- Tables, figures, and CSV files are generated in `analysis/output/verify/`
-
-## Installation Complete
-
-Installation is successful when:
-- All four checkpoints pass
-- Adminer is accessible at http://localhost:18080
-- Database queries return expected row counts
-- `teralizer.eval` produces the dataset report and verification outputs
-
-## Stopping Services
-
-Run from the repository root. Select the replication Compose file explicitly
-so these commands do not target the development services:
-
-```bash
-# Stop containers (preserves data)
-docker compose -f replication/docker-compose.yml down
-
-# Stop and remove all data
-docker compose -f replication/docker-compose.yml down -v
-```
+[README.md](README.md) describes the remaining workflows. `./artifact clean` removes the services, their volumes and the `output/` and `state/` directories, and it leaves the extracted archives in place.

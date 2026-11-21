@@ -38,59 +38,35 @@ The project has to build with Java 8, use Maven or Gradle with a `build.gradle` 
 
 ## Package contents
 
-Choose the archives for the work you want to do:
+The Zenodo release holds `release-manifest.json`, `checksums.sha256`, a release summary and one ZIP archive per component. The `core` archive holds this repository's source, the reference results and the reviewer commands. Each `corpus-*` archive holds one evaluation database, and each `projects-*` archive holds the projects of one collection. The release summary lists the archives that each workflow needs, with their download and disk sizes. See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites and [replication/README.md](replication/README.md) for the corpus-package contract.
 
-- Browse the published results with `teralizer-results`.
-- Rebuild the analysis with `teralizer-core`.
-- Exercise the pipeline with `teralizer-core` and `teralizer-projects-extended-sample`.
-- Reproduce both corpora with `teralizer-core`, `teralizer-projects-primary`, and `teralizer-projects-extended`.
+[INSTALL.md](INSTALL.md) describes how to download, check and extract the archives and how to check the installation with the smoke test.
 
-The optional `teralizer-data-primary` and `teralizer-data-extended` archives hold pipeline logs, reports, and generalized tests. See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites and disk planning, [INSTALL.md](INSTALL.md) for installation, and [replication/README.md](replication/README.md) for the corpus-package storage contract.
+## Reproduce the results
 
-## Set up replication
-
-You need Bash, Docker with Compose, and `uv`. Run commands from the repository or installed core package root.
-
-In an installed core release:
+Run every command from the extracted `teralizer/` directory. The smoke test restores the two JARVIS corpora, rebuilds the RQ0 report and compares it with the reference:
 
 ```sh
-./replication/quick-start.sh
+./artifact smoke
 ```
 
-In a source checkout, first set `CORPUS_PACKAGE_DIR` to the corpus component from an installed or downloaded package, then run the same command:
+With all four `corpus-*` archives extracted, rebuild every report, compare every output with the reference and check the paper's claims:
 
 ```sh
-export CORPUS_PACKAGE_DIR
-./replication/quick-start.sh
+./artifact reproduce-results
 ```
 
-The quick start verifies the selected package, starts PostgreSQL and Adminer, and restores the published databases. It can also extract sibling project and data archives. Do not point it at databases you need to preserve: the restore uses the importer's `--force` option.
+`./artifact reproduce-results rq0` does the same for RQ0 alone. The reports land in `output/`, together with `verify-outputs.json`, and `claims.json` after a full run. The services need the network only while Docker pulls and builds their images. A corpus that is already restored and verified is reused by the next command.
 
-Open the database browser at <http://localhost:18080>. The connection details are in [replication/docker-compose.yml](replication/docker-compose.yml). List published corpus IDs and resolve a database name with:
+To browse the databases, start Adminer and open <http://localhost:18080>. The connection details are in [replication/docker-compose.yml](replication/docker-compose.yml).
 
 ```sh
-./scripts/corpus-registry list --published
-./scripts/corpus-registry get controlled database
+docker compose -f replication/docker-compose.yml up -d adminer
 ```
 
-Stop replication services without deleting their data:
+`./artifact clean` removes the services, their volumes and the `output/` and `state/` directories. The extracted archives stay. Set `COMPOSE_PROJECT_NAME` to keep the services of two workspaces apart.
 
-```sh
-docker compose -f replication/docker-compose.yml down
-```
-
-## Rebuild the analysis
-
-After setup, regenerate the reports and compare the publication outputs with the shipped reference:
-
-```sh
-./replication/scripts/run-analysis.sh verify
-./replication/scripts/verify-outputs.sh original verify
-```
-
-The analysis writes rendered reports under [analysis/reports](analysis/reports) and publication outputs under [analysis/output](analysis/output). Each run replaces the selected output variant's tables, data, and figures.
-
-To build an individual report, use its name from the [report registry](analysis/src/teralizer/eval/registry.py):
+In a source checkout, `analysis/reports` holds the rendered reports. To build one report there, use its name from the [report registry](analysis/src/teralizer/eval/registry.py):
 
 ```sh
 uv run --directory analysis python -m teralizer.eval dataset --targets md

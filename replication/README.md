@@ -44,28 +44,11 @@ The builder verifies the complete package before it changes release staging. Zen
 
 ## Verify and restore
 
-An installed release contains its verified corpus component at `replication/datasets/`. Run this command from the installed release:
+An extracted release keeps the corpus manifest at `replication/corpus-manifest.json` in core and each dump in its corpus component, `components/corpus-<id>/`. The reviewer commands in `./artifact` restore the corpora that a workflow needs. To restore selected corpora directly, start PostgreSQL and name them:
 
 ```bash
-./replication/quick-start.sh
+docker compose -f replication/docker-compose.yml up -d --wait postgres
+./replication/scripts/import-databases.sh --force controlled
 ```
 
-The quick start verifies the package before it starts PostgreSQL. It restores each selected corpus, prepares derived schema, and checks report-only access.
-
-In a source checkout, select an installed or downloaded package explicitly:
-
-```bash
-CORPUS_PACKAGE_DIR=/external/published-installation/replication/datasets \
-  ./replication/quick-start.sh
-```
-
-To restore selected corpora without the quick start, run:
-
-```bash
-docker compose -f replication/docker-compose.yml up -d postgres
-./replication/scripts/import-databases.sh --force \
-  --corpus controlled \
-  /external/published-installation/replication/datasets
-```
-
-The importer verifies the complete package before it changes a database.
+The importer checks each named dump against the manifest before it changes a database. It restores the corpus, prepares its derived schema and checks access through the report role.

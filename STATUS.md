@@ -76,10 +76,9 @@ We apply for the following ACM artifact badges:
 
 | Workflow | Command | Expected Result |
 |----------|---------|-----------------|
-| Quick start | `./quick-start.sh` | Services running, Adminer accessible |
-| Verify data import | `./scripts/verify-results.sh` | Database counts match expected values |
-| Re-run analysis | `./scripts/run-analysis.sh verify` | All registered reports complete without errors |
-| Compare outputs | `./scripts/verify-outputs.sh original verify` | All outputs match exactly |
+| Preflight | `./artifact preflight smoke` | Docker, Compose and the needed components pass |
+| Smoke test | `./artifact smoke` | JARVIS corpora restored, RQ0 matches the reference |
+| Re-run analysis | `./artifact reproduce-results` | Every report builds, every output matches the reference, every claim passes |
 | Run pipeline | `./scripts/run.sh --dataset extended --count 5` | 5 projects processed successfully |
 
 ---

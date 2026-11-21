@@ -12,13 +12,13 @@ The results in the paper were produced on:
 
 ## Verification
 
-Run the preflight check to verify requirements:
+Check the host and the extracted components of a workflow, for example the smoke test:
 
 ```bash
-./replication/scripts/preflight-check.sh
+./artifact preflight smoke
 ```
 
-All checks should pass before proceeding with installation.
+Preflight lists every problem it finds before it stops.
 
 ## Software
 
@@ -90,7 +90,7 @@ verified corpus manifest.
 
 | Activity | Time |
 |----------|------|
-| Initial setup (download + quick-start) | ~10 minutes |
+| Initial setup (download, extraction and smoke test) | ~10 minutes |
 | Workflow 1: Inspect results | ~5 minutes |
 | Workflow 2: Verify analysis | ~10 minutes |
 | Workflow 3: Verify pipeline (5 projects) | ~15 minutes |
