@@ -9,7 +9,7 @@ The release was tested on Ubuntu 24.04 in WSL 2 with Docker Desktop, on an AMD R
 
 ## Time, disk and memory
 
-Measured on the test host, starting from extracted archives. `RELEASE.md` on Zenodo lists the download and unpacked size of every workflow.
+Measured on the test host, starting from extracted archives. The description of the Zenodo record lists the download size of every archive.
 
 | Workflow | Time | Restored databases | Docker memory |
 |---|---|---|---|

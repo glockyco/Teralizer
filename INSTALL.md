@@ -6,7 +6,7 @@ Download from Zenodo, [10.5281/zenodo.17950380](https://doi.org/10.5281/zenodo.1
 
 - `release-manifest.json` and `checksums.sha256`,
 - `teralizer-replication-core.zip`,
-- the further archives of your workflow, which `RELEASE.md` on the Zenodo record lists. The smoke test needs `teralizer-replication-corpus-jarvis-scenarios.zip` and `teralizer-replication-corpus-jarvis-benchmark.zip`.
+- the further archives of your workflow, which the description of the Zenodo record lists. The smoke test needs `teralizer-replication-corpus-jarvis-scenarios.zip` and `teralizer-replication-corpus-jarvis-benchmark.zip`.
 
 The DOI resolves to the latest version. [REQUIREMENTS.md](REQUIREMENTS.md) lists the prerequisites.
 

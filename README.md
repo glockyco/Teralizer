@@ -38,7 +38,7 @@ The project has to build with Java 8, use Maven or Gradle with a `build.gradle` 
 
 ## Package contents
 
-The Zenodo release holds `release-manifest.json`, `checksums.sha256`, a release summary and one ZIP archive per component. The `core` archive holds this repository's source, the reference results and the reviewer commands. Each `corpus-*` archive holds one evaluation database, and each `projects-*` archive holds the projects of one collection. The release summary lists the archives that each workflow needs, with their download and disk sizes. See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites and [replication/README.md](replication/README.md) for the corpus-package contract.
+The Zenodo release holds `release-manifest.json`, `checksums.sha256` and one ZIP archive per component. The `core` archive holds this repository's source, the reference results and the reviewer commands. Each `corpus-*` archive holds one evaluation database, and each `projects-*` archive holds the projects of one collection. The description of the Zenodo record lists the archives that each workflow needs, with their sizes. See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites and [replication/README.md](replication/README.md) for the corpus-package contract.
 
 [INSTALL.md](INSTALL.md) describes how to download, check and extract the archives and how to check the installation with the smoke test.
 

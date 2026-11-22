@@ -69,7 +69,6 @@ class Declaration:
     content_license: str
     repository: str
     keywords: tuple[str, ...]
-    description: str
     creators: tuple[Creator, ...]
     paper_title: str
     paper_authors: tuple[str, ...]
@@ -163,7 +162,6 @@ def parse(document: dict[str, object]) -> Declaration:
         content_license=_text(release, "content_license", "release"),
         repository=_text(release, "repository", "release"),
         keywords=_texts(release, "keywords", "release"),
-        description=_text(release, "description", "release"),
         creators=tuple(
             Creator(
                 name=_text(entry, "name", "creator"),

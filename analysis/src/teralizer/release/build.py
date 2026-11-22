@@ -2,21 +2,20 @@
 
 A candidate is built into a fresh directory that must not exist. Every archive is
 written from the member plan and verified through an independent reader before
-the release files are written: `release-manifest.json`, the summary `RELEASE.md`
-and `checksums.sha256` over the archives and both files. These are the exact upload
-set of the Zenodo record. `zenodo.json` holds the deposit metadata and is not
-uploaded. A failed build leaves only a `.partial` directory, which is never a
-candidate.
+the release files are written: `release-manifest.json` and `checksums.sha256` over
+the archives and the manifest. These are the exact upload set of the Zenodo record.
+`zenodo.json` holds the structured deposit metadata and is not uploaded. The record
+description is written on Zenodo, so changing it needs no rebuild. A failed build
+leaves only a `.partial` directory, which is never a candidate.
 """
 
 from __future__ import annotations
 
 import hashlib
-import html
 import json
 import shutil
 import subprocess
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -142,69 +141,8 @@ def _readme(declaration: Declaration, component_id: str) -> bytes:
     return "\n".join(lines).encode()
 
 
-def _size(count: int) -> str:
-    for unit, scale in (("GB", 10**9), ("MB", 10**6), ("kB", 10**3)):
-        if count >= scale:
-            return f"{count / scale:.1f} {unit}"
-    return f"{count} B"
-
-
-def _summary(declaration: Declaration, built: Sequence[BuiltArchive]) -> bytes:
-    """RELEASE.md: what to download for each workflow, beside the archives."""
-    filenames = {item.component: item.path.name for item in built}
-    by_component = {item.component: item for item in built}
-    included = set(filenames)
-    doi = declaration.version_doi or "reserved before publication"
-    lines = [
-        f"# {declaration.title}",
-        "",
-        f"Version {declaration.version}, version DOI {doi}, concept DOI {declaration.concept_doi}.",
-        f"The paper is {declaration.paper_title}, by {', '.join(declaration.paper_authors)}, "
-        f"<https://doi.org/{declaration.paper_doi}>.",
-        "",
-        "Download the core archive and the archives of the workflow you want, extract them "
-        "into one directory with any ZIP tool, and follow `teralizer/README.md`. "
-        "`release-manifest.json` describes every archive, and `checksums.sha256` holds the "
-        "SHA-256 of every other file of this record.",
-        "",
-        "## Workflows",
-        "",
-        "| Workflow | Command | Archives | Download | Unpacked |",
-        "| --- | --- | --- | --- | --- |",
-    ]
-    for workflow in declaration.workflows:
-        if not set(workflow.components) <= included:
-            continue
-        archives = "<br>".join(f"`{filenames[c]}`" for c in workflow.components)
-        commands = "<br>".join(
-            f"`./{command}`"
-            for command in (workflow.command, workflow.full_command)
-            if command is not None
-        )
-        download = sum(by_component[c].bytes for c in workflow.components)
-        unpacked = sum(by_component[c].unpacked_bytes for c in workflow.components)
-        lines.append(
-            f"| {workflow.purpose} | {commands} | {archives} "
-            f"| {_size(download)} | {_size(unpacked)} |"
-        )
-    lines += [
-        "",
-        "## Archives",
-        "",
-        "| Archive | Size | Unpacked | Contents |",
-        "| --- | --- | --- | --- |",
-    ]
-    for item in built:
-        lines.append(
-            f"| `{item.path.name}` | {_size(item.bytes)} | {_size(item.unpacked_bytes)} "
-            f"| {declaration.component(item.component).purpose} |"
-        )
-    return ("\n".join(lines) + "\n").encode()
-
-
 def _zenodo(declaration: Declaration) -> dict[str, object]:
-    """Metadata for the Zenodo deposit API. The record itself does not carry it."""
-    paper = f"https://doi.org/{declaration.paper_doi}"
+    """Structured metadata for the Zenodo deposit. The record description lives on Zenodo."""
     return {
         "metadata": {
             "upload_type": "software",
@@ -218,12 +156,6 @@ def _zenodo(declaration: Declaration) -> dict[str, object]:
                 }
                 for creator in declaration.creators
             ],
-            "description": (
-                f"<p>{html.escape(declaration.description, quote=False)}</p>"
-                f'<p>Paper: <a href="{paper}">{paper}</a><br>'
-                f'Source repository: <a href="{declaration.repository}">'
-                f"{declaration.repository}</a></p>"
-            ),
             "keywords": list(declaration.keywords),
             "license": declaration.code_license.lower(),
             "related_identifiers": [
@@ -489,11 +421,8 @@ def build_candidate(
     documents.validate_release_manifest(release_manifest)
     manifest_bytes = _canonical(release_manifest)
     (partial / "release-manifest.json").write_bytes(manifest_bytes)
-    summary_bytes = _summary(declaration, built)
-    (partial / "RELEASE.md").write_bytes(summary_bytes)
     lines = [f"{item.sha256}  {item.path.name}" for item in built]
     lines.append(f"{hashlib.sha256(manifest_bytes).hexdigest()}  release-manifest.json")
-    lines.append(f"{hashlib.sha256(summary_bytes).hexdigest()}  RELEASE.md")
     (partial / "checksums.sha256").write_text(
         "\n".join(sorted(lines, key=lambda line: line[66:])) + "\n"
     )

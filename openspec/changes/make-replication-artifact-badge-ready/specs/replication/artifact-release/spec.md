@@ -164,11 +164,11 @@ The release SHALL NOT require complete author working run roots when selected so
 - **THEN** release validation rejects that substitute
 ### Requirement: Public requirements state the release's measured facts
 
-The release SHALL provide one reviewer entry point and a requirements document readable without executing artifact code. Together with the release summary they SHALL state, for each workflow, what a reader needs to judge feasibility before download. Archive sizes come from the release build, and times and resources from the clean run of the final archives.
+The release SHALL provide one reviewer entry point and a requirements document readable without executing artifact code. Together with the description of the archive record they SHALL state, for each workflow, what a reader needs to judge feasibility before download. Archive sizes come from the release build, and times and resources from the clean run of the final archives.
 
 #### Scenario: A reader evaluates feasibility before download
 
-- **WHEN** the reader opens the release summary or the packaged requirements document
+- **WHEN** the reader opens the record description or the packaged requirements document
 - **THEN** they find the workflow's archives, download and unpacked sizes, free disk, memory, CPU architecture, supported hosts, host software, network use, run time and cleanup effects without running the artifact
 
 ### Requirement: Public metadata agrees with the packaged release
