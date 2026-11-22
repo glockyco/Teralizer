@@ -77,7 +77,7 @@ Dropped as not worth their cost: a per-file audit and record of generated tests,
 - [x] 7.1 Run fast synthetic-package tests in pull-request CI for the public document formats, archive build and verification, extraction roots, preflight, missing workflow dependencies, and provenance release mode. The release tests run in the analysis test job.
 - [x] 7.2 Run the final archives once on desktop-ac, extracted with unzip into a new directory with empty Docker volumes: preflight, smoke, all-report reproduction, and clean. Write the measured times, peak disk and memory into `REQUIREMENTS.md`. rc-2 passed all steps, including the three reduced collections, and clean left no volume and no root-owned file. The final build repeats the run only if code outside documentation changed.
 
-Dropped: a dedicated release-candidate CI job, a machine-readable acceptance record, a hidden source checkout, an offline repeat, and an Apple Silicon compatibility run (7.2 to 7.6 before). The one clean run exposes every failure they guard against, nothing reads the record, and the release claims no Apple Silicon support. The acceptance record format was removed from the code.
+Dropped: a dedicated release-candidate CI job, a machine-readable acceptance record, a hidden source checkout, and an offline repeat (7.3 to 7.5 before). The one clean run exposes every failure they guard against, and nothing reads the record. The acceptance record format was removed from the code. Smoke and all-report reproduction of rc-1 also passed on macOS with Colima on Apple Silicon, so REQUIREMENTS.md states macOS as tested.
 
 ## 8. Build and publish the immutable version
 

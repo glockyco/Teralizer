@@ -2,14 +2,14 @@
 
 ## Host
 
-- Linux on x86-64, or Windows with WSL 2, with Docker Engine or Docker Desktop and Docker Compose 2.3 or later.
+- Linux on x86-64, Windows with WSL 2, or macOS, with Docker Engine, Docker Desktop or Colima and Docker Compose 2.3 or later.
 - Bash, unzip, and `sha256sum` or `shasum`.
 
-The release was tested on Ubuntu 24.04 in WSL 2 with Docker Desktop, on an AMD Ryzen 5 5600X with 12 threads and 62 GB of memory available to WSL. macOS on Apple Silicon runs the x86-64 images under emulation, which this release does not claim. `./artifact preflight WORKFLOW` checks the host and the extracted archives before a workflow runs.
+The release was tested on Ubuntu 24.04 in WSL 2 with Docker Desktop, on an AMD Ryzen 5 5600X with 12 threads and 62 GB of memory available to WSL, and on macOS 26 with Colima, on an Apple M5 Pro with 8 cores and 16 GB of memory for the Colima VM. On Apple Silicon, the pipeline image runs under x86-64 emulation. `./artifact preflight WORKFLOW` checks the host and the extracted archives before a workflow runs.
 
 ## Time, disk and memory
 
-Measured on the test host, starting from extracted archives. The description of the Zenodo record lists the download size of every archive.
+Measured on the Linux test host, starting from extracted archives. On the Mac, smoke took 1 min and `reproduce-results` 14 min. The description of the Zenodo record lists the download size of every archive.
 
 | Workflow | Time | Restored databases | Docker memory |
 |---|---|---|---|

@@ -179,8 +179,8 @@ host = "Linux on x86-64 with Docker Engine or Docker Desktop and Compose V2"
 
 [[platform]]
 id = "macos-arm64"
-status = "unsupported"
-host = "macOS on Apple Silicon with Docker Desktop, running linux/amd64 images under emulation"
+status = "compatibility-tested"
+host = "macOS on Apple Silicon with Colima, running the linux/amd64 pipeline image under emulation"
 
 [[platform]]
 id = "windows-native"

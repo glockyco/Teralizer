@@ -56,7 +56,7 @@ analysis() {
 # Host prerequisites that no container can check. Every problem is listed
 # before the command stops.
 host_problems() {
-    local problems=() arch version major minor
+    local problems=() version major minor
     if ! command -v docker >/dev/null 2>&1; then
         problems+=("Docker is not installed or not on PATH")
     elif ! docker info >/dev/null 2>&1; then
@@ -70,10 +70,6 @@ host_problems() {
             if (( major < 2 || (major == 2 && minor < 3) )); then
                 problems+=("Docker Compose $version found; this release needs 2.3 or later")
             fi
-        fi
-        arch=$(docker info --format '{{.Architecture}}')
-        if [[ "$arch" != x86_64 ]]; then
-            printf 'note: Docker runs on %s; the release is tested on x86_64\n' "$arch" >&2
         fi
     fi
     if [[ ! -f "$RELEASE_MANIFEST" ]]; then

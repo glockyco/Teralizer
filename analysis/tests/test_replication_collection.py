@@ -34,7 +34,6 @@ set -eu
 printf '%s\n' "$*" >> "${FAKE_DOCKER_LOG:?}"
 case "$*" in
     info) ;;
-    'info --format {{.Architecture}}') printf 'x86_64\n' ;;
     'compose version --short') printf '2.25.0\n' ;;
     *' build -q analysis'|*' build -q teralizer'|*' up -d --wait postgres'|*' down --volumes --remove-orphans') ;;
     *' -m teralizer.release preflight '*) ;;

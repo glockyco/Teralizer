@@ -181,7 +181,7 @@ Author-only export and release-build commands are excluded from packaged reviewe
 
 The release-tested baseline is Linux x86-64 with Docker Engine or Docker Desktop and Compose V2. The report analysis, PostgreSQL service, and Java collection pipeline use images pinned by immutable digest. Locked dependency installation has no permissive fallback. The Dockerfiles and Compose file in core carry the digests.
 
-The reviewer may pull declared images during setup. Once images and selected release components are present, smoke and results reproduction need no network. The release does not archive OCI images in this version and claims neither Apple Silicon nor native Windows outside WSL2.
+The reviewer may pull declared images during setup. Once images and selected release components are present, smoke and results reproduction need no network. The release does not archive OCI images in this version. Smoke and results reproduction were also run on macOS on Apple Silicon with Colima, where the pipeline image runs under x86-64 emulation. Native Windows outside WSL2 is not claimed.
 
 Host-based `uv`, Nix, Java, or Gradle remain developer conveniences and do not appear as primary reviewer prerequisites. The Java collection container executes project builds in a disposable workspace without the Docker socket, host credentials, or writable mounts over the release source. Network access for third-party dependency resolution is isolated to the documented collection workflow.
 
@@ -251,7 +251,7 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 - **Archive manifests and release manifests drift into two registries.** → Component manifests describe payload bytes. The release manifest describes archive relationships. Both reference corpus/report authorities rather than restating them.
 - **Exact outer archive facts are recursively self-referential.** → Keep final archive hashes and byte sizes only in the standalone release manifest and public summary. Internal component manifests bind payload facts.
 - **Pinned images remain hosted outside Zenodo.** → Record immutable digests and Dockerfiles and verify the offline-after-setup path. Do not add an OCI archive without a measured availability requirement and a separate size and licensing decision.
-- **The x86-64 Java stack is slow under Apple Silicon emulation.** → Make Linux x86-64 the release baseline, measure Apple compatibility separately, and do not promise the 30-minute bound on an unmeasured platform.
+- **The x86-64 Java stack is slow under Apple Silicon emulation.** → Make Linux x86-64 the release baseline and state the macOS times separately.
 - **A shipped third-party project has no license.** → Ship it as the first version did, record that no license was found, and state in the notice that it remains under its authors' terms. Never apply the artifact license to others' code.
 - **The clean release gate is expensive.** → Use tiny fixture packages on every change and run the complete real-package gate once per release candidate. Never replace it with source tests.
 - **A new DOI is embedded before publication but the deposit changes.** → Reserve the version DOI, freeze the candidate, upload the exact validated files, then verify the downloaded record. Any byte change creates a new candidate and, after publication, a new version.
