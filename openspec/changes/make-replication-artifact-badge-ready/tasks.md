@@ -53,12 +53,12 @@
 
 - [x] 5.1 Pin every reviewer base and service image by digest, pin locked dependency resolution, and publish the Dockerfiles. No OCI archive in this release. The Dockerfiles and the Compose file pin every image by digest.
 - [x] 5.3 Fix Compose service and container-name disagreements, use service discovery instead of author deployment names, and work under an arbitrary Compose project name. Two Compose projects ran side by side.
-- [ ] 5.4 Confine third-party Maven and Gradle execution to disposable scratch state with a memory limit, no author credentials, no Docker socket, no superuser database role, and no writable mount over release components. Remaining: run the packaged JARVIS collection with the collection role.
+- [x] 5.4 Confine third-party Maven and Gradle execution to disposable scratch state with a memory limit, no author credentials, no Docker socket, no superuser database role, and no writable mount over release components. The scorecard, controlled and real-world collections of rc-2 ran as the collection role.
 - [x] 5.5 Add the root `artifact` controller with `preflight`, `smoke`, `reproduce-results`, `collect-reduced`, `collect-full`, and `clean`, limited to sequencing existing helpers.
 - [x] 5.6 Implement preflight for release and component identity, the exact workflow component set, supported architecture, and Docker and Compose compatibility. Report all missing prerequisites in one result. Memory and free disk are documented in `REQUIREMENTS.md` instead of checked, because a reader needs them before downloading anyway.
 - [x] 5.7 Implement bounded smoke with core and the two JARVIS corpora. It passes in about 2 minutes.
 - [x] 5.8 Route results reproduction through every registered report and the evidence verifier, RQ0 with core and its two JARVIS corpora, all reports with all four corpora.
-- [ ] 5.9 Route reduced and full collection through the existing production stages, run ledgers, and resume behavior, and run one reduced unit of each packaged path. Done: scorecard and census. Remaining: CUT-PVC inside the scorecard collection, controlled, and the real-world sample.
+- [x] 5.9 Route reduced and full collection through the existing production stages, run ledgers, and resume behavior, and run one reduced unit of each packaged path. rc-2 ran the scorecard with CUT-PVC, controlled, and the real-world sample on desktop-ac. The census ran from an earlier candidate. The runner layers the published run profile under each project config, which the controlled run exposed as missing.
 
 ## 6. Complete reuse, licensing, and public documentation
 
@@ -68,14 +68,14 @@
 - [x] 6.4 Cite the JARVIS publication and keep the licenses of the JARVIS fixtures, `jpf-symbc`, and `jpf-core`. `replication/RQ0.md` cites the paper and treats its table values as published facts, the fixture components retain the Apache Commons LICENSE and NOTICE files, and the nested JPF sources keep theirs.
 - [x] 6.6 State in the README license section that the bundled EvoSuite jar and JPF sources keep their own licenses, next to the existing statement for analyzed projects.
 - [x] 6.9 Generate a short README for each optional component and publish a workflow matrix with exact component lists and sizes. The builder writes both, the matrix as `RELEASE.md`.
-- [ ] 6.10 Correct citation, paper, DOI, and Zenodo metadata: `CITATION.cff` with the version 2 DOI and all four authors, and `zenodo.json` reviewed against the packaged documentation.
+- [ ] 6.10 Correct citation, paper, DOI, and Zenodo metadata: `CITATION.cff` with the version DOI and all four authors, and `zenodo.json` reviewed against the packaged documentation.
 
 Dropped as not worth their cost: a per-file audit and record of generated tests, logs and dumps (6.5), because a scan found no secrets or personal data beyond host account names in machine paths of the run logs, and rewriting logs would break their checksum lineage. An ethics statement and a separate license map document (6.6), because the study involves no human participants and the README license section covers the licenses. Generated and checked requirement facts (6.7), because `RELEASE.md` already carries the sizes and the few measured times are read off one run. A reuse guide beyond the README (6.8), because the README covers querying, the data dictionary, running Teralizer on a new project, and the confinement of collection.
 
 ## 7. Prove the staged release at archive level
 
 - [x] 7.1 Run fast synthetic-package tests in pull-request CI for the public document formats, archive build and verification, extraction roots, preflight, missing workflow dependencies, and provenance release mode. The release tests run in the analysis test job.
-- [ ] 7.2 Run the final archives once on desktop-ac, extracted with unzip into a new directory with empty Docker volumes: preflight, smoke, all-report reproduction, and clean. Write the measured times, peak disk and memory into `REQUIREMENTS.md`.
+- [x] 7.2 Run the final archives once on desktop-ac, extracted with unzip into a new directory with empty Docker volumes: preflight, smoke, all-report reproduction, and clean. Write the measured times, peak disk and memory into `REQUIREMENTS.md`. rc-2 passed all steps, including the three reduced collections, and clean left no volume and no root-owned file. The final build repeats the run only if code outside documentation changed.
 
 Dropped: a dedicated release-candidate CI job, a machine-readable acceptance record, a hidden source checkout, an offline repeat, and an Apple Silicon compatibility run (7.2 to 7.6 before). The one clean run exposes every failure they guard against, nothing reads the record, and the release claims no Apple Silicon support. The acceptance record format was removed from the code.
 
