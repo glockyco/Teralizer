@@ -200,6 +200,14 @@ if [[ "$DATASET" == "primary" && -z "$PHASE" ]]; then
     exit 1
 fi
 
+# Each config names only its project. The profile under it holds the variants and
+# pipeline settings that the published run of the corpus used.
+case "$DATASET/$PHASE" in
+    primary/generalization) PROFILE=project-configs/primary/generalization-profile.conf ;;
+    primary/generation) PROFILE="" ;;
+    extended/*) PROFILE=project-configs/reporeapers-rq6.conf ;;
+esac
+
 if [[ -n "$PHASE" && "$PHASE" != "generation" && "$PHASE" != "generalization" ]]; then
     echo -e "${RED}Error: --phase must be 'generation' or 'generalization'${NC}"
     exit 1
@@ -466,6 +474,7 @@ run_config() {
         # Translate host path to container path
         # Host: /path/to/repo/project-configs/... -> Container: /app/project-configs/...
         local container_conf="${conf/$REPO_ROOT\/project-configs//app/project-configs}"
+        container_conf="${PROFILE:+$PROFILE,}$container_conf"
         local container_name="${COMPOSE_PROJECT_NAME:-teralizer}-collect-${CORPUS_ID}-${name}"
         container_name="${container_name//[^a-zA-Z0-9_.-]/-}"
         supervised_container_run "$container_name" "$PROJECT_TIMEOUT" \
@@ -484,7 +493,7 @@ run_config() {
             done < <(sed -n 's/^[[:space:]]*\([a-z-]*-path\)[[:space:]]*=[[:space:]]*"\(projects\/[^"]*\)".*/\1=\2/p' "$conf")
         fi
         supervised_run "-" "$PROJECT_TIMEOUT" \
-            ./gradlew run -Dteralizer.config="$conf" \
+            ./gradlew run -Dteralizer.config="${PROFILE:+$PROFILE,}$conf" \
             -Dteralizer.database.name="$SCRATCH_DB" \
             -Dteralizer.data-dir="$RUN_DATA_DIR" ${path_overrides[@]+"${path_overrides[@]}"} --no-daemon
         return "$SUPERVISED_RC"
@@ -597,4 +606,9 @@ echo "Total:     ${#configs[@]}"
 echo "Ledger:    $STATUS_TSV"
 if [[ "$stopped" == true ]]; then
     exit 75
+fi
+# Single projects fail or hit the cap in every real-world run. A run in which every
+# attempted config failed points to a broken setup instead.
+if [[ "$failed" -gt 0 && "$succeeded" -eq 0 ]]; then
+    exit 1
 fi
