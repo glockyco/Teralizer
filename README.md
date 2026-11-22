@@ -94,6 +94,8 @@ Collection builds and runs third-party code in Docker and needs network access t
 
 Working copies and pipeline data go under `state/collect/` by default. Reduced and full real-world runs have separate directories and scratch databases. Each collection prints the location of its ledger and logs, or writes the pipeline log to the terminal. It reports the scratch database name and leaves the published corpus databases unchanged.
 
+A collection runs the pipeline of this release, so its counts differ somewhat from the published corpora.
+
 To pause a controlled or real-world run, `touch <state>/STOP` at the exact stop path printed by the runner. The active configuration finishes before the runner stops. Run the same command again to resume from the ledger. JARVIS runs start over with an empty scratch database and ledger each time.
 
 ## Development
